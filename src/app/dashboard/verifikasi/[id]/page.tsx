@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { PDFViewer } from '@/components/ui/pdf-viewer'
@@ -23,7 +24,7 @@ import { supabase } from '@/lib/supabase'
 import { updateApplicationStatus, getApplicationDocuments, generateNomorSurat, updateNomorSurat } from '@/lib/services/applicationService'
 import { toast } from 'sonner'
 import {
-  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase
+  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -42,6 +43,11 @@ export default function VerifikasiDetailPage() {
   const [showRejectDialog, setShowRejectDialog] = useState(false)
   const [rejectionReason, setRejectionReason] = useState('')
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string; filePath: string } | null>(null)
+  
+  // State untuk kirim berkas online
+  const [showSendOnlineDialog, setShowSendOnlineDialog] = useState(false)
+  const [skbtFile, setSkbtFile] = useState<File | null>(null)
+  const [isSendingOnline, setIsSendingOnline] = useState(false)
 
   useEffect(() => {
     if (params.id) loadApplication()
@@ -197,6 +203,98 @@ export default function VerifikasiDetailPage() {
     }
   }
 
+  // Handler untuk file SKBT yang sudah di-TTD
+  const handleSkbtFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    // Validasi tipe file (hanya PDF)
+    if (file.type !== 'application/pdf') {
+      toast.error('Hanya file PDF yang diperbolehkan')
+      e.target.value = ''
+      return
+    }
+    
+    // Validasi ukuran file (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 10MB')
+      e.target.value = ''
+      return
+    }
+    
+    setSkbtFile(file)
+  }
+
+  // Handler untuk kirim berkas online
+  const handleSendOnline = async () => {
+    if (!application || !skbtFile) {
+      toast.error('Pilih file SKBT yang sudah ditandatangani')
+      return
+    }
+
+    if (!application.nomor_surat) {
+      toast.error('Nomor surat belum tersedia')
+      return
+    }
+
+    setIsSendingOnline(true)
+    try {
+      // 1. Upload file SKBT ke storage
+      const fileExt = skbtFile.name.split('.').pop()
+      const fileName = `skbt_${application.tracking_number}_${Date.now()}.${fileExt}`
+      const filePath = `skbt/${application.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, skbtFile)
+
+      if (uploadError) throw uploadError
+
+      // 2. Get public URL untuk download
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath)
+
+      // 3. Kirim email notifikasi dengan tanda terima digital
+      const response = await fetch('/api/send-digital-receipt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trackingNumber: application.tracking_number,
+          nomorSurat: application.nomor_surat,
+          namaLengkap: application.nama_lengkap,
+          nip: application.nip,
+          tujuanPermohonan: application.tujuan_permohonan || 'mutasi',
+          email: application.email,
+          tanggalTTD: format(new Date(), 'dd MMMM yyyy, HH:mm', { locale: id }) + ' WIB',
+          downloadUrl: urlData.publicUrl,
+        }),
+      })
+
+      const result = await response.json()
+      if (!result.success) throw new Error('Gagal mengirim email')
+
+      // 4. Update status menjadi Selesai
+      await updateApplicationStatus(application.id, 'Selesai', 'Berkas dikirim secara online', user?.id)
+
+      toast.success('Berkas berhasil dikirim! Email notifikasi telah dikirim ke pemohon.')
+      setShowSendOnlineDialog(false)
+      setSkbtFile(null)
+      router.push('/dashboard/verifikasi')
+    } catch (error) {
+      console.error('Error sending online:', error)
+      toast.error('Gagal mengirim berkas online')
+    } finally {
+      setIsSendingOnline(false)
+    }
+  }
+
+  // Cek apakah bisa kirim berkas online (status sudah di-TTD Inspektur)
+  const canSendOnline = () => {
+    if (!application) return false
+    return application.status === 'Ditandatangani Inspektur' && currentRole === 'admin'
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -267,6 +365,19 @@ export default function VerifikasiDetailPage() {
           <Button variant="destructive" className="flex-1 h-12 rounded-xl shadow-lg" onClick={() => setShowRejectDialog(true)}>
             <X className="h-4 w-4 mr-2" />
             Tolak
+          </Button>
+        </div>
+      )}
+      
+      {/* Mobile Send Online Button */}
+      {canSendOnline() && (
+        <div className="lg:hidden">
+          <Button 
+            className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl shadow-lg" 
+            onClick={() => setShowSendOnlineDialog(true)}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Kirim Berkas Online
           </Button>
         </div>
       )}
@@ -393,6 +504,14 @@ export default function VerifikasiDetailPage() {
                       Tolak Permohonan
                     </Button>
                   </>
+                ) : canSendOnline() ? (
+                  <Button 
+                    className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl shadow-lg shadow-blue-200/50 transition-all duration-300 hover:scale-[1.02]" 
+                    onClick={() => setShowSendOnlineDialog(true)}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Kirim Berkas Online
+                  </Button>
                 ) : (
                   <div className="text-center py-4">
                     <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -449,6 +568,102 @@ export default function VerifikasiDetailPage() {
           <div className="flex-1 overflow-hidden">
             {previewDoc && <PDFViewer url={previewDoc.url} fileName={previewDoc.name} onDownload={handleDownloadPreview} />}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Online Dialog */}
+      <Dialog open={showSendOnlineDialog} onOpenChange={setShowSendOnlineDialog}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-blue-600">
+              <Send className="h-5 w-5" />
+              Kirim Berkas Online
+            </DialogTitle>
+            <DialogDescription>
+              Upload berkas SKBT yang sudah ditandatangani untuk dikirim ke pemohon via email.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Info Pemohon */}
+            <div className="p-4 bg-slate-50 rounded-xl space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Nama:</span>
+                <span className="font-medium text-slate-800">{application?.nama_lengkap}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">Email:</span>
+                <span className="font-medium text-slate-800">{application?.email}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-500">No. Surat:</span>
+                <span className="font-medium text-slate-800 font-mono">{application?.nomor_surat || '-'}</span>
+              </div>
+            </div>
+
+            {/* File Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="skbt-file" className="text-sm font-medium text-slate-600">
+                Upload Berkas SKBT (PDF)
+              </Label>
+              <div className="relative">
+                <Input
+                  id="skbt-file"
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleSkbtFileChange}
+                  className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+                />
+              </div>
+              {skbtFile && (
+                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                  <FileText className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm text-blue-700 truncate flex-1">{skbtFile.name}</span>
+                  <span className="text-xs text-blue-500">
+                    {(skbtFile.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                </div>
+              )}
+              <p className="text-xs text-slate-500">
+                Maksimal 10MB. Pastikan berkas sudah ditandatangani oleh Inspektur.
+              </p>
+            </div>
+
+            {/* Info */}
+            <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+              <p className="text-xs text-amber-700">
+                <strong>Perhatian:</strong> Setelah dikirim, pemohon akan menerima email berisi tanda terima digital dan link download berkas SKBT.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowSendOnlineDialog(false)
+                setSkbtFile(null)
+              }} 
+              className="w-full sm:w-auto rounded-xl"
+            >
+              Batal
+            </Button>
+            <Button 
+              onClick={handleSendOnline} 
+              disabled={isSendingOnline || !skbtFile} 
+              className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+            >
+              {isSendingOnline ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Mengirim...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Kirim Sekarang
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
