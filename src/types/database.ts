@@ -37,6 +37,8 @@ export interface User {
   updated_at: string
 }
 
+export type PickupMethod = 'online' | 'offline'
+
 export interface Application {
   id: string
   tracking_number: string
@@ -53,6 +55,8 @@ export interface Application {
   status: ApplicationStatus
   nomor_surat?: string
   rejection_reason?: string
+  pickup_method?: PickupMethod
+  pickup_method_selected_at?: string
   created_at: string
   updated_at: string
 }

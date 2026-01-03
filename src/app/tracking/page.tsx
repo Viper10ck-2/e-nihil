@@ -8,12 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { StatusBadge } from '@/components/ui/status-badge'
 import { StatusTimeline } from '@/components/tracking/StatusTimeline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Search, User, Building, MapPin, Calendar, Target, FileSearch, CheckCircle, Clock, Sparkles, AlertTriangle, Upload, FileText, Send, HandCoins } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { getApplicationByTrackingNumber, getStatusHistory } from '@/lib/services/applicationService'
 import { toast } from 'sonner'
-import type { Application, StatusHistory, DocumentWithRejection } from '@/types/database'
+import type { Application, StatusHistory, DocumentWithRejection, PickupMethod } from '@/types/database'
 
 const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   surat_permohonan: 'Surat Permohonan',
@@ -37,6 +45,9 @@ export default function TrackingPage() {
   const [initialSearchDone, setInitialSearchDone] = useState(false)
   const [isSendingPickupChoice, setIsSendingPickupChoice] = useState(false)
   const [pickupChoiceSent, setPickupChoiceSent] = useState(false)
+  const [savedPickupMethod, setSavedPickupMethod] = useState<PickupMethod | null>(null)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [pendingPickupMethod, setPendingPickupMethod] = useState<'online' | 'offline' | null>(null)
 
   // Function to search by tracking number
   const searchByTrackingNumber = useCallback(async (trackingNo: string) => {
@@ -45,12 +56,21 @@ export default function TrackingPage() {
     setIsLoading(true)
     setError(null)
     setApplication(null)
+    setSavedPickupMethod(null)
+    setPickupChoiceSent(false)
 
     try {
       const app = await getApplicationByTrackingNumber(trackingNo.toUpperCase())
       
       if (app) {
         setApplication(app)
+        
+        // Check if pickup method already selected
+        if (app.pickup_method) {
+          setSavedPickupMethod(app.pickup_method as PickupMethod)
+          setPickupChoiceSent(true)
+        }
+        
         const statusHistory = await getStatusHistory(app.id)
         setHistory(statusHistory as StatusHistory[])
         
@@ -164,8 +184,15 @@ export default function TrackingPage() {
 
   // Handler untuk pilihan pengambilan SKBT
   const handlePickupChoice = async (method: 'online' | 'offline') => {
-    if (!application) return
+    setPendingPickupMethod(method)
+    setShowConfirmDialog(true)
+  }
 
+  // Handler untuk konfirmasi pilihan
+  const confirmPickupChoice = async () => {
+    if (!application || !pendingPickupMethod) return
+
+    setShowConfirmDialog(false)
     setIsSendingPickupChoice(true)
     try {
       const response = await fetch('/api/send-pickup-choice', {
@@ -178,21 +205,31 @@ export default function TrackingPage() {
           nip: application.nip,
           email: application.email,
           nomorHp: application.nomor_hp,
-          pickupMethod: method,
+          pickupMethod: pendingPickupMethod,
         }),
       })
 
       const result = await response.json()
+      
+      if (result.alreadySelected) {
+        toast.error('Pilihan pengambilan sudah dipilih sebelumnya dan tidak dapat diubah.')
+        setSavedPickupMethod(pendingPickupMethod)
+        setPickupChoiceSent(true)
+        return
+      }
+      
       if (!result.success) throw new Error('Gagal mengirim pilihan')
 
+      setSavedPickupMethod(pendingPickupMethod)
       setPickupChoiceSent(true)
-      const methodLabel = method === 'online' ? 'dikirim via email' : 'diambil langsung di kantor'
+      const methodLabel = pendingPickupMethod === 'online' ? 'dikirim via email' : 'diambil langsung di kantor'
       toast.success(`Pilihan pengambilan berhasil dikirim! Admin akan segera memproses berkas untuk ${methodLabel}.`)
     } catch (error) {
       console.error('Error sending pickup choice:', error)
       toast.error('Gagal mengirim pilihan. Silakan coba lagi.')
     } finally {
       setIsSendingPickupChoice(false)
+      setPendingPickupMethod(null)
     }
   }
 
@@ -487,7 +524,7 @@ export default function TrackingPage() {
                         <div>
                           <CardTitle className="text-lg text-emerald-700">SKBT Siap Diambil!</CardTitle>
                           <CardDescription className="text-emerald-600">
-                            Pilih metode pengambilan berkas SKBT Anda
+                            {pickupChoiceSent ? 'Pilihan pengambilan telah dikonfirmasi' : 'Pilih metode pengambilan berkas SKBT Anda'}
                           </CardDescription>
                         </div>
                       </div>
@@ -499,9 +536,26 @@ export default function TrackingPage() {
                             <CheckCircle className="h-8 w-8 text-emerald-600" />
                           </div>
                           <h3 className="text-lg font-semibold text-emerald-700 mb-2">Pilihan Terkirim!</h3>
-                          <p className="text-sm text-emerald-600">
+                          <p className="text-sm text-emerald-600 mb-4">
                             Admin akan segera memproses berkas SKBT Anda sesuai pilihan pengambilan.
                           </p>
+                          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
+                            savedPickupMethod === 'online' 
+                              ? 'bg-blue-100 text-blue-700' 
+                              : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {savedPickupMethod === 'online' ? (
+                              <>
+                                <Send className="h-4 w-4" />
+                                <span className="font-medium">Kirim Online (Email)</span>
+                              </>
+                            ) : (
+                              <>
+                                <HandCoins className="h-4 w-4" />
+                                <span className="font-medium">Ambil Langsung di Kantor</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <>
@@ -555,7 +609,7 @@ export default function TrackingPage() {
                           
                           <div className="mt-4 p-3 bg-white/60 rounded-xl border border-emerald-100">
                             <p className="text-xs text-emerald-700">
-                              <strong>Informasi:</strong> Setelah memilih, Admin akan segera memproses berkas SKBT Anda sesuai pilihan pengambilan.
+                              <strong>⚠️ Perhatian:</strong> Pilihan pengambilan hanya dapat dipilih <strong>1 kali</strong> dan tidak dapat diubah setelah dikonfirmasi.
                             </p>
                           </div>
                         </>
@@ -626,6 +680,88 @@ export default function TrackingPage() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Konfirmasi Pilihan Pengambilan
+            </DialogTitle>
+            <DialogDescription>
+              Pilihan ini tidak dapat diubah setelah dikonfirmasi.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className={`p-4 rounded-xl border-2 ${
+              pendingPickupMethod === 'online' 
+                ? 'bg-blue-50 border-blue-200' 
+                : 'bg-amber-50 border-amber-200'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                  pendingPickupMethod === 'online' ? 'bg-blue-100' : 'bg-amber-100'
+                }`}>
+                  {pendingPickupMethod === 'online' ? (
+                    <Send className="h-6 w-6 text-blue-600" />
+                  ) : (
+                    <HandCoins className="h-6 w-6 text-amber-600" />
+                  )}
+                </div>
+                <div>
+                  <p className={`font-semibold ${
+                    pendingPickupMethod === 'online' ? 'text-blue-700' : 'text-amber-700'
+                  }`}>
+                    {pendingPickupMethod === 'online' ? 'Kirim Online (Email)' : 'Ambil Langsung di Kantor'}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    {pendingPickupMethod === 'online' 
+                      ? 'Berkas SKBT akan dikirim ke email Anda' 
+                      : 'Ambil berkas fisik di Kantor Inspektorat'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
+              <strong className="text-amber-700">⚠️ Perhatian:</strong> Setelah mengklik &quot;Konfirmasi&quot;, pilihan Anda akan disimpan dan <strong>tidak dapat diubah</strong>.
+            </p>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowConfirmDialog(false)
+                setPendingPickupMethod(null)
+              }}
+              className="w-full sm:w-auto rounded-xl"
+            >
+              Batal
+            </Button>
+            <Button 
+              onClick={confirmPickupChoice}
+              disabled={isSendingPickupChoice}
+              className={`w-full sm:w-auto rounded-xl ${
+                pendingPickupMethod === 'online'
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-amber-600 hover:bg-amber-700'
+              }`}
+            >
+              {isSendingPickupChoice ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Konfirmasi
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
