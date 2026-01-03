@@ -413,10 +413,10 @@ export default function VerifikasiDetailPage() {
     }
   }
 
-  // Cek apakah bisa menolak dokumen (hanya admin saat status Menunggu Verifikasi)
+  // Cek apakah bisa menolak dokumen (admin saat status Menunggu Verifikasi atau Dokumen Ditolak)
   const canRejectDocument = () => {
     if (!application) return false
-    return currentRole === 'admin' && application.status === 'Menunggu Verifikasi Admin'
+    return currentRole === 'admin' && ['Menunggu Verifikasi Admin', 'Dokumen Ditolak'].includes(application.status)
   }
 
   if (isLoading) {
