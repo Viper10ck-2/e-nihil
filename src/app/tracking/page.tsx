@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,6 +26,7 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
 }
 
 export default function TrackingPage() {
+  const searchParams = useSearchParams()
   const [trackingNumber, setTrackingNumber] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,21 +34,18 @@ export default function TrackingPage() {
   const [history, setHistory] = useState<StatusHistory[]>([])
   const [rejectedDocuments, setRejectedDocuments] = useState<DocumentWithRejection[]>([])
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null)
+  const [initialSearchDone, setInitialSearchDone] = useState(false)
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!trackingNumber.trim()) {
-      setError('Masukkan nomor tracking')
-      return
-    }
+  // Function to search by tracking number
+  const searchByTrackingNumber = useCallback(async (trackingNo: string) => {
+    if (!trackingNo.trim()) return
 
     setIsLoading(true)
     setError(null)
     setApplication(null)
 
     try {
-      const app = await getApplicationByTrackingNumber(trackingNumber.toUpperCase())
+      const app = await getApplicationByTrackingNumber(trackingNo.toUpperCase())
       
       if (app) {
         setApplication(app)
@@ -56,7 +55,7 @@ export default function TrackingPage() {
         // Load rejected documents if status is "Dokumen Ditolak"
         if (app.status === 'Dokumen Ditolak') {
           try {
-            const response = await fetch(`/api/applications/${trackingNumber.toUpperCase()}/rejected-documents`)
+            const response = await fetch(`/api/applications/${trackingNo.toUpperCase()}/rejected-documents`)
             const result = await response.json()
             if (result.success) {
               setRejectedDocuments(result.data.documents || [])
@@ -76,6 +75,29 @@ export default function TrackingPage() {
     } finally {
       setIsLoading(false)
     }
+  }, [])
+
+  // Check for query parameter on mount
+  useEffect(() => {
+    if (initialSearchDone) return
+    
+    const noParam = searchParams.get('no')
+    if (noParam) {
+      setTrackingNumber(noParam.toUpperCase())
+      searchByTrackingNumber(noParam)
+      setInitialSearchDone(true)
+    }
+  }, [searchParams, searchByTrackingNumber, initialSearchDone])
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!trackingNumber.trim()) {
+      setError('Masukkan nomor tracking')
+      return
+    }
+
+    await searchByTrackingNumber(trackingNumber)
   }
 
   const handleReuploadDocument = async (doc: DocumentWithRejection, file: File) => {
