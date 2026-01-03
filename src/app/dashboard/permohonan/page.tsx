@@ -223,18 +223,19 @@ export default function PermohonanPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>No. Tracking</TableHead>
-                <TableHead>Nama Pemohon</TableHead>
-                <TableHead>Unit Kerja</TableHead>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead className="w-[140px]">No. Tracking</TableHead>
+                <TableHead className="w-[200px]">Nama Pemohon</TableHead>
+                <TableHead className="w-[120px]">Unit Kerja</TableHead>
+                <TableHead className="w-[100px]">Tanggal</TableHead>
+                <TableHead className="w-[140px]">Status</TableHead>
+                <TableHead className="w-[120px]">No. Surat</TableHead>
+                <TableHead className="w-[140px]">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredApplications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     Tidak ada permohonan yang ditemukan
                   </TableCell>
                 </TableRow>
@@ -259,8 +260,11 @@ export default function PermohonanPage() {
                     <TableCell>
                       <StatusBadge status={app.status} />
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                    <TableCell className="font-mono text-sm">
+                      {app.nomor_surat || '-'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
                         {app.status === 'Selesai' && (
                           <Button
                             variant="outline"
