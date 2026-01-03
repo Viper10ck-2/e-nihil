@@ -8,11 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { login } from '@/lib/services/authService'
+import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
 import { Lock, User } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { refreshAuth } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     nip: '',
@@ -29,6 +31,8 @@ export default function LoginPage() {
       const user = await login(formData.nip, formData.password)
 
       if (user) {
+        // Refresh auth context to update user state
+        refreshAuth()
         toast.success('Login berhasil!')
         router.push('/dashboard')
       } else {

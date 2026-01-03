@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { UserRole } from '@/types/database'
 import {
@@ -17,6 +17,7 @@ interface AuthContextType {
   isLoading: boolean
   setCurrentRole: (role: UserRole) => void
   logout: () => void
+  refreshAuth: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -27,18 +28,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentRole, setCurrentRoleState] = useState<UserRole | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    // Check for existing session
+  const refreshAuth = useCallback(() => {
     const storedUser = getCurrentUser()
     const storedRole = getCurrentRole()
 
     if (storedUser) {
       setUser(storedUser)
       setCurrentRoleState(storedRole || storedUser.roles[0] || null)
+    } else {
+      setUser(null)
+      setCurrentRoleState(null)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Check for existing session
+    refreshAuth()
+    setIsLoading(false)
+
+    // Listen for storage changes (login from another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_user' || e.key === 'current_role') {
+        refreshAuth()
+      }
     }
 
-    setIsLoading(false)
-  }, [])
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [refreshAuth])
 
   const setCurrentRole = (role: UserRole) => {
     if (user?.roles.includes(role)) {
@@ -62,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         setCurrentRole,
         logout,
+        refreshAuth,
       }}
     >
       {children}
