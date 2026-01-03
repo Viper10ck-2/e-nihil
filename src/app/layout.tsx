@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { PageTransition } from "@/components/layout/PageTransition";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers/Providers";
 
@@ -34,7 +35,9 @@ export default function RootLayout({
         <Providers>
           <Header />
           <main className="flex-1">
-            {children}
+            <PageTransition>
+              {children}
+            </PageTransition>
           </main>
           <Footer />
           <Toaster />
