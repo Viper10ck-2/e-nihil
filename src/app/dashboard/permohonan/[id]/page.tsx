@@ -35,6 +35,12 @@ interface DeliveryProof {
   messageId?: string
 }
 
+interface OfflinePickupProof {
+  filePath: string
+  fileName: string
+  uploadedAt: string
+}
+
 export default function PermohonanDetailPage() {
   const router = useRouter()
   const params = useParams()
@@ -44,6 +50,7 @@ export default function PermohonanDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string; filePath: string } | null>(null)
   const [deliveryProof, setDeliveryProof] = useState<DeliveryProof | null>(null)
+  const [offlineProof, setOfflineProof] = useState<OfflinePickupProof | null>(null)
   const [showProofDialog, setShowProofDialog] = useState(false)
 
   useEffect(() => {
@@ -60,10 +67,15 @@ export default function PermohonanDetailPage() {
       const docs = await getApplicationDocuments(applicationId)
       setDocuments(docs as Document[])
       
-      // Load delivery proof if status is Diambil/Selesai and pickup_method is online
+      // Load delivery proof if status is Diambil/Selesai
       const appData = app as Application
-      if ((appData.status === 'Diambil' || appData.status === 'Selesai') && appData.pickup_method === 'online') {
-        await loadDeliveryProof(appData.tracking_number)
+      if (appData.status === 'Diambil' || appData.status === 'Selesai') {
+        if (appData.pickup_method === 'online') {
+          await loadDeliveryProof(appData.tracking_number)
+        } else {
+          // Load offline pickup proof
+          await loadOfflineProof(appData.id, appData.tracking_number)
+        }
       }
     } catch (error) {
       console.error('Error loading application:', error)
@@ -97,6 +109,72 @@ export default function PermohonanDetailPage() {
       setDeliveryProof(proofData)
     } catch (error) {
       console.error('Error loading delivery proof:', error)
+    }
+  }
+
+  const loadOfflineProof = async (applicationId: string, _trackingNumber: string) => {
+    try {
+      // Try to find bukti penyerahan in storage
+      const { data: files, error } = await supabase.storage
+        .from('documents')
+        .list(`bukti-penyerahan/${applicationId}`)
+      
+      if (error || !files || files.length === 0) {
+        // Also try tanda-terima folder (legacy)
+        const { data: tandaTerimaFiles, error: ttError } = await supabase.storage
+          .from('documents')
+          .list('tanda-terima', {
+            search: applicationId
+          })
+        
+        if (ttError || !tandaTerimaFiles || tandaTerimaFiles.length === 0) return
+        
+        const file = tandaTerimaFiles[0]
+        setOfflineProof({
+          filePath: `tanda-terima/${file.name}`,
+          fileName: file.name,
+          uploadedAt: file.created_at || new Date().toISOString()
+        })
+        return
+      }
+      
+      const file = files[0]
+      setOfflineProof({
+        filePath: `bukti-penyerahan/${applicationId}/${file.name}`,
+        fileName: file.name,
+        uploadedAt: file.created_at || new Date().toISOString()
+      })
+    } catch (error) {
+      console.error('Error loading offline proof:', error)
+    }
+  }
+
+  const handleViewOfflineProof = async () => {
+    if (!offlineProof) return
+    try {
+      const { data } = supabase.storage.from('documents').getPublicUrl(offlineProof.filePath)
+      setPreviewDoc({ url: data.publicUrl, name: offlineProof.fileName, filePath: offlineProof.filePath })
+    } catch (error) {
+      console.error('Error viewing offline proof:', error)
+      toast.error('Gagal membuka bukti pengambilan')
+    }
+  }
+
+  const handleDownloadOfflineProof = async () => {
+    if (!offlineProof) return
+    try {
+      const { data, error } = await supabase.storage.from('documents').download(offlineProof.filePath)
+      if (error) throw error
+      const url = URL.createObjectURL(data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = offlineProof.fileName
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Bukti pengambilan berhasil diunduh')
+    } catch (error) {
+      console.error('Error downloading offline proof:', error)
+      toast.error('Gagal mengunduh bukti pengambilan')
     }
   }
 
@@ -425,18 +503,55 @@ export default function PermohonanDetailPage() {
                   </Button>
                 </div>
               </div>
-            ) : application.pickup_method === 'offline' ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <Receipt className="h-5 w-5 text-amber-600" />
+            ) : application.pickup_method === 'offline' || !application.pickup_method ? (
+              offlineProof ? (
+                <div className="space-y-4">
+                  {/* Proof Summary */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <Receipt className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-amber-800 font-medium">Bukti Pengambilan Tersimpan</p>
+                        <p className="text-amber-600 text-sm">{offlineProof.fileName}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-amber-800 font-medium">Tanda Terima Tersimpan</p>
-                    <p className="text-amber-600 text-sm">Dokumen tanda terima telah diupload saat konfirmasi pengambilan</p>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={handleViewOfflineProof}
+                      className="flex-1 border-amber-200 text-amber-700 hover:bg-amber-50"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Lihat Bukti
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleDownloadOfflineProof}
+                      className="flex-1 border-amber-200 text-amber-700 hover:bg-amber-50"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                      <Receipt className="h-5 w-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="text-amber-800 font-medium">Bukti Pengambilan</p>
+                      <p className="text-amber-600 text-sm">Bukti pengambilan tidak tersedia</p>
+                    </div>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="text-center py-4 text-slate-500">
                 <p>Bukti pengiriman tidak tersedia</p>
