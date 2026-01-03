@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { 
@@ -12,6 +12,9 @@ import {
   Users,
   UserX
 } from 'lucide-react'
+
+const AUTOSWIPE_INTERVAL = 6000 // 6 seconds - santai/slow
+const ANIMATION_DURATION = 600 // 600ms - smooth animation
 
 const TUJUAN_DOCUMENTS = [
   {
@@ -81,9 +84,11 @@ export function DocumentRequirementsCarousel() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [direction, setDirection] = useState<'left' | 'right' | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const autoswipeRef = useRef<NodeJS.Timeout | null>(null)
 
-  const handleNavigate = (newIndex: number, dir: 'left' | 'right') => {
+  const handleNavigate = useCallback((newIndex: number, dir: 'left' | 'right') => {
     if (isAnimating) return
     setDirection(dir)
     setIsAnimating(true)
@@ -94,37 +99,65 @@ export function DocumentRequirementsCarousel() {
         setIsAnimating(false)
         setDirection(null)
       }, 50)
-    }, 150)
-  }
+    }, ANIMATION_DURATION / 2)
+  }, [isAnimating])
+
+  const handleNext = useCallback(() => {
+    const newIndex = activeIndex === TUJUAN_DOCUMENTS.length - 1 ? 0 : activeIndex + 1
+    handleNavigate(newIndex, 'left')
+  }, [activeIndex, handleNavigate])
 
   const handlePrev = () => {
     const newIndex = activeIndex === 0 ? TUJUAN_DOCUMENTS.length - 1 : activeIndex - 1
     handleNavigate(newIndex, 'right')
   }
 
-  const handleNext = () => {
-    const newIndex = activeIndex === TUJUAN_DOCUMENTS.length - 1 ? 0 : activeIndex + 1
-    handleNavigate(newIndex, 'left')
-  }
+  // Autoswipe effect
+  useEffect(() => {
+    if (isPaused || isAnimating) {
+      if (autoswipeRef.current) {
+        clearInterval(autoswipeRef.current)
+        autoswipeRef.current = null
+      }
+      return
+    }
+
+    autoswipeRef.current = setInterval(() => {
+      handleNext()
+    }, AUTOSWIPE_INTERVAL)
+
+    return () => {
+      if (autoswipeRef.current) {
+        clearInterval(autoswipeRef.current)
+      }
+    }
+  }, [isPaused, isAnimating, handleNext])
+
+  // Pause on hover handlers
+  const handleMouseEnter = () => setIsPaused(true)
+  const handleMouseLeave = () => setIsPaused(false)
 
   const handleTabClick = (index: number) => {
     if (index === activeIndex || isAnimating) return
     const dir = index > activeIndex ? 'left' : 'right'
     handleNavigate(index, dir)
+    // Reset autoswipe timer after manual interaction
+    setIsPaused(true)
+    setTimeout(() => setIsPaused(false), 1000)
   }
 
   const activeTujuan = TUJUAN_DOCUMENTS[activeIndex]
   const ActiveIcon = activeTujuan.icon
 
-  // Animation classes
+  // Animation classes - smooth and slow
   const getAnimationClass = () => {
-    if (!direction) return 'opacity-100 translate-x-0'
+    if (!direction) return 'opacity-100 translate-x-0 scale-100'
     if (isAnimating) {
       return direction === 'left' 
-        ? 'opacity-0 -translate-x-8' 
-        : 'opacity-0 translate-x-8'
+        ? 'opacity-0 -translate-x-12 scale-95' 
+        : 'opacity-0 translate-x-12 scale-95'
     }
-    return 'opacity-100 translate-x-0'
+    return 'opacity-100 translate-x-0 scale-100'
   }
 
   return (
@@ -152,7 +185,12 @@ export function DocumentRequirementsCarousel() {
       </div>
 
       {/* Card with Swipe Animation */}
-      <div className="relative" ref={containerRef}>
+      <div 
+        className="relative" 
+        ref={containerRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         {/* Navigation Buttons */}
         <Button
           variant="outline"
@@ -176,7 +214,7 @@ export function DocumentRequirementsCarousel() {
         {/* Animated Card Container */}
         <div className="overflow-hidden">
           <div 
-            className={`transform transition-all duration-300 ease-out ${getAnimationClass()}`}
+            className={`transform transition-all duration-[600ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${getAnimationClass()}`}
           >
             <Card className={`border-0 shadow-xl overflow-hidden bg-gradient-to-br ${activeTujuan.bgColor}`}>
               {/* Content */}
@@ -238,21 +276,41 @@ export function DocumentRequirementsCarousel() {
         </div>
       </div>
 
-      {/* Dots Indicator */}
+      {/* Dots Indicator with Progress */}
       <div className="flex justify-center gap-2 mt-6">
         {TUJUAN_DOCUMENTS.map((_, index) => (
           <button
             key={index}
             onClick={() => handleTabClick(index)}
             disabled={isAnimating}
-            className={`h-2 rounded-full transition-all duration-300 ${
+            className={`relative h-2 rounded-full transition-all duration-500 overflow-hidden ${
               index === activeIndex 
-                ? 'w-6 bg-blue-600' 
+                ? 'w-8 bg-blue-200' 
                 : 'w-2 bg-slate-300 hover:bg-slate-400'
             }`}
-          />
+          >
+            {index === activeIndex && !isPaused && (
+              <span 
+                className="absolute inset-0 bg-blue-600 rounded-full origin-left"
+                style={{
+                  animation: `progress ${AUTOSWIPE_INTERVAL}ms linear infinite`,
+                }}
+              />
+            )}
+            {index === activeIndex && isPaused && (
+              <span className="absolute inset-0 bg-blue-600 rounded-full" />
+            )}
+          </button>
         ))}
       </div>
+
+      {/* Progress animation keyframes */}
+      <style jsx>{`
+        @keyframes progress {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+      `}</style>
     </div>
   )
 }
