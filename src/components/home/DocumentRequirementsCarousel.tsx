@@ -178,7 +178,7 @@ export function DocumentRequirementsCarousel() {
           <div 
             className={`transform transition-all duration-300 ease-out ${getAnimationClass()}`}
           >
-            <Card className={`border-0 shadow-xl overflow-hidden bg-gradient-to-br ${activeTujuan.bgColor}`}>
+            <Card className="border-0 shadow-xl overflow-hidden bg-white">
               {/* Header */}
               <div className={`bg-gradient-to-r ${activeTujuan.color} p-6 transition-all duration-500`}>
                 <div className="flex items-center gap-4">
