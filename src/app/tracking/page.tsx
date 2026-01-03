@@ -142,7 +142,7 @@ export default function TrackingPage() {
               <div className="relative">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 rounded-full"></div>
                 <Card className="ml-4 border-0 shadow-xl shadow-blue-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent pb-4">
+                  <CardHeader className="pb-4">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
@@ -224,7 +224,7 @@ export default function TrackingPage() {
               <div className="relative">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 via-indigo-400 to-indigo-300 rounded-full"></div>
                 <Card className="ml-4 border-0 shadow-xl shadow-indigo-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent pb-4">
+                  <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200/50">
                         <Clock className="h-5 w-5 text-white" />

@@ -278,7 +278,7 @@ export default function VerifikasiDetailPage() {
           <div className="relative">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 rounded-full"></div>
             <Card className="ml-4 border-0 shadow-xl shadow-blue-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent pb-4">
+              <CardHeader className="pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
                     <User className="h-5 w-5 text-white" />
@@ -331,7 +331,7 @@ export default function VerifikasiDetailPage() {
           <div className="relative">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
             <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent pb-4">
+              <CardHeader className="pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200/50">
                     <FileText className="h-5 w-5 text-white" />
@@ -342,7 +342,7 @@ export default function VerifikasiDetailPage() {
               <CardContent className="p-5">
                 <div className="space-y-3">
                   {documents.map((doc) => (
-                    <div key={doc.id} className="group flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-transparent hover:from-emerald-50 rounded-xl border border-slate-100 hover:border-emerald-200 transition-all duration-200">
+                    <div key={doc.id} className="group flex items-center justify-between p-4 bg-slate-50 hover:bg-emerald-50 rounded-xl border border-slate-100 hover:border-emerald-200 transition-all duration-200">
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors">
                           <Check className="h-5 w-5 text-emerald-600" />
@@ -373,7 +373,7 @@ export default function VerifikasiDetailPage() {
           <div className="relative">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-500 via-violet-400 to-violet-300 rounded-full"></div>
             <Card className="ml-4 border-0 shadow-xl shadow-violet-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-violet-50 to-transparent pb-4">
+              <CardHeader className="pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-200/50">
                     <Check className="h-5 w-5 text-white" />

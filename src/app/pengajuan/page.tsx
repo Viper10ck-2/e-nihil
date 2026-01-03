@@ -288,7 +288,7 @@ export default function PengajuanPage() {
                 <div className="relative">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 rounded-full"></div>
                   <Card className="ml-4 border-0 shadow-xl shadow-blue-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-                    <CardHeader className="pb-4 bg-gradient-to-r from-blue-50 to-transparent">
+                    <CardHeader className="pb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
                           <User className="h-5 w-5 text-white" />
@@ -426,7 +426,7 @@ export default function PengajuanPage() {
                 <div className="relative">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
                   <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-                    <CardHeader className="pb-4 bg-gradient-to-r from-emerald-50 to-transparent">
+                    <CardHeader className="pb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200/50">
                           <Upload className="h-5 w-5 text-white" />
