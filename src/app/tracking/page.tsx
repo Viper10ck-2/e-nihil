@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { StatusBadge } from '@/components/ui/status-badge'
 import { StatusTimeline } from '@/components/tracking/StatusTimeline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Search, User, Building, MapPin, Calendar, Target, FileSearch, CheckCircle, Clock, Sparkles, AlertTriangle, Upload, FileText } from 'lucide-react'
+import { Search, User, Building, MapPin, Calendar, Target, FileSearch, CheckCircle, Clock, Sparkles, AlertTriangle, Upload, FileText, Send, HandCoins } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { getApplicationByTrackingNumber, getStatusHistory } from '@/lib/services/applicationService'
@@ -35,6 +35,8 @@ export default function TrackingPage() {
   const [rejectedDocuments, setRejectedDocuments] = useState<DocumentWithRejection[]>([])
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null)
   const [initialSearchDone, setInitialSearchDone] = useState(false)
+  const [isSendingPickupChoice, setIsSendingPickupChoice] = useState(false)
+  const [pickupChoiceSent, setPickupChoiceSent] = useState(false)
 
   // Function to search by tracking number
   const searchByTrackingNumber = useCallback(async (trackingNo: string) => {
@@ -157,6 +159,40 @@ export default function TrackingPage() {
       toast.error('Gagal mengupload dokumen. Silakan coba lagi.')
     } finally {
       setUploadingDocId(null)
+    }
+  }
+
+  // Handler untuk pilihan pengambilan SKBT
+  const handlePickupChoice = async (method: 'online' | 'offline') => {
+    if (!application) return
+
+    setIsSendingPickupChoice(true)
+    try {
+      const response = await fetch('/api/send-pickup-choice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trackingNumber: application.tracking_number,
+          nomorSurat: application.nomor_surat,
+          namaLengkap: application.nama_lengkap,
+          nip: application.nip,
+          email: application.email,
+          nomorHp: application.nomor_hp,
+          pickupMethod: method,
+        }),
+      })
+
+      const result = await response.json()
+      if (!result.success) throw new Error('Gagal mengirim pilihan')
+
+      setPickupChoiceSent(true)
+      const methodLabel = method === 'online' ? 'dikirim via email' : 'diambil langsung di kantor'
+      toast.success(`Pilihan pengambilan berhasil dikirim! Admin akan segera memproses berkas untuk ${methodLabel}.`)
+    } catch (error) {
+      console.error('Error sending pickup choice:', error)
+      toast.error('Gagal mengirim pilihan. Silakan coba lagi.')
+    } finally {
+      setIsSendingPickupChoice(false)
     }
   }
 
@@ -433,6 +469,97 @@ export default function TrackingPage() {
                           <strong>Informasi:</strong> Setelah semua dokumen diperbaiki, permohonan Anda akan diverifikasi kembali oleh Admin.
                         </p>
                       </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Pickup Choice Section - Status Ditandatangani Inspektur */}
+              {application.status === 'Ditandatangani Inspektur' && (
+                <div className="relative">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
+                  <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-gradient-to-br from-emerald-50 to-green-50 overflow-hidden">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
+                          <CheckCircle className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg text-emerald-700">SKBT Siap Diambil!</CardTitle>
+                          <CardDescription className="text-emerald-600">
+                            Pilih metode pengambilan berkas SKBT Anda
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-5">
+                      {pickupChoiceSent ? (
+                        <div className="text-center py-6">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <CheckCircle className="h-8 w-8 text-emerald-600" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-emerald-700 mb-2">Pilihan Terkirim!</h3>
+                          <p className="text-sm text-emerald-600">
+                            Admin akan segera memproses berkas SKBT Anda sesuai pilihan pengambilan.
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm text-emerald-700 mb-4 p-3 bg-white/60 rounded-xl border border-emerald-100">
+                            Surat Keterangan Bebas Temuan (SKBT) Anda telah ditandatangani oleh Inspektur. 
+                            Silakan pilih metode pengambilan:
+                          </p>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Option 1: Online */}
+                            <button
+                              onClick={() => handlePickupChoice('online')}
+                              disabled={isSendingPickupChoice}
+                              className="p-4 bg-white/80 rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                                  <Send className="h-5 w-5 text-blue-600" />
+                                </div>
+                                <p className="font-semibold text-blue-700">Kirim Online</p>
+                              </div>
+                              <p className="text-sm text-slate-600">
+                                Berkas SKBT akan dikirim ke email Anda dalam format PDF
+                              </p>
+                            </button>
+                            
+                            {/* Option 2: Offline */}
+                            <button
+                              onClick={() => handlePickupChoice('offline')}
+                              disabled={isSendingPickupChoice}
+                              className="p-4 bg-white/80 rounded-xl border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-50/50 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
+                                  <HandCoins className="h-5 w-5 text-amber-600" />
+                                </div>
+                                <p className="font-semibold text-amber-700">Ambil Langsung</p>
+                              </div>
+                              <p className="text-sm text-slate-600">
+                                Ambil berkas fisik di Kantor Inspektorat
+                              </p>
+                            </button>
+                          </div>
+                          
+                          {isSendingPickupChoice && (
+                            <div className="mt-4 flex items-center justify-center gap-2 text-emerald-600">
+                              <LoadingSpinner size="sm" />
+                              <span className="text-sm">Mengirim pilihan...</span>
+                            </div>
+                          )}
+                          
+                          <div className="mt-4 p-3 bg-white/60 rounded-xl border border-emerald-100">
+                            <p className="text-xs text-emerald-700">
+                              <strong>Informasi:</strong> Setelah memilih, Admin akan segera memproses berkas SKBT Anda sesuai pilihan pengambilan.
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                 </div>

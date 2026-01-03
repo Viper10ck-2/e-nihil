@@ -1046,3 +1046,182 @@ export async function sendSkbtReadyEmail(params: SendSkbtReadyEmailParams) {
     return { success: false, error }
   }
 }
+
+
+// Interface untuk notifikasi pilihan pengambilan ke admin
+interface SendPickupChoiceEmailParams {
+  trackingNumber: string
+  nomorSurat: string
+  namaLengkap: string
+  nip: string
+  email: string
+  nomorHp: string
+  pickupMethod: 'online' | 'offline'
+  timestamp: string
+}
+
+// Email template untuk notifikasi pilihan pengambilan ke admin
+const generatePickupChoiceHTML = (params: SendPickupChoiceEmailParams) => {
+  const methodLabel = params.pickupMethod === 'online' 
+    ? '📧 DIKIRIM ONLINE (Email)' 
+    : '🏢 DIAMBIL LANGSUNG DI KANTOR'
+  
+  const methodColor = params.pickupMethod === 'online' ? '#3b82f6' : '#f59e0b'
+  const methodBgColor = params.pickupMethod === 'online' ? '#eff6ff' : '#fef3c7'
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: 'Times New Roman', Times, serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f6f9fc; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center;">
+              <h1 style="margin: 0; font-size: 18px; font-weight: bold; color: #1e3a5f; text-transform: uppercase; letter-spacing: 1px;">
+                PEMOHON MEMILIH METODE PENGAMBILAN SKBT
+              </h1>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr style="border: none; border-top: 1px solid #e6ebf1; margin: 0;">
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <!-- Method Choice Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${methodBgColor}; border: 2px solid ${methodColor}; border-radius: 8px; margin-bottom: 20px;">
+                <tr>
+                  <td style="padding: 20px; text-align: center;">
+                    <p style="margin: 0; font-size: 16px; font-weight: bold; color: ${methodColor};">
+                      ${methodLabel}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="margin: 0 0 20px 0; font-size: 14px; color: #333; line-height: 1.6;">
+                Pemohon berikut telah memilih metode pengambilan SKBT:
+              </p>
+              
+              <!-- Applicant Info -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 8px; margin: 20px 0;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 14px; width: 140px;">No. Registrasi</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 14px; font-weight: bold;">: ${params.trackingNumber}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 14px;">No. Surat</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 14px; font-weight: bold;">: ${params.nomorSurat}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 14px;">Nama Pemohon</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 14px;">: ${params.namaLengkap}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 14px;">NIP</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 14px;">: ${params.nip}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 14px;">Email</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 14px;">: ${params.email}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 14px;">No. HP</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 14px;">: ${params.nomorHp}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 14px;">Waktu Pilih</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 14px;">: ${params.timestamp}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Action Required Box -->
+              ${params.pickupMethod === 'online' ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; margin: 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="margin: 0; font-size: 14px; color: #1e40af; line-height: 1.5;">
+                      <strong>⚡ Tindakan Diperlukan:</strong><br>
+                      Silakan kirim berkas SKBT ke email pemohon melalui menu Dashboard → Verifikasi → Kirim Berkas Online.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              ` : `
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; margin: 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="margin: 0; font-size: 14px; color: #92400e; line-height: 1.5;">
+                      <strong>📋 Informasi:</strong><br>
+                      Pemohon akan datang ke kantor untuk mengambil berkas SKBT secara langsung. Pastikan berkas sudah siap.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              `}
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr style="border: none; border-top: 1px solid #e6ebf1; margin: 0;">
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center;">
+              <p style="margin: 0 0 10px 0; font-size: 14px; color: #1e3a5f;">
+                Mohon untuk segera ditindaklanjuti, terima kasih.
+              </p>
+              <p style="margin: 0; font-size: 12px; color: #8898aa;">
+                e-Nihil - Inspektorat Daerah Kabupaten Bintan
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `
+}
+
+export async function sendPickupChoiceEmail(params: SendPickupChoiceEmailParams) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@inspektorat.bintankab.go.id'
+  
+  try {
+    const methodLabel = params.pickupMethod === 'online' ? 'Online' : 'Offline'
+    const info = await transporter.sendMail({
+      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+      to: adminEmail,
+      subject: `[e-Nihil] Pemohon Pilih Pengambilan ${methodLabel} - ${params.trackingNumber}`,
+      html: generatePickupChoiceHTML(params),
+    })
+    console.log('Pickup choice email sent to admin:', info.messageId)
+    return { success: true, data: { messageId: info.messageId } }
+  } catch (error) {
+    console.error('Error sending pickup choice email:', error)
+    return { success: false, error }
+  }
+}
