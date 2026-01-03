@@ -216,7 +216,7 @@ export default function PermohonanPage() {
         <CardHeader>
           <CardTitle className="text-slate-800 flex items-center gap-2">
             <FileText className="h-5 w-5 text-slate-500" />
-            Daftar Permohonan ({filteredApplications.length})
+            Riwayat Permohonan
           </CardTitle>
         </CardHeader>
         <CardContent>
