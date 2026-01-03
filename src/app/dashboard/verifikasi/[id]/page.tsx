@@ -75,7 +75,8 @@ export default function VerifikasiDetailPage() {
 
   const canApprove = () => {
     if (!application) return false
-    if (currentRole === 'admin') return !['Selesai', 'Diambil', 'Ditolak'].includes(application.status)
+    // Admin tidak bisa approve jika sudah Selesai, Diambil, Ditolak, atau Ditandatangani Inspektur
+    if (currentRole === 'admin') return !['Selesai', 'Diambil', 'Ditolak', 'Ditandatangani Inspektur'].includes(application.status)
     switch (currentRole) {
       case 'kasubbag_anev': return application.status === 'Diverifikasi Admin'
       case 'sekretaris': return application.status === 'Diparaf Kasubbag Anev'
@@ -133,9 +134,8 @@ export default function VerifikasiDetailPage() {
         await updateNomorSurat(application.id, nomorSurat)
         toast.success(`Nomor surat: ${nomorSurat}`)
       }
-      if (currentRole === 'inspektur' || (currentRole === 'admin' && nextStatus === 'Ditandatangani Inspektur')) {
-        await updateApplicationStatus(application.id, 'Selesai', 'Surat siap diambil', user?.id)
-      }
+      // Tidak langsung ke Selesai setelah TTD Inspektur
+      // Status akan diubah ke Selesai saat Admin mengirim berkas online
       toast.success('Permohonan berhasil disetujui')
       router.push('/dashboard/verifikasi')
     } catch (error) {
