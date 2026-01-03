@@ -433,7 +433,8 @@ const generateDigitalReceiptHTML = (params: SendDigitalReceiptParams) => {
                       <strong>Informasi Pengambilan:</strong><br>
                       Anda dapat mengambil berkas fisik di:<br>
                       <strong>Inspektorat Daerah Kabupaten Bintan</strong><br>
-                      Jl. Bintan Buyu, Kijang, Kabupaten Bintan<br>
+                      Jl. Bintan Buyu, Bandar Seri Bentan<br>
+                      Kabupaten Bintan, Kepulauan Riau<br>
                       Jam Kerja: Senin - Jumat, 08.00 - 16.00 WIB<br><br>
                       Harap membawa identitas diri (KTP/Kartu Pegawai) saat pengambilan.
                     </p>

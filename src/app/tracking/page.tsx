@@ -269,7 +269,8 @@ export default function TrackingPage() {
                           </p>
                           <p className="text-sm text-emerald-700">
                             Kantor Inspektorat Daerah Kabupaten Bintan<br />
-                            Jl. Bintan Buyu, Kijang, Kec. Bintan Timur
+                            Jl. Bintan Buyu, Bandar Seri Bentan<br />
+                            Kabupaten Bintan, Kepulauan Riau
                           </p>
                         </div>
                         <div className="p-4 bg-white/60 rounded-xl border border-emerald-100">

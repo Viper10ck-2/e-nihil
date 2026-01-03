@@ -48,7 +48,7 @@ export function Footer() {
               <li className="flex items-start gap-2">
                 <MapPin size={16} className="mt-1 flex-shrink-0" />
                 <span>
-                  Jl. Bintan Buyu, Kijang, Kec. Bintan Timur,
+                  Jl. Bintan Buyu, Bandar Seri Bentan,
                   Kabupaten Bintan, Kepulauan Riau
                 </span>
               </li>
