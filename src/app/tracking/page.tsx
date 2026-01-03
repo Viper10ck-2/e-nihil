@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { StatusBadge } from '@/components/ui/status-badge'
 import { StatusTimeline } from '@/components/tracking/StatusTimeline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Search, User, Building, MapPin, Calendar } from 'lucide-react'
+import { Search, User, Building, MapPin, Calendar, Target } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { getApplicationByTrackingNumber, getStatusHistory } from '@/lib/services/applicationService'
@@ -115,21 +115,33 @@ export default function TrackingPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Nama Pemohon</p>
                       <p className="font-medium">{application.nama_lengkap}</p>
-                      <p className="text-sm text-muted-foreground">NIP: {application.nip}</p>
+                      <p className="text-sm text-muted-foreground">NIP: {application.nip || '-'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Target className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Tujuan Pengajuan</p>
+                      <p className="font-medium">
+                        {application.tujuan_permohonan === 'mutasi' && 'Mutasi'}
+                        {application.tujuan_permohonan === 'promosi' && 'Promosi Jabatan'}
+                        {application.tujuan_permohonan === 'lainnya_asn' && 'Lainnya (ASN)'}
+                        {application.tujuan_permohonan === 'lainnya_non_asn' && 'Lainnya (Non-ASN)'}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
                       <p className="text-sm text-muted-foreground">Unit Kerja Asal</p>
-                      <p className="font-medium">{application.unit_kerja_asal}</p>
+                      <p className="font-medium">{application.unit_kerja_asal || '-'}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
                       <p className="text-sm text-muted-foreground">Instansi Tujuan</p>
-                      <p className="font-medium">{application.instansi_tujuan}</p>
+                      <p className="font-medium">{application.instansi_tujuan || '-'}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
