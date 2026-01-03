@@ -266,14 +266,14 @@ export default function PengajuanPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column - Data Pemohon */}
                 <Card className="border-0 shadow-lg">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-t-lg border-b">
+                  <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-t-lg border-b border-blue-100">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <User className="h-5 w-5 text-blue-600" />
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md shadow-blue-200">
+                        <User className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <CardTitle className="text-base">Data Pemohon</CardTitle>
-                        <CardDescription className="text-xs">Isi data diri sesuai SK yang berlaku</CardDescription>
+                        <CardTitle className="text-base text-blue-900">Data Pemohon</CardTitle>
+                        <CardDescription className="text-xs text-blue-600">Isi data diri sesuai SK yang berlaku</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
@@ -401,14 +401,14 @@ export default function PengajuanPage() {
 
                 {/* Right Column - Upload Dokumen */}
                 <Card className="border-0 shadow-lg">
-                  <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-t-lg border-b">
+                  <CardHeader className="bg-gradient-to-r from-green-50 to-green-100/50 rounded-t-lg border-b border-green-100">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                        <Upload className="h-5 w-5 text-green-600" />
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-md shadow-green-200">
+                        <Upload className="h-5 w-5 text-white" />
                       </div>
                       <div>
-                        <CardTitle className="text-base">Upload Dokumen</CardTitle>
-                        <CardDescription className="text-xs">Format PDF, maks. 10MB per file</CardDescription>
+                        <CardTitle className="text-base text-green-900">Upload Dokumen</CardTitle>
+                        <CardDescription className="text-xs text-green-600">Format PDF, maks. 10MB per file</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
