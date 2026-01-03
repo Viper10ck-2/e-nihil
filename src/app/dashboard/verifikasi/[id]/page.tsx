@@ -438,16 +438,6 @@ export default function VerifikasiDetailPage() {
     })
   }
 
-  // Select all documents that can be rejected
-  const selectAllDocuments = () => {
-    const selectableDocs = documents.filter(doc => !documentRejections.has(doc.id))
-    if (selectedDocsForReject.size === selectableDocs.length) {
-      setSelectedDocsForReject(new Set())
-    } else {
-      setSelectedDocsForReject(new Set(selectableDocs.map(doc => doc.id)))
-    }
-  }
-
   // Open multi-reject dialog
   const openMultiRejectDialog = () => {
     const reasons = new Map<string, string>()
@@ -659,13 +649,13 @@ export default function VerifikasiDetailPage() {
           <div className="relative">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
             <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200/50">
                       <FileText className="h-5 w-5 text-white" />
                     </div>
-                    <CardTitle className="text-lg text-slate-800">Dokumen Pendukung ({documents.length})</CardTitle>
+                    <CardTitle className="text-lg text-slate-800">Syarat Administrasi</CardTitle>
                   </div>
                   {canRejectDocument() && selectedDocsForReject.size > 0 && (
                     <Button 
@@ -679,57 +669,40 @@ export default function VerifikasiDetailPage() {
                     </Button>
                   )}
                 </div>
-                {canRejectDocument() && documents.filter(d => !documentRejections.has(d.id)).length > 0 && (
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-                    <input
-                      type="checkbox"
-                      id="select-all-docs"
-                      checked={selectedDocsForReject.size === documents.filter(d => !documentRejections.has(d.id)).length && selectedDocsForReject.size > 0}
-                      onChange={selectAllDocuments}
-                      className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
-                    />
-                    <label htmlFor="select-all-docs" className="text-sm text-slate-600 cursor-pointer">
-                      Pilih semua dokumen untuk ditolak
-                    </label>
-                  </div>
-                )}
               </CardHeader>
-              <CardContent className="p-5">
-                <div className="space-y-3">
+              <CardContent className="px-5 pb-5 pt-2">
+                <div className="space-y-2">
                   {documents.map((doc) => {
                     const rejection = documentRejections.get(doc.id)
                     const isSelected = selectedDocsForReject.has(doc.id)
+                    const canSelect = canRejectDocument() && !rejection
                     return (
-                      <div key={doc.id} className={`group p-4 rounded-xl border transition-all duration-200 ${
-                        rejection 
-                          ? 'bg-amber-50 border-amber-200 hover:border-amber-300' 
-                          : isSelected
-                            ? 'bg-red-50 border-red-200 hover:border-red-300'
-                            : 'bg-slate-50 hover:bg-emerald-50 border-slate-100 hover:border-emerald-200'
-                      }`}>
+                      <div 
+                        key={doc.id} 
+                        className={`group p-3 rounded-xl border transition-all duration-200 ${
+                          rejection 
+                            ? 'bg-amber-50 border-amber-200' 
+                            : isSelected
+                              ? 'bg-red-50 border-red-200'
+                              : 'bg-slate-50 border-slate-100 hover:border-slate-200'
+                        } ${canSelect ? 'cursor-pointer hover:shadow-sm' : ''}`}
+                        onClick={() => canSelect && toggleDocumentSelection(doc.id)}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3 min-w-0 flex-1">
-                            {canRejectDocument() && !rejection && (
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleDocumentSelection(doc.id)}
-                                className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500 flex-shrink-0"
-                              />
-                            )}
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                               rejection 
-                                ? 'bg-amber-100 group-hover:bg-amber-200' 
+                                ? 'bg-amber-100' 
                                 : isSelected
-                                  ? 'bg-red-100 group-hover:bg-red-200'
-                                  : 'bg-emerald-100 group-hover:bg-emerald-200'
+                                  ? 'bg-red-100'
+                                  : 'bg-emerald-100'
                             }`}>
                               {rejection ? (
-                                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                                <AlertTriangle className="h-4 w-4 text-amber-600" />
                               ) : isSelected ? (
-                                <X className="h-5 w-5 text-red-600" />
+                                <Check className="h-4 w-4 text-red-600" />
                               ) : (
-                                <Check className="h-5 w-5 text-emerald-600" />
+                                <Check className="h-4 w-4 text-emerald-600" />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -737,22 +710,22 @@ export default function VerifikasiDetailPage() {
                               <p className="text-xs text-slate-500">{formatFileSize(doc.file_size)}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} className="h-9 w-9 p-0 hover:bg-blue-100 hover:text-blue-600 rounded-lg">
+                          <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} className="h-8 w-8 p-0 hover:bg-blue-100 hover:text-blue-600 rounded-lg">
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(doc)} className="h-9 w-9 p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg">
+                            <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(doc)} className="h-8 w-8 p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg">
                               <Download className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
                         {rejection && (
-                          <div className="mt-3 pt-3 border-t border-amber-200">
+                          <div className="mt-2 pt-2 border-t border-amber-200">
                             <div className="flex items-start gap-2">
-                              <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
                               <div>
-                                <p className="text-xs font-medium text-amber-700">Dokumen Ditolak</p>
-                                <p className="text-xs text-amber-600 mt-1">{rejection.rejection_reason}</p>
+                                <p className="text-xs font-medium text-amber-700">Ditolak</p>
+                                <p className="text-xs text-amber-600">{rejection.rejection_reason}</p>
                               </div>
                             </div>
                           </div>
