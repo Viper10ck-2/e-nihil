@@ -61,6 +61,12 @@ export default function VerifikasiDetailPage() {
   const [docRejectionReason, setDocRejectionReason] = useState('')
   const [isRejectingDoc, setIsRejectingDoc] = useState(false)
   const [documentRejections, setDocumentRejections] = useState<Map<string, DocumentRejection>>(new Map())
+  
+  // State untuk multi-select penolakan dokumen
+  const [selectedDocsForReject, setSelectedDocsForReject] = useState<Set<string>>(new Set())
+  const [showMultiRejectDialog, setShowMultiRejectDialog] = useState(false)
+  const [multiRejectReasons, setMultiRejectReasons] = useState<Map<string, string>>(new Map())
+  const [isRejectingMultiple, setIsRejectingMultiple] = useState(false)
 
   useEffect(() => {
     if (params.id) loadApplication()
@@ -419,6 +425,85 @@ export default function VerifikasiDetailPage() {
     return currentRole === 'admin' && ['Menunggu Verifikasi Admin', 'Dokumen Ditolak'].includes(application.status)
   }
 
+  // Toggle select document for rejection
+  const toggleDocumentSelection = (docId: string) => {
+    setSelectedDocsForReject(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(docId)) {
+        newSet.delete(docId)
+      } else {
+        newSet.add(docId)
+      }
+      return newSet
+    })
+  }
+
+  // Select all documents that can be rejected
+  const selectAllDocuments = () => {
+    const selectableDocs = documents.filter(doc => !documentRejections.has(doc.id))
+    if (selectedDocsForReject.size === selectableDocs.length) {
+      setSelectedDocsForReject(new Set())
+    } else {
+      setSelectedDocsForReject(new Set(selectableDocs.map(doc => doc.id)))
+    }
+  }
+
+  // Open multi-reject dialog
+  const openMultiRejectDialog = () => {
+    const reasons = new Map<string, string>()
+    selectedDocsForReject.forEach(docId => {
+      reasons.set(docId, '')
+    })
+    setMultiRejectReasons(reasons)
+    setShowMultiRejectDialog(true)
+  }
+
+  // Handler untuk menolak multiple dokumen
+  const handleRejectMultipleDocuments = async () => {
+    if (!application || selectedDocsForReject.size === 0) return
+    
+    // Validate all reasons are filled
+    for (const docId of selectedDocsForReject) {
+      const reason = multiRejectReasons.get(docId)
+      if (!reason?.trim()) {
+        toast.error('Semua alasan penolakan harus diisi')
+        return
+      }
+    }
+
+    setIsRejectingMultiple(true)
+    try {
+      const rejections = Array.from(selectedDocsForReject).map(docId => ({
+        documentId: docId,
+        rejectionReason: multiRejectReasons.get(docId)?.trim() || '',
+      }))
+
+      const response = await fetch('/api/documents/reject-multiple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: application.id,
+          rejections,
+          rejectedBy: user?.id,
+        }),
+      })
+
+      const result = await response.json()
+      if (!result.success) throw new Error(result.message)
+
+      toast.success(`${result.rejectedCount} dokumen berhasil ditolak. Notifikasi telah dikirim ke pemohon.`)
+      setShowMultiRejectDialog(false)
+      setSelectedDocsForReject(new Set())
+      setMultiRejectReasons(new Map())
+      loadApplication()
+    } catch (error) {
+      console.error('Error rejecting multiple documents:', error)
+      toast.error('Gagal menolak dokumen')
+    } finally {
+      setIsRejectingMultiple(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -575,32 +660,74 @@ export default function VerifikasiDetailPage() {
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
             <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
               <CardHeader className="pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200/50">
-                    <FileText className="h-5 w-5 text-white" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200/50">
+                      <FileText className="h-5 w-5 text-white" />
+                    </div>
+                    <CardTitle className="text-lg text-slate-800">Dokumen Pendukung ({documents.length})</CardTitle>
                   </div>
-                  <CardTitle className="text-lg text-slate-800">Dokumen Pendukung ({documents.length})</CardTitle>
+                  {canRejectDocument() && selectedDocsForReject.size > 0 && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={openMultiRejectDialog}
+                      className="bg-amber-500 hover:bg-amber-600 rounded-lg"
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Tolak ({selectedDocsForReject.size})
+                    </Button>
+                  )}
                 </div>
+                {canRejectDocument() && documents.filter(d => !documentRejections.has(d.id)).length > 0 && (
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+                    <input
+                      type="checkbox"
+                      id="select-all-docs"
+                      checked={selectedDocsForReject.size === documents.filter(d => !documentRejections.has(d.id)).length && selectedDocsForReject.size > 0}
+                      onChange={selectAllDocuments}
+                      className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+                    />
+                    <label htmlFor="select-all-docs" className="text-sm text-slate-600 cursor-pointer">
+                      Pilih semua dokumen untuk ditolak
+                    </label>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="p-5">
                 <div className="space-y-3">
                   {documents.map((doc) => {
                     const rejection = documentRejections.get(doc.id)
+                    const isSelected = selectedDocsForReject.has(doc.id)
                     return (
                       <div key={doc.id} className={`group p-4 rounded-xl border transition-all duration-200 ${
                         rejection 
                           ? 'bg-amber-50 border-amber-200 hover:border-amber-300' 
-                          : 'bg-slate-50 hover:bg-emerald-50 border-slate-100 hover:border-emerald-200'
+                          : isSelected
+                            ? 'bg-red-50 border-red-200 hover:border-red-300'
+                            : 'bg-slate-50 hover:bg-emerald-50 border-slate-100 hover:border-emerald-200'
                       }`}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3 min-w-0 flex-1">
+                            {canRejectDocument() && !rejection && (
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleDocumentSelection(doc.id)}
+                                className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500 flex-shrink-0"
+                              />
+                            )}
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                               rejection 
                                 ? 'bg-amber-100 group-hover:bg-amber-200' 
-                                : 'bg-emerald-100 group-hover:bg-emerald-200'
+                                : isSelected
+                                  ? 'bg-red-100 group-hover:bg-red-200'
+                                  : 'bg-emerald-100 group-hover:bg-emerald-200'
                             }`}>
                               {rejection ? (
                                 <AlertTriangle className="h-5 w-5 text-amber-600" />
+                              ) : isSelected ? (
+                                <X className="h-5 w-5 text-red-600" />
                               ) : (
                                 <Check className="h-5 w-5 text-emerald-600" />
                               )}
@@ -617,20 +744,6 @@ export default function VerifikasiDetailPage() {
                             <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(doc)} className="h-9 w-9 p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg">
                               <Download className="h-4 w-4" />
                             </Button>
-                            {canRejectDocument() && !rejection && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => {
-                                  setSelectedDocForReject(doc)
-                                  setShowDocRejectDialog(true)
-                                }} 
-                                className="h-9 w-9 p-0 hover:bg-red-100 hover:text-red-600 rounded-lg"
-                                title="Tolak Dokumen"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
                           </div>
                         </div>
                         {rejection && (
@@ -1028,6 +1141,87 @@ export default function VerifikasiDetailPage() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Multi Document Rejection Dialog */}
+      <Dialog open={showMultiRejectDialog} onOpenChange={setShowMultiRejectDialog}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="h-5 w-5" />
+              Tolak {selectedDocsForReject.size} Dokumen
+            </DialogTitle>
+            <DialogDescription>
+              Masukkan alasan penolakan untuk setiap dokumen. Pemohon akan menerima 1 email berisi semua dokumen yang ditolak.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto space-y-4 py-2 pr-2">
+            {Array.from(selectedDocsForReject).map((docId, index) => {
+              const doc = documents.find(d => d.id === docId)
+              if (!doc) return null
+              return (
+                <div key={docId} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-xs font-bold flex items-center justify-center">
+                      {index + 1}
+                    </span>
+                    <p className="font-medium text-slate-800">{getDocumentLabel(doc.document_type)}</p>
+                  </div>
+                  <Textarea
+                    placeholder={`Alasan penolakan untuk ${getDocumentLabel(doc.document_type)}...`}
+                    value={multiRejectReasons.get(docId) || ''}
+                    onChange={(e) => {
+                      setMultiRejectReasons(prev => {
+                        const newMap = new Map(prev)
+                        newMap.set(docId, e.target.value)
+                        return newMap
+                      })
+                    }}
+                    rows={2}
+                    className="bg-white border-slate-200 focus:border-amber-400 rounded-lg text-sm"
+                  />
+                </div>
+              )
+            })}
+          </div>
+          <div className="pt-4 border-t border-slate-200">
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 mb-4">
+              <p className="text-xs text-amber-700">
+                <strong>Perhatian:</strong> Pemohon akan menerima 1 email notifikasi berisi daftar semua dokumen yang ditolak beserta alasannya.
+              </p>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowMultiRejectDialog(false)
+                  setMultiRejectReasons(new Map())
+                }} 
+                className="w-full sm:w-auto rounded-xl"
+              >
+                Batal
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={handleRejectMultipleDocuments} 
+                disabled={isRejectingMultiple || Array.from(multiRejectReasons.values()).some(r => !r?.trim())} 
+                className="w-full sm:w-auto rounded-xl bg-amber-500 hover:bg-amber-600"
+              >
+                {isRejectingMultiple ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <X className="h-4 w-4 mr-2" />
+                    Tolak {selectedDocsForReject.size} Dokumen
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
