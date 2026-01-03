@@ -271,57 +271,56 @@ export default function TrackingPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <User className="h-5 w-5 text-blue-600" />
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50/50">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-blue-600" />
                         </div>
-                        <div>
-                          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Nama Pemohon</p>
-                          <p className="font-semibold text-slate-800">{application.nama_lengkap}</p>
-                          <p className="text-sm text-slate-500">NIP: {application.nip || '-'}</p>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Pemohon</p>
+                          <p className="font-semibold text-sm text-slate-800 truncate">{application.nama_lengkap}</p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                          <Target className="h-5 w-5 text-emerald-600" />
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50/50">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                          <Target className="h-4 w-4 text-emerald-600" />
                         </div>
-                        <div>
-                          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Tujuan Pengajuan</p>
-                          <p className="font-semibold text-slate-800">
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Tujuan</p>
+                          <p className="font-semibold text-sm text-slate-800 truncate">
                             {application.tujuan_permohonan === 'mutasi' && 'Mutasi'}
-                            {application.tujuan_permohonan === 'promosi' && 'Promosi Jabatan'}
+                            {application.tujuan_permohonan === 'promosi' && 'Promosi'}
                             {application.tujuan_permohonan === 'lainnya_asn' && 'Lainnya (ASN)'}
                             {application.tujuan_permohonan === 'lainnya_non_asn' && 'Lainnya (Non-ASN)'}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
-                          <Building className="h-5 w-5 text-violet-600" />
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50/50">
+                        <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center flex-shrink-0">
+                          <Building className="h-4 w-4 text-violet-600" />
                         </div>
-                        <div>
-                          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Unit Kerja Asal</p>
-                          <p className="font-semibold text-slate-800">{application.unit_kerja_asal || '-'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                          <MapPin className="h-5 w-5 text-amber-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Instansi Tujuan</p>
-                          <p className="font-semibold text-slate-800">{application.instansi_tujuan || '-'}</p>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Unit Kerja</p>
+                          <p className="font-semibold text-sm text-slate-800 truncate">{application.unit_kerja_asal || '-'}</p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors md:col-span-2">
-                        <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
-                          <Calendar className="h-5 w-5 text-cyan-600" />
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50/50">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <MapPin className="h-4 w-4 text-amber-600" />
                         </div>
-                        <div>
-                          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Terakhir Diupdate</p>
-                          <p className="font-semibold text-slate-800">
-                            {format(new Date(application.updated_at), 'dd MMMM yyyy, HH:mm', { locale: id })} WIB
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Instansi Tujuan</p>
+                          <p className="font-semibold text-sm text-slate-800 truncate">{application.instansi_tujuan || '-'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50/50 col-span-2 md:col-span-2">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
+                          <Calendar className="h-4 w-4 text-cyan-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] text-slate-500 uppercase tracking-wide">Terakhir Update</p>
+                          <p className="font-semibold text-sm text-slate-800">
+                            {format(new Date(application.updated_at), 'dd MMM yyyy, HH:mm', { locale: id })} WIB
                           </p>
                         </div>
                       </div>
