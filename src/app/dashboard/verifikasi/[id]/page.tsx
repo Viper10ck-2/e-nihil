@@ -18,23 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
 import { DOCUMENT_TYPES } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
 import { updateApplicationStatus, getApplicationDocuments, generateNomorSurat, updateNomorSurat } from '@/lib/services/applicationService'
 import { toast } from 'sonner'
 import {
-  ArrowLeft,
-  Check,
-  X,
-  FileText,
-  Download,
-  Eye,
-  User,
-  Building,
-  MapPin,
-  Mail,
-  Phone,
+  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -54,26 +43,17 @@ export default function VerifikasiDetailPage() {
   const [rejectionReason, setRejectionReason] = useState('')
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string; filePath: string } | null>(null)
 
-
   useEffect(() => {
-    if (params.id) {
-      loadApplication()
-    }
+    if (params.id) loadApplication()
   }, [params.id])
 
   const loadApplication = async () => {
     setIsLoading(true)
     try {
       const applicationId = params.id as string
-      const { data: app, error } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('id', applicationId)
-        .single()
-
+      const { data: app, error } = await supabase.from('applications').select('*').eq('id', applicationId).single()
       if (error) throw error
       setApplication(app as Application)
-
       const docs = await getApplicationDocuments(applicationId)
       setDocuments(docs as Document[])
     } catch (error) {
@@ -84,93 +64,55 @@ export default function VerifikasiDetailPage() {
     }
   }
 
-  const getDocumentLabel = (type: string) => {
-    return DOCUMENT_TYPES.find(d => d.type === type)?.label || type
-  }
-
-  const formatFileSize = (bytes: number) => {
-    return (bytes / 1024 / 1024).toFixed(2) + ' MB'
-  }
+  const getDocumentLabel = (type: string) => DOCUMENT_TYPES.find(d => d.type === type)?.label || type
+  const formatFileSize = (bytes: number) => (bytes / 1024 / 1024).toFixed(2) + ' MB'
 
   const canApprove = () => {
     if (!application) return false
-    
-    // Admin sebagai superuser bisa approve semua status kecuali yang sudah selesai
-    if (currentRole === 'admin') {
-      return !['Selesai', 'Diambil', 'Ditolak'].includes(application.status)
-    }
-    
+    if (currentRole === 'admin') return !['Selesai', 'Diambil', 'Ditolak'].includes(application.status)
     switch (currentRole) {
-      case 'kasubbag_anev':
-        return application.status === 'Diverifikasi Admin'
-      case 'sekretaris':
-        return application.status === 'Diparaf Kasubbag Anev'
-      case 'inspektur':
-        return application.status === 'Diproses Sekretaris'
-      default:
-        return false
+      case 'kasubbag_anev': return application.status === 'Diverifikasi Admin'
+      case 'sekretaris': return application.status === 'Diparaf Kasubbag Anev'
+      case 'inspektur': return application.status === 'Diproses Sekretaris'
+      default: return false
     }
   }
 
   const getNextStatus = (): ApplicationStatus => {
     if (!application) return 'Menunggu Verifikasi Admin'
-    
-    // Admin sebagai superuser - lanjutkan ke status berikutnya sesuai flow
     if (currentRole === 'admin') {
       switch (application.status) {
-        case 'Menunggu Verifikasi Admin':
-          return 'Diverifikasi Admin'
-        case 'Diverifikasi Admin':
-          return 'Diparaf Kasubbag Anev'
-        case 'Diparaf Kasubbag Anev':
-          return 'Diproses Sekretaris'
-        case 'Diproses Sekretaris':
-          return 'Ditandatangani Inspektur'
-        default:
-          return application.status
+        case 'Menunggu Verifikasi Admin': return 'Diverifikasi Admin'
+        case 'Diverifikasi Admin': return 'Diparaf Kasubbag Anev'
+        case 'Diparaf Kasubbag Anev': return 'Diproses Sekretaris'
+        case 'Diproses Sekretaris': return 'Ditandatangani Inspektur'
+        default: return application.status
       }
     }
-    
     switch (currentRole) {
-      case 'kasubbag_anev':
-        return 'Diparaf Kasubbag Anev'
-      case 'sekretaris':
-        return 'Diproses Sekretaris'
-      case 'inspektur':
-        return 'Ditandatangani Inspektur'
-      default:
-        return application?.status || 'Menunggu Verifikasi Admin'
+      case 'kasubbag_anev': return 'Diparaf Kasubbag Anev'
+      case 'sekretaris': return 'Diproses Sekretaris'
+      case 'inspektur': return 'Ditandatangani Inspektur'
+      default: return application?.status || 'Menunggu Verifikasi Admin'
     }
   }
 
   const getApproveLabel = () => {
     if (!application) return 'Setujui'
-    
-    // Admin sebagai superuser - label sesuai status saat ini
     if (currentRole === 'admin') {
       switch (application.status) {
-        case 'Menunggu Verifikasi Admin':
-          return 'Verifikasi'
-        case 'Diverifikasi Admin':
-          return 'Paraf (Kasubbag)'
-        case 'Diparaf Kasubbag Anev':
-          return 'Teruskan (Sekretaris)'
-        case 'Diproses Sekretaris':
-          return 'TTD (Inspektur)'
-        default:
-          return 'Setujui'
+        case 'Menunggu Verifikasi Admin': return 'Verifikasi'
+        case 'Diverifikasi Admin': return 'Paraf (Kasubbag)'
+        case 'Diparaf Kasubbag Anev': return 'Teruskan (Sekretaris)'
+        case 'Diproses Sekretaris': return 'TTD (Inspektur)'
+        default: return 'Setujui'
       }
     }
-    
     switch (currentRole) {
-      case 'kasubbag_anev':
-        return 'Paraf'
-      case 'sekretaris':
-        return 'Teruskan'
-      case 'inspektur':
-        return 'TTD'
-      default:
-        return 'Setujui'
+      case 'kasubbag_anev': return 'Paraf'
+      case 'sekretaris': return 'Teruskan'
+      case 'inspektur': return 'TTD'
+      default: return 'Setujui'
     }
   }
 
@@ -180,19 +122,14 @@ export default function VerifikasiDetailPage() {
     try {
       const nextStatus = getNextStatus()
       await updateApplicationStatus(application.id, nextStatus, `Disetujui oleh ${currentRole}`, user?.id)
-      
-      // Generate nomor surat saat status berubah ke "Diverifikasi Admin"
       if (nextStatus === 'Diverifikasi Admin') {
         const nomorSurat = await generateNomorSurat()
         await updateNomorSurat(application.id, nomorSurat)
         toast.success(`Nomor surat: ${nomorSurat}`)
       }
-      
-      // Jika inspektur atau admin yang approve ke status Ditandatangani Inspektur, langsung selesai
       if (currentRole === 'inspektur' || (currentRole === 'admin' && nextStatus === 'Ditandatangani Inspektur')) {
         await updateApplicationStatus(application.id, 'Selesai', 'Surat siap diambil', user?.id)
       }
-      
       toast.success('Permohonan berhasil disetujui')
       router.push('/dashboard/verifikasi')
     } catch (error) {
@@ -205,28 +142,13 @@ export default function VerifikasiDetailPage() {
 
   const handleReject = async () => {
     if (!application) return
-    if (!rejectionReason.trim()) {
-      toast.error('Alasan penolakan wajib diisi')
-      return
-    }
-
+    if (!rejectionReason.trim()) { toast.error('Alasan penolakan wajib diisi'); return }
     setIsRejecting(true)
     try {
       await updateApplicationStatus(application.id, 'Ditolak', rejectionReason, user?.id)
-      
-      // Hapus nomor surat jika ada (agar nomor bisa dipakai lagi)
-      const updateData: { rejection_reason: string; nomor_surat?: null } = { 
-        rejection_reason: rejectionReason 
-      }
-      if (application.nomor_surat) {
-        updateData.nomor_surat = null
-      }
-      
-      await supabase
-        .from('applications')
-        .update(updateData as never)
-        .eq('id', application.id)
-      
+      const updateData: { rejection_reason: string; nomor_surat?: null } = { rejection_reason: rejectionReason }
+      if (application.nomor_surat) updateData.nomor_surat = null
+      await supabase.from('applications').update(updateData as never).eq('id', application.id)
       toast.success('Permohonan ditolak')
       setShowRejectDialog(false)
       router.push('/dashboard/verifikasi')
@@ -252,12 +174,9 @@ export default function VerifikasiDetailPage() {
     try {
       const { data, error } = await supabase.storage.from('documents').download(doc.file_path)
       if (error) throw error
-      
       const url = URL.createObjectURL(data)
       const a = document.createElement('a')
-      a.href = url
-      a.download = doc.file_name
-      a.click()
+      a.href = url; a.download = doc.file_name; a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
       toast.error('Gagal mengunduh dokumen')
@@ -269,12 +188,9 @@ export default function VerifikasiDetailPage() {
     try {
       const { data, error } = await supabase.storage.from('documents').download(previewDoc.filePath)
       if (error) throw error
-      
       const url = URL.createObjectURL(data)
       const a = document.createElement('a')
-      a.href = url
-      a.download = previewDoc.name
-      a.click()
+      a.href = url; a.download = previewDoc.name; a.click()
       URL.revokeObjectURL(url)
     } catch (error) {
       toast.error('Gagal mengunduh dokumen')
@@ -283,235 +199,211 @@ export default function VerifikasiDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="lg" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-slate-500">Memuat data...</p>
+        </div>
       </div>
     )
   }
 
   if (!application) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Permohonan tidak ditemukan</p>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center">
+            <FileText className="h-8 w-8 text-slate-400" />
+          </div>
+          <p className="text-slate-500">Permohonan tidak ditemukan</p>
+        </div>
       </div>
     )
   }
 
-
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        <Button variant="ghost" size="sm" onClick={() => router.back()} className="px-2 sm:px-3">
-          <ArrowLeft className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Kembali</span>
-        </Button>
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-        <div>
-          <h1 className="text-lg sm:text-2xl font-bold break-all">{application.tracking_number}</h1>
-          {application.nomor_surat && (
-            <p className="text-xs sm:text-sm font-medium text-primary">
-              No. Surat: {application.nomor_surat}
-            </p>
-          )}
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            {format(new Date(application.created_at), 'dd MMM yyyy, HH:mm', { locale: id })}
-          </p>
+    <div className="space-y-6">
+      {/* Header Card */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 p-6 text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/4"></div>
+        
+        <div className="relative z-10">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-4 text-white hover:bg-white/20 -ml-2">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Kembali
+          </Button>
+          
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Hash className="h-6 w-6" />
+                </div>
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold font-mono">{application.tracking_number}</h1>
+                  {application.nomor_surat && (
+                    <p className="text-blue-100 text-sm">No. Surat: {application.nomor_surat}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-blue-100 text-sm mt-3">
+                <Calendar className="h-4 w-4" />
+                <span>Diajukan {format(new Date(application.created_at), 'dd MMMM yyyy, HH:mm', { locale: id })} WIB</span>
+              </div>
+            </div>
+            <StatusBadge status={application.status} />
+          </div>
         </div>
-        <StatusBadge status={application.status} />
       </div>
 
       {/* Mobile Action Buttons */}
       {canApprove() && (
-        <div className="flex gap-2 lg:hidden">
-          <Button className="flex-1" size="sm" onClick={handleApprove} disabled={isApproving}>
-            {isApproving ? <LoadingSpinner size="sm" /> : <Check className="h-4 w-4 mr-1" />}
+        <div className="flex gap-3 lg:hidden">
+          <Button className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-lg" onClick={handleApprove} disabled={isApproving}>
+            {isApproving ? <LoadingSpinner size="sm" /> : <Check className="h-4 w-4 mr-2" />}
             {getApproveLabel()}
           </Button>
-          <Button variant="destructive" size="sm" onClick={() => setShowRejectDialog(true)}>
-            <X className="h-4 w-4 mr-1" />
+          <Button variant="destructive" className="flex-1 h-12 rounded-xl shadow-lg" onClick={() => setShowRejectDialog(true)}>
+            <X className="h-4 w-4 mr-2" />
             Tolak
           </Button>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           {/* Applicant Info */}
-          <Card>
-            <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <User className="h-4 w-4 sm:h-5 sm:w-5" />
-                Data Pemohon
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 sm:space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <Label className="text-xs sm:text-sm text-muted-foreground">Nama Lengkap</Label>
-                  <p className="font-medium text-sm sm:text-base">{application.nama_lengkap}</p>
-                </div>
-                <div>
-                  <Label className="text-xs sm:text-sm text-muted-foreground">NIP</Label>
-                  <p className="font-medium font-mono text-xs sm:text-sm break-all">{application.nip}</p>
-                </div>
-                <div>
-                  <Label className="text-xs sm:text-sm text-muted-foreground">Pangkat/Golongan</Label>
-                  <p className="font-medium text-sm sm:text-base">{application.pangkat_golongan}</p>
-                </div>
-                <div>
-                  <Label className="text-xs sm:text-sm text-muted-foreground">Tujuan Permohonan</Label>
-                  <p className="font-medium text-sm sm:text-base">
-                    {application.tujuan_permohonan === 'mutasi' && 'Perpindahan Antar Instansi (Mutasi)'}
-                    {application.tujuan_permohonan === 'promosi' && 'Promosi Jabatan'}
-                    {application.tujuan_permohonan === 'lainnya_asn' && 'Tujuan Lainnya (ASN)'}
-                    {application.tujuan_permohonan === 'lainnya_non_asn' && 'Tujuan Lainnya (Non-ASN)'}
-                    {!application.tujuan_permohonan && 'Perpindahan Antar Instansi (Mutasi)'}
-                  </p>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Jabatan - hidden for lainnya_non_asn */}
-              {application.tujuan_permohonan !== 'lainnya_non_asn' && application.jabatan && application.jabatan !== '-' && (
-                <div>
-                  <Label className="text-xs sm:text-sm text-muted-foreground">Jabatan</Label>
-                  <p className="font-medium text-sm sm:text-base">{application.jabatan}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                {/* Unit Kerja Asal - hidden for lainnya_non_asn */}
-                {application.tujuan_permohonan !== 'lainnya_non_asn' && application.unit_kerja_asal && application.unit_kerja_asal !== '-' && (
-                  <div className="flex items-start gap-2">
-                    <Building className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0">
-                      <Label className="text-xs sm:text-sm text-muted-foreground">Unit Kerja Asal</Label>
-                      <p className="font-medium text-sm sm:text-base break-words">{application.unit_kerja_asal}</p>
-                    </div>
+          <div className="relative">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 rounded-full"></div>
+            <Card className="ml-4 border-0 shadow-xl shadow-blue-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-transparent pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
+                    <User className="h-5 w-5 text-white" />
                   </div>
+                  <CardTitle className="text-lg text-slate-800">Data Pemohon</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-5 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InfoItem icon={User} label="Nama Lengkap" value={application.nama_lengkap} color="blue" />
+                  <InfoItem icon={Hash} label="NIP" value={application.nip} color="indigo" mono />
+                  <InfoItem icon={Briefcase} label="Pangkat/Golongan" value={application.pangkat_golongan} color="violet" />
+                  <InfoItem icon={Target} label="Tujuan Permohonan" value={getTujuanLabel(application.tujuan_permohonan)} color="emerald" />
+                </div>
+                
+                {application.tujuan_permohonan !== 'lainnya_non_asn' && application.jabatan && application.jabatan !== '-' && (
+                  <InfoItem icon={Briefcase} label="Jabatan" value={application.jabatan} color="amber" fullWidth />
                 )}
-                {/* Instansi Tujuan - hidden for promosi, lainnya_asn, lainnya_non_asn */}
-                {application.tujuan_permohonan === 'mutasi' && application.instansi_tujuan && application.instansi_tujuan !== '-' && (
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0">
-                      <Label className="text-xs sm:text-sm text-muted-foreground">Instansi Tujuan</Label>
-                      <p className="font-medium text-sm sm:text-base break-words">{application.instansi_tujuan}</p>
-                    </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {application.tujuan_permohonan !== 'lainnya_non_asn' && application.unit_kerja_asal && application.unit_kerja_asal !== '-' && (
+                    <InfoItem icon={Building} label="Unit Kerja Asal" value={application.unit_kerja_asal} color="cyan" />
+                  )}
+                  {(application.tujuan_permohonan === 'mutasi' || !application.tujuan_permohonan) && application.instansi_tujuan && application.instansi_tujuan !== '-' && (
+                    <InfoItem icon={MapPin} label="Instansi Tujuan" value={application.instansi_tujuan} color="rose" />
+                  )}
+                </div>
+
+                {application.alasan_permohonan && application.alasan_permohonan !== '-' && (
+                  <InfoItem 
+                    icon={FileText} 
+                    label={(application.tujuan_permohonan === 'lainnya_asn' || application.tujuan_permohonan === 'lainnya_non_asn') ? 'Tujuan dan Alasan' : 'Alasan Permohonan'} 
+                    value={application.alasan_permohonan} 
+                    color="slate" 
+                    fullWidth 
+                  />
+                )}
+
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InfoItem icon={Mail} label="Email" value={application.email} color="blue" />
+                    <InfoItem icon={Phone} label="Nomor HP" value={application.nomor_hp} color="emerald" />
                   </div>
-                )}
-                {/* For old data without tujuan_permohonan */}
-                {!application.tujuan_permohonan && application.instansi_tujuan && application.instansi_tujuan !== '-' && (
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-                    <div className="min-w-0">
-                      <Label className="text-xs sm:text-sm text-muted-foreground">Instansi Tujuan</Label>
-                      <p className="font-medium text-sm sm:text-base break-words">{application.instansi_tujuan}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Alasan Permohonan - always show, contains tujuan lainnya info */}
-              {application.alasan_permohonan && application.alasan_permohonan !== '-' && (
-                <div>
-                  <Label className="text-xs sm:text-sm text-muted-foreground">
-                    {(application.tujuan_permohonan === 'lainnya_asn' || application.tujuan_permohonan === 'lainnya_non_asn') 
-                      ? 'Tujuan dan Alasan Permohonan' 
-                      : 'Alasan Permohonan'}
-                  </Label>
-                  <p className="font-medium text-sm sm:text-base">{application.alasan_permohonan}</p>
                 </div>
-              )}
-
-              <Separator />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span className="truncate">{application.email}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span>{application.nomor_hp}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Documents */}
-          <Card>
-            <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
-                Dokumen ({documents.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 sm:space-y-3">
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-2 sm:p-3 bg-muted/50 rounded-lg gap-2"
-                  >
-                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                      <div className="h-6 w-6 sm:h-8 sm:w-8 rounded bg-green-100 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-xs sm:text-sm truncate">
-                          {getDocumentLabel(doc.document_type)}
-                        </p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                          {formatFileSize(doc.file_size)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} className="h-8 w-8 p-0">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(doc)} className="h-8 w-8 p-0">
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
+          <div className="relative">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
+            <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200/50">
+                    <FileText className="h-5 w-5 text-white" />
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <CardTitle className="text-lg text-slate-800">Dokumen Pendukung ({documents.length})</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-5">
+                <div className="space-y-3">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="group flex items-center justify-between p-4 bg-gradient-to-r from-slate-50 to-transparent hover:from-emerald-50 rounded-xl border border-slate-100 hover:border-emerald-200 transition-all duration-200">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors">
+                          <Check className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm text-slate-800 truncate">{getDocumentLabel(doc.document_type)}</p>
+                          <p className="text-xs text-slate-500">{formatFileSize(doc.file_size)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} className="h-9 w-9 p-0 hover:bg-blue-100 hover:text-blue-600 rounded-lg">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(doc)} className="h-9 w-9 p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Sidebar - Actions (Desktop) */}
         <div className="hidden lg:block space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Aksi</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {canApprove() ? (
-                <>
-                  <Button className="w-full" onClick={handleApprove} disabled={isApproving}>
-                    {isApproving ? <LoadingSpinner size="sm" className="mr-2" /> : <Check className="h-4 w-4 mr-2" />}
-                    {getApproveLabel()}
-                  </Button>
-                  <Button variant="destructive" className="w-full" onClick={() => setShowRejectDialog(true)}>
-                    <X className="h-4 w-4 mr-2" />
-                    Tolak
-                  </Button>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center">
-                  Tidak ada aksi yang diperlukan.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-500 via-violet-400 to-violet-300 rounded-full"></div>
+            <Card className="ml-4 border-0 shadow-xl shadow-violet-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-violet-50 to-transparent pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-200/50">
+                    <Check className="h-5 w-5 text-white" />
+                  </div>
+                  <CardTitle className="text-lg text-slate-800">Aksi</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-5 space-y-3">
+                {canApprove() ? (
+                  <>
+                    <Button className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-lg shadow-emerald-200/50 transition-all duration-300 hover:scale-[1.02]" onClick={handleApprove} disabled={isApproving}>
+                      {isApproving ? <LoadingSpinner size="sm" className="mr-2" /> : <Check className="h-4 w-4 mr-2" />}
+                      {getApproveLabel()}
+                    </Button>
+                    <Button variant="destructive" className="w-full h-12 rounded-xl shadow-lg transition-all duration-300 hover:scale-[1.02]" onClick={() => setShowRejectDialog(true)}>
+                      <X className="h-4 w-4 mr-2" />
+                      Tolak Permohonan
+                    </Button>
+                  </>
+                ) : (
+                  <div className="text-center py-4">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-100 flex items-center justify-center">
+                      <Check className="h-6 w-6 text-slate-400" />
+                    </div>
+                    <p className="text-sm text-slate-500">Tidak ada aksi yang diperlukan</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
@@ -519,33 +411,25 @@ export default function VerifikasiDetailPage() {
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Tolak Permohonan</DialogTitle>
-            <DialogDescription>
-              Berikan alasan penolakan permohonan ini.
-            </DialogDescription>
+            <DialogTitle className="text-red-600">Tolak Permohonan</DialogTitle>
+            <DialogDescription>Berikan alasan penolakan permohonan ini.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="rejection-reason">Alasan Penolakan</Label>
+              <Label htmlFor="rejection-reason" className="text-sm font-medium text-slate-600">Alasan Penolakan</Label>
               <Textarea
                 id="rejection-reason"
                 placeholder="Jelaskan alasan penolakan..."
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={4}
+                className="mt-2 bg-slate-50/50 border-slate-200 focus:border-red-400 rounded-xl"
               />
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="w-full sm:w-auto">
-              Batal
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleReject}
-              disabled={isRejecting || !rejectionReason.trim()}
-              className="w-full sm:w-auto"
-            >
+            <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="w-full sm:w-auto rounded-xl">Batal</Button>
+            <Button variant="destructive" onClick={handleReject} disabled={isRejecting || !rejectionReason.trim()} className="w-full sm:w-auto rounded-xl">
               {isRejecting && <LoadingSpinner size="sm" className="mr-2" />}
               Tolak
             </Button>
@@ -556,23 +440,54 @@ export default function VerifikasiDetailPage() {
       {/* PDF Preview Dialog */}
       <Dialog open={!!previewDoc} onOpenChange={() => setPreviewDoc(null)}>
         <DialogContent className="max-w-[98vw] sm:max-w-4xl h-[95vh] sm:h-[90vh] p-0 gap-0">
-          <DialogHeader className="p-3 sm:p-4 pb-0 border-b">
+          <DialogHeader className="p-4 pb-0 border-b">
             <DialogTitle className="flex items-center gap-2 text-sm sm:text-base pr-8">
-              <FileText className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
               <span className="truncate">{previewDoc?.name}</span>
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden">
-            {previewDoc && (
-              <PDFViewer 
-                url={previewDoc.url} 
-                fileName={previewDoc.name}
-                onDownload={handleDownloadPreview}
-              />
-            )}
+            {previewDoc && <PDFViewer url={previewDoc.url} fileName={previewDoc.name} onDownload={handleDownloadPreview} />}
           </div>
         </DialogContent>
       </Dialog>
     </div>
   )
+}
+
+// Helper Components
+function InfoItem({ icon: Icon, label, value, color, mono, fullWidth }: { 
+  icon: React.ElementType; label: string; value: string; color: string; mono?: boolean; fullWidth?: boolean 
+}) {
+  const colorMap: Record<string, string> = {
+    blue: 'bg-blue-100 text-blue-600',
+    indigo: 'bg-indigo-100 text-indigo-600',
+    violet: 'bg-violet-100 text-violet-600',
+    emerald: 'bg-emerald-100 text-emerald-600',
+    amber: 'bg-amber-100 text-amber-600',
+    cyan: 'bg-cyan-100 text-cyan-600',
+    rose: 'bg-rose-100 text-rose-600',
+    slate: 'bg-slate-100 text-slate-600',
+  }
+  return (
+    <div className={`flex items-start gap-3 p-3 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors ${fullWidth ? 'md:col-span-2' : ''}`}>
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${colorMap[color]}`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">{label}</p>
+        <p className={`font-semibold text-slate-800 ${mono ? 'font-mono text-sm' : ''}`}>{value || '-'}</p>
+      </div>
+    </div>
+  )
+}
+
+function getTujuanLabel(tujuan: string | null | undefined): string {
+  switch (tujuan) {
+    case 'mutasi': return 'Perpindahan Antar Instansi (Mutasi)'
+    case 'promosi': return 'Promosi Jabatan'
+    case 'lainnya_asn': return 'Tujuan Lainnya (ASN)'
+    case 'lainnya_non_asn': return 'Tujuan Lainnya (Non-ASN)'
+    default: return 'Perpindahan Antar Instansi (Mutasi)'
+  }
 }
