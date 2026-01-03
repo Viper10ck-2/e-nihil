@@ -573,7 +573,7 @@ export default function VerifikasiDetailPage() {
 
       {/* Send Online Dialog */}
       <Dialog open={showSendOnlineDialog} onOpenChange={setShowSendOnlineDialog}>
-        <DialogContent className="max-w-[95vw] sm:max-w-md">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-blue-600">
               <Send className="h-5 w-5" />
@@ -583,44 +583,50 @@ export default function VerifikasiDetailPage() {
               Upload berkas SKBT yang sudah ditandatangani untuk dikirim ke pemohon via email.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            {/* Info Pemohon */}
-            <div className="p-4 bg-slate-50 rounded-xl space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Nama:</span>
-                <span className="font-medium text-slate-800">{application?.nama_lengkap}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Email:</span>
-                <span className="font-medium text-slate-800">{application?.email}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">No. Surat:</span>
-                <span className="font-medium text-slate-800 font-mono">{application?.nomor_surat || '-'}</span>
-              </div>
+          <div className="space-y-5 py-2">
+            {/* Info Pemohon - Table Layout */}
+            <div className="bg-slate-50 rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-3 px-4 text-slate-500 w-28">Nama</td>
+                    <td className="py-3 px-4 font-medium text-slate-800 text-right">{application?.nama_lengkap}</td>
+                  </tr>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-3 px-4 text-slate-500">Email</td>
+                    <td className="py-3 px-4 font-medium text-slate-800 text-right">{application?.email}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 text-slate-500">No. Surat</td>
+                    <td className="py-3 px-4 font-medium text-slate-800 font-mono text-right">{application?.nomor_surat || '-'}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             {/* File Upload */}
-            <div className="space-y-2">
-              <Label htmlFor="skbt-file" className="text-sm font-medium text-slate-600">
+            <div className="space-y-3">
+              <Label htmlFor="skbt-file" className="text-sm font-medium text-slate-700">
                 Upload Berkas SKBT (PDF)
               </Label>
-              <div className="relative">
+              <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 hover:border-blue-300 transition-colors">
                 <Input
                   id="skbt-file"
                   type="file"
                   accept=".pdf"
                   onChange={handleSkbtFileChange}
-                  className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100"
+                  className="cursor-pointer border-0 p-0 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-500 file:text-white hover:file:bg-blue-600 file:cursor-pointer"
                 />
               </div>
               {skbtFile && (
-                <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
-                  <FileText className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm text-blue-700 truncate flex-1">{skbtFile.name}</span>
-                  <span className="text-xs text-blue-500">
-                    {(skbtFile.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
+                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-blue-800 truncate">{skbtFile.name}</p>
+                    <p className="text-xs text-blue-500">{(skbtFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                  </div>
                 </div>
               )}
               <p className="text-xs text-slate-500">
@@ -629,27 +635,27 @@ export default function VerifikasiDetailPage() {
             </div>
 
             {/* Info */}
-            <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-              <p className="text-xs text-amber-700">
+            <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+              <p className="text-sm text-amber-800">
                 <strong>Perhatian:</strong> Setelah dikirim, pemohon akan menerima email berisi tanda terima digital dan link download berkas SKBT.
               </p>
             </div>
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-2">
             <Button 
               variant="outline" 
               onClick={() => {
                 setShowSendOnlineDialog(false)
                 setSkbtFile(null)
               }} 
-              className="w-full sm:w-auto rounded-xl"
+              className="w-full sm:w-auto h-11 rounded-xl"
             >
               Batal
             </Button>
             <Button 
               onClick={handleSendOnline} 
               disabled={isSendingOnline || !skbtFile} 
-              className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+              className="w-full sm:w-auto h-11 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-200/50"
             >
               {isSendingOnline ? (
                 <>
