@@ -163,6 +163,31 @@ export default function VerifikasiDetailPage() {
         await updateNomorSurat(application.id, nomorSurat)
         toast.success(`Nomor surat: ${nomorSurat}`)
       }
+      
+      // Kirim email notifikasi saat status berubah ke "Ditandatangani Inspektur"
+      if (nextStatus === 'Ditandatangani Inspektur' && application.nomor_surat) {
+        try {
+          const response = await fetch('/api/send-skbt-ready', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              trackingNumber: application.tracking_number,
+              nomorSurat: application.nomor_surat,
+              namaLengkap: application.nama_lengkap,
+              email: application.email,
+              trackingUrl: `${window.location.origin}/tracking?no=${application.tracking_number}`,
+            }),
+          })
+          const result = await response.json()
+          if (result.success) {
+            toast.success('Email notifikasi telah dikirim ke pemohon')
+          }
+        } catch (emailError) {
+          console.error('Error sending SKBT ready email:', emailError)
+          // Tidak gagalkan proses approve jika email gagal
+        }
+      }
+      
       // Tidak langsung ke Selesai setelah TTD Inspektur
       // Status akan diubah ke Selesai saat Admin mengirim berkas online
       toast.success('Permohonan berhasil disetujui')
