@@ -46,6 +46,7 @@ const allStatuses: ApplicationStatus[] = [
   'Diproses Sekretaris',
   'Ditandatangani Inspektur',
   'Diambil',
+  'Selesai', // Legacy status
   'Ditolak',
 ]
 

@@ -8,6 +8,7 @@ export type ApplicationStatus =
   | 'Diproses Sekretaris'
   | 'Ditandatangani Inspektur'
   | 'Diambil'
+  | 'Selesai' // Legacy status for backward compatibility
   | 'Ditolak'
 
 export type TujuanPermohonan = 'mutasi' | 'promosi' | 'lainnya_asn' | 'lainnya_non_asn'
