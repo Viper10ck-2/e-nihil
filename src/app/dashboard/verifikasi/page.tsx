@@ -151,13 +151,13 @@ export default function VerifikasiPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>No. Tracking</TableHead>
-                <TableHead>Nama Pemohon</TableHead>
-                <TableHead>Unit Kerja</TableHead>
-                <TableHead>Instansi Tujuan</TableHead>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+                <TableHead className="w-[140px]">No. Tracking</TableHead>
+                <TableHead className="w-[200px]">Nama Pemohon</TableHead>
+                <TableHead className="w-[120px]">Unit Kerja</TableHead>
+                <TableHead className="w-[120px]">Instansi Tujuan</TableHead>
+                <TableHead className="w-[100px]">Tanggal</TableHead>
+                <TableHead className="w-[140px]">Status</TableHead>
+                <TableHead className="w-[100px]">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -181,15 +181,15 @@ export default function VerifikasiPage() {
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell>{app.unit_kerja_asal}</TableCell>
-                    <TableCell>{app.instansi_tujuan}</TableCell>
+                    <TableCell>{app.unit_kerja_asal || '-'}</TableCell>
+                    <TableCell>{app.instansi_tujuan || '-'}</TableCell>
                     <TableCell>
                       {format(new Date(app.created_at), 'dd MMM yyyy', { locale: id })}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={app.status} />
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>
                       <Link href={`/dashboard/verifikasi/${app.id}`}>
                         <Button variant="ghost" size="sm">
                           Detail
