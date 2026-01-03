@@ -18,11 +18,22 @@ import { supabase } from '@/lib/supabase'
 import { getApplicationDocuments } from '@/lib/services/applicationService'
 import { toast } from 'sonner'
 import {
-  ArrowLeft, Check, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase
+  ArrowLeft, Check, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send, HandCoins, Receipt
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import type { Application, Document } from '@/types/database'
+
+interface DeliveryProof {
+  type: string
+  trackingNumber: string
+  nomorSurat: string
+  namaLengkap: string
+  nip: string
+  email: string
+  sentAt: string
+  messageId?: string
+}
 
 export default function PermohonanDetailPage() {
   const router = useRouter()
@@ -32,6 +43,8 @@ export default function PermohonanDetailPage() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string; filePath: string } | null>(null)
+  const [deliveryProof, setDeliveryProof] = useState<DeliveryProof | null>(null)
+  const [showProofDialog, setShowProofDialog] = useState(false)
 
   useEffect(() => {
     if (params.id) loadApplication()
@@ -46,12 +59,121 @@ export default function PermohonanDetailPage() {
       setApplication(app as Application)
       const docs = await getApplicationDocuments(applicationId)
       setDocuments(docs as Document[])
+      
+      // Load delivery proof if status is Diambil and pickup_method is online
+      const appData = app as Application
+      if (appData.status === 'Diambil' && appData.pickup_method === 'online') {
+        await loadDeliveryProof(appData.tracking_number)
+      }
     } catch (error) {
       console.error('Error loading application:', error)
       toast.error('Gagal memuat data permohonan')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const loadDeliveryProof = async (trackingNumber: string) => {
+    try {
+      // List files in bukti-pengiriman folder
+      const { data: files, error } = await supabase.storage
+        .from('documents')
+        .list('bukti-pengiriman', {
+          search: `online_${trackingNumber}`
+        })
+      
+      if (error || !files || files.length === 0) return
+      
+      // Get the proof file
+      const proofFile = files[0]
+      const { data, error: downloadError } = await supabase.storage
+        .from('documents')
+        .download(`bukti-pengiriman/${proofFile.name}`)
+      
+      if (downloadError) return
+      
+      const text = await data.text()
+      const proofData = JSON.parse(text) as DeliveryProof
+      setDeliveryProof(proofData)
+    } catch (error) {
+      console.error('Error loading delivery proof:', error)
+    }
+  }
+
+  const handleDownloadProof = () => {
+    if (!deliveryProof || !application) return
+    
+    // Generate HTML content for the proof
+    const htmlContent = generateProofHTML(deliveryProof)
+    
+    // Create blob and download
+    const blob = new Blob([htmlContent], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `Bukti_Pengiriman_${application.tracking_number}.html`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Bukti pengiriman berhasil diunduh')
+  }
+
+  const generateProofHTML = (proof: DeliveryProof) => {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bukti Pengiriman SKBT - ${proof.trackingNumber}</title>
+  <style>
+    body { font-family: 'Times New Roman', serif; margin: 40px; background: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { color: #22c55e; font-size: 18px; margin: 0; }
+    .checkmark { width: 60px; height: 60px; background: #22c55e; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
+    .checkmark::after { content: '✓'; color: white; font-size: 30px; }
+    .receipt { background: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .receipt-title { text-align: center; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+    .divider { border-top: 1px dashed #22c55e; margin: 15px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 8px 0; font-size: 13px; }
+    td:first-child { color: #666; width: 140px; }
+    td:last-child { color: #1e3a5f; }
+    .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+    @media print { body { margin: 0; background: white; } .container { box-shadow: none; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="checkmark"></div>
+      <h1>BUKTI PENGIRIMAN SKBT ONLINE</h1>
+    </div>
+    <div class="receipt">
+      <div class="receipt-title">Bukti Pengiriman Digital</div>
+      <div class="divider"></div>
+      <table>
+        <tr><td>No. Registrasi</td><td><strong>${proof.trackingNumber}</strong></td></tr>
+        <tr><td>No. Surat</td><td><strong>${proof.nomorSurat}</strong></td></tr>
+        <tr><td>Nama Pemohon</td><td>${proof.namaLengkap}</td></tr>
+        <tr><td>NIP</td><td>${proof.nip}</td></tr>
+        <tr><td>Email Tujuan</td><td>${proof.email}</td></tr>
+        <tr><td>Metode Pengiriman</td><td>Online (Email)</td></tr>
+        <tr><td>Tanggal Kirim</td><td>${format(new Date(proof.sentAt), 'dd MMMM yyyy, HH:mm', { locale: id })} WIB</td></tr>
+        <tr><td>ID Pesan</td><td style="font-family: monospace; font-size: 11px;">${proof.messageId || '-'}</td></tr>
+      </table>
+      <div class="divider"></div>
+      <p style="text-align: center; font-size: 11px; color: #666; margin: 0;">
+        Dokumen ini merupakan bukti sah pengiriman SKBT secara online
+      </p>
+    </div>
+    <div class="footer">
+      <p>e-Nihil - Inspektorat Daerah Kabupaten Bintan</p>
+      <p>Jl. Bintan Buyu, Bandar Seri Bentan, Kabupaten Bintan, Kepulauan Riau</p>
+    </div>
+  </div>
+</body>
+</html>
+    `
   }
 
   const getDocumentLabel = (type: string) => DOCUMENT_TYPES.find(d => d.type === type)?.label || type
@@ -234,6 +356,96 @@ export default function PermohonanDetailPage() {
         </Card>
       </div>
 
+      {/* Delivery/Pickup Proof Section */}
+      {application.status === 'Diambil' && (
+        <Card className="border border-slate-200 shadow-sm">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                application.pickup_method === 'online' ? 'bg-blue-100' : 'bg-amber-100'
+              }`}>
+                {application.pickup_method === 'online' ? (
+                  <Send className="h-5 w-5 text-blue-600" />
+                ) : (
+                  <HandCoins className="h-5 w-5 text-amber-600" />
+                )}
+              </div>
+              <div>
+                <CardTitle className="text-lg text-slate-800">
+                  {application.pickup_method === 'online' ? 'Bukti Pengiriman Online' : 'Bukti Pengambilan'}
+                </CardTitle>
+                <p className="text-sm text-slate-500">
+                  {application.pickup_method === 'online' 
+                    ? 'SKBT telah dikirim via email' 
+                    : 'SKBT telah diambil langsung di kantor'}
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {application.pickup_method === 'online' && deliveryProof ? (
+              <div className="space-y-4">
+                {/* Proof Summary */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-blue-600 text-xs font-medium uppercase">Email Tujuan</p>
+                      <p className="text-blue-800 font-medium">{deliveryProof.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-blue-600 text-xs font-medium uppercase">Tanggal Kirim</p>
+                      <p className="text-blue-800 font-medium">
+                        {format(new Date(deliveryProof.sentAt), 'dd MMM yyyy, HH:mm', { locale: id })} WIB
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-blue-600 text-xs font-medium uppercase">ID Pesan</p>
+                      <p className="text-blue-800 font-mono text-xs">{deliveryProof.messageId || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowProofDialog(true)}
+                    className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Lihat Bukti
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDownloadProof}
+                    className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+            ) : application.pickup_method === 'offline' ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                    <Receipt className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-amber-800 font-medium">Tanda Terima Tersimpan</p>
+                    <p className="text-amber-600 text-sm">Dokumen tanda terima telah diupload saat konfirmasi pengambilan</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-slate-500">
+                <p>Bukti pengiriman tidak tersedia</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* PDF Preview Dialog */}
       <Dialog open={!!previewDoc} onOpenChange={() => setPreviewDoc(null)}>
         <DialogContent className="max-w-[98vw] sm:max-w-4xl h-[95vh] sm:h-[90vh] p-0 gap-0">
@@ -246,6 +458,77 @@ export default function PermohonanDetailPage() {
           <div className="flex-1 overflow-hidden">
             {previewDoc && <PDFViewer url={previewDoc.url} fileName={previewDoc.name} onDownload={handleDownloadPreview} />}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delivery Proof Preview Dialog */}
+      <Dialog open={showProofDialog} onOpenChange={setShowProofDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-blue-500" />
+              Bukti Pengiriman Online
+            </DialogTitle>
+          </DialogHeader>
+          {deliveryProof && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-5">
+                <div className="text-center mb-4">
+                  <div className="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Check className="h-7 w-7 text-white" />
+                  </div>
+                  <p className="text-xs text-blue-600 uppercase tracking-wider font-medium">Bukti Pengiriman Digital</p>
+                </div>
+                
+                <div className="border-t border-dashed border-blue-300 my-4"></div>
+                
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">No. Registrasi</span>
+                    <span className="font-mono font-semibold text-slate-800">{deliveryProof.trackingNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">No. Surat</span>
+                    <span className="font-mono font-semibold text-slate-800">{deliveryProof.nomorSurat}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Nama Pemohon</span>
+                    <span className="font-medium text-slate-800">{deliveryProof.namaLengkap}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">NIP</span>
+                    <span className="font-mono text-slate-800">{deliveryProof.nip}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Email Tujuan</span>
+                    <span className="text-blue-600">{deliveryProof.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Metode</span>
+                    <span className="text-slate-800">Online (Email)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Tanggal Kirim</span>
+                    <span className="text-slate-800">
+                      {format(new Date(deliveryProof.sentAt), 'dd MMM yyyy, HH:mm', { locale: id })} WIB
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="border-t border-dashed border-blue-300 my-4"></div>
+                
+                <div className="text-center">
+                  <p className="text-xs text-slate-500">ID Pesan:</p>
+                  <p className="font-mono text-xs text-slate-600 break-all">{deliveryProof.messageId || '-'}</p>
+                </div>
+              </div>
+              
+              <Button onClick={handleDownloadProof} className="w-full bg-blue-600 hover:bg-blue-700">
+                <Download className="h-4 w-4 mr-2" />
+                Download Bukti Pengiriman
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
