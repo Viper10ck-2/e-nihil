@@ -275,7 +275,7 @@ export default function PermohonanPage() {
                             Diambil
                           </Button>
                         )}
-                        <Link href={`/dashboard/verifikasi/${app.id}`}>
+                        <Link href={`/dashboard/permohonan/${app.id}`}>
                           <Button variant="ghost" size="sm">
                             Detail
                             <ArrowRight className="ml-1 h-4 w-4" />
