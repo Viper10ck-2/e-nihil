@@ -119,7 +119,7 @@ export const UNIT_KERJA = [
 
 export const DOCUMENT_TYPES: { type: DocumentType; label: string }[] = [
   { type: 'surat_permohonan', label: 'Surat Permohonan kepada Inspektur' },
-  { type: 'surat_pernyataan_bebas_temuan', label: 'Surat Pernyataan Bebas Temuan dari Kepala Dinas/Badan' },
+  { type: 'surat_pernyataan_bebas_temuan', label: 'Surat Pengantar dari Kepala Dinas/Badan' },
   { type: 'surat_rekomendasi', label: 'Surat Keterangan/Rekomendasi Terima dari Instansi Tujuan' },
   { type: 'sk_pns', label: 'SK PNS' },
   { type: 'sk_pangkat_terakhir', label: 'SK Pangkat Terakhir' },
