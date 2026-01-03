@@ -263,25 +263,25 @@ export default function PengajuanPage() {
         {tujuanPermohonan && (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {/* Left Column - Data Pemohon */}
-                <Card className="border-0 shadow-lg overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-b from-blue-400 via-blue-200 to-blue-50">
+                  <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <User className="h-5 w-5 text-white" />
+                      <div className="w-10 h-10 rounded-lg bg-blue-500/30 flex items-center justify-center">
+                        <User className="h-5 w-5 text-blue-700" />
                       </div>
                       <div>
-                        <CardTitle className="text-base text-white">Data Pemohon</CardTitle>
-                        <CardDescription className="text-xs text-blue-100">Isi data diri sesuai SK yang berlaku</CardDescription>
+                        <CardTitle className="text-base text-blue-800">Data Pemohon</CardTitle>
+                        <CardDescription className="text-xs text-blue-600">Isi data diri sesuai SK yang berlaku</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-5 space-y-4">
+                  <CardContent className="p-5 space-y-4 bg-blue-50/50">
                     <FormField control={form.control} name="nama_lengkap" render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm">Nama Lengkap (dengan gelar)</FormLabel>
-                        <FormControl><Input placeholder="Dr. Nama Lengkap, S.H., M.H." className="bg-slate-50 border-slate-200" {...field} /></FormControl>
+                        <FormLabel className="text-sm text-blue-700">Nama Lengkap (dengan gelar)</FormLabel>
+                        <FormControl><Input placeholder="Dr. Nama Lengkap, S.H., M.H." className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -290,8 +290,8 @@ export default function PengajuanPage() {
                       {!isFieldHidden('nip') && (
                         <FormField control={form.control} name="nip" render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm">NIP</FormLabel>
-                            <FormControl><Input placeholder="198501012010011001" maxLength={18} className="bg-slate-50 border-slate-200" {...field} /></FormControl>
+                            <FormLabel className="text-sm text-blue-700">NIP</FormLabel>
+                            <FormControl><Input placeholder="198501012010011001" maxLength={18} className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -299,12 +299,12 @@ export default function PengajuanPage() {
                       {!isFieldHidden('pangkat_golongan') && (
                         <FormField control={form.control} name="pangkat_golongan" render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm">Pangkat/Golongan</FormLabel>
+                            <FormLabel className="text-sm text-blue-700">Pangkat/Golongan</FormLabel>
                             <Select onValueChange={(value) => {
                               if (value === 'lainnya') { setShowPangkatLainnya(true); field.onChange('') }
                               else { setShowPangkatLainnya(false); setPangkatLainnya(''); field.onChange(value) }
                             }} value={showPangkatLainnya ? 'lainnya' : field.value}>
-                              <FormControl><SelectTrigger className="bg-slate-50 border-slate-200"><SelectValue placeholder="Pilih Pangkat" /></SelectTrigger></FormControl>
+                              <FormControl><SelectTrigger className="bg-white border-blue-200"><SelectValue placeholder="Pilih Pangkat" /></SelectTrigger></FormControl>
                               <SelectContent>
                                 {PANGKAT_GOLONGAN.map((pg) => (<SelectItem key={pg.value} value={pg.value}>{pg.label}</SelectItem>))}
                                 <SelectItem value="lainnya">Lainnya</SelectItem>
@@ -319,9 +319,9 @@ export default function PengajuanPage() {
                     {showPangkatLainnya && !isFieldHidden('pangkat_golongan') && (
                       <FormField control={form.control} name="pangkat_golongan" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm">Isi Sendiri Pangkat/Golongan</FormLabel>
+                          <FormLabel className="text-sm text-blue-700">Isi Sendiri Pangkat/Golongan</FormLabel>
                           <FormControl>
-                            <Input placeholder="Masukkan pangkat/golongan..." className="bg-slate-50 border-slate-200"
+                            <Input placeholder="Masukkan pangkat/golongan..." className="bg-white border-blue-200 focus:border-blue-400"
                               value={pangkatLainnya} onChange={(e) => { setPangkatLainnya(e.target.value); field.onChange(e.target.value) }} />
                           </FormControl>
                           <FormMessage />
@@ -331,8 +331,8 @@ export default function PengajuanPage() {
 
                     {showTujuanLainnya && (
                       <div className="space-y-2">
-                        <FormLabel className="text-sm">Tuliskan Tujuan dan Alasan <span className="text-destructive">*</span></FormLabel>
-                        <Textarea placeholder="Jelaskan tujuan dan alasan permohonan SKBT Anda..." className="bg-slate-50 border-slate-200"
+                        <FormLabel className="text-sm text-blue-700">Tuliskan Tujuan dan Alasan <span className="text-red-500">*</span></FormLabel>
+                        <Textarea placeholder="Jelaskan tujuan dan alasan permohonan SKBT Anda..." className="bg-white border-blue-200 focus:border-blue-400"
                           value={tujuanLainnya} onChange={(e) => setTujuanLainnya(e.target.value)} rows={3} />
                       </div>
                     )}
@@ -340,8 +340,8 @@ export default function PengajuanPage() {
                     {!isFieldHidden('jabatan') && (
                       <FormField control={form.control} name="jabatan" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm">Jabatan</FormLabel>
-                          <FormControl><Input placeholder="Kepala Seksi..." className="bg-slate-50 border-slate-200" {...field} /></FormControl>
+                          <FormLabel className="text-sm text-blue-700">Jabatan</FormLabel>
+                          <FormControl><Input placeholder="Kepala Seksi..." className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -350,9 +350,9 @@ export default function PengajuanPage() {
                     {!isFieldHidden('unit_kerja_asal') && (
                       <FormField control={form.control} name="unit_kerja_asal" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm">Unit Kerja Asal</FormLabel>
+                          <FormLabel className="text-sm text-blue-700">Unit Kerja Asal</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger className="bg-slate-50 border-slate-200"><SelectValue placeholder="Pilih Unit Kerja" /></SelectTrigger></FormControl>
+                            <FormControl><SelectTrigger className="bg-white border-blue-200"><SelectValue placeholder="Pilih Unit Kerja" /></SelectTrigger></FormControl>
                             <SelectContent>{UNIT_KERJA.map((uk) => (<SelectItem key={uk.value} value={uk.value}>{uk.label}</SelectItem>))}</SelectContent>
                           </Select>
                           <FormMessage />
@@ -363,8 +363,8 @@ export default function PengajuanPage() {
                     {!isFieldHidden('instansi_tujuan') && (
                       <FormField control={form.control} name="instansi_tujuan" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm">Instansi Tujuan</FormLabel>
-                          <FormControl><Input placeholder="Instansi yang dituju..." className="bg-slate-50 border-slate-200" {...field} /></FormControl>
+                          <FormLabel className="text-sm text-blue-700">Instansi Tujuan</FormLabel>
+                          <FormControl><Input placeholder="Instansi yang dituju..." className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -373,8 +373,8 @@ export default function PengajuanPage() {
                     {!isFieldHidden('alasan_permohonan') && (
                       <FormField control={form.control} name="alasan_permohonan" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm">Alasan Permohonan</FormLabel>
-                          <FormControl><Textarea placeholder="Jelaskan alasan pengajuan SKBT..." className="bg-slate-50 border-slate-200" rows={3} {...field} /></FormControl>
+                          <FormLabel className="text-sm text-blue-700">Alasan Permohonan</FormLabel>
+                          <FormControl><Textarea placeholder="Jelaskan alasan pengajuan SKBT..." className="bg-white border-blue-200 focus:border-blue-400" rows={3} {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -383,15 +383,15 @@ export default function PengajuanPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField control={form.control} name="email" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm">Email</FormLabel>
-                          <FormControl><Input type="email" placeholder="email@example.com" className="bg-slate-50 border-slate-200" {...field} /></FormControl>
+                          <FormLabel className="text-sm text-blue-700">Email</FormLabel>
+                          <FormControl><Input type="email" placeholder="email@example.com" className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
                       <FormField control={form.control} name="nomor_hp" render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm">Nomor HP</FormLabel>
-                          <FormControl><Input placeholder="08123456789" className="bg-slate-50 border-slate-200" {...field} /></FormControl>
+                          <FormLabel className="text-sm text-blue-700">Nomor HP</FormLabel>
+                          <FormControl><Input placeholder="08123456789" className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -400,26 +400,26 @@ export default function PengajuanPage() {
                 </Card>
 
                 {/* Right Column - Upload Dokumen */}
-                <Card className="border-0 shadow-lg overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-green-600 to-green-700 text-white">
+                <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-b from-emerald-400 via-emerald-200 to-emerald-50">
+                  <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                        <Upload className="h-5 w-5 text-white" />
+                      <div className="w-10 h-10 rounded-lg bg-emerald-500/30 flex items-center justify-center">
+                        <Upload className="h-5 w-5 text-emerald-700" />
                       </div>
                       <div>
-                        <CardTitle className="text-base text-white">Upload Dokumen</CardTitle>
-                        <CardDescription className="text-xs text-green-100">Format PDF, maks. 10MB per file</CardDescription>
+                        <CardTitle className="text-base text-emerald-800">Upload Dokumen</CardTitle>
+                        <CardDescription className="text-xs text-emerald-600">Format PDF, maks. 10MB per file</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-5 space-y-4">
+                  <CardContent className="p-5 space-y-4 bg-emerald-50/50">
                     {visibleDocuments.map((doc) => (
                       <DocumentUpload key={doc.type} documentType={doc.type} label={doc.label}
                         selectedFile={uploadedFiles[doc.type]} onFileSelect={(file) => handleFileSelect(doc.type, file)} />
                     ))}
-                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                      <p className="text-xs text-amber-800 flex items-start gap-2">
-                        <span className="text-amber-500">⚠️</span>
+                    <div className="mt-4 p-3 bg-white border border-emerald-200 rounded-lg">
+                      <p className="text-xs text-emerald-700 flex items-start gap-2">
+                        <span className="text-emerald-500">📄</span>
                         Pastikan semua dokumen sudah lengkap dan jelas terbaca
                       </p>
                     </div>
