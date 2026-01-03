@@ -516,102 +516,72 @@ export default function TrackingPage() {
                 <div className="relative">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
                   <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-gradient-to-br from-emerald-50 to-green-50 overflow-hidden">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
-                          <CheckCircle className="h-5 w-5 text-white" />
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-md">
+                          <CheckCircle className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-lg text-emerald-700">SKBT Siap Diambil!</CardTitle>
-                          <CardDescription className="text-emerald-600">
-                            {pickupChoiceSent ? 'Pilihan pengambilan telah dikonfirmasi' : 'Pilih metode pengambilan berkas SKBT Anda'}
+                          <CardTitle className="text-base text-emerald-700">SKBT Siap Diambil!</CardTitle>
+                          <CardDescription className="text-xs text-emerald-600">
+                            {pickupChoiceSent ? 'Pilihan telah dikonfirmasi' : 'Pilih metode pengambilan'}
                           </CardDescription>
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-5">
+                    <CardContent className="p-4 pt-2">
                       {pickupChoiceSent ? (
-                        <div className="text-center py-6">
-                          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-                            <CheckCircle className="h-8 w-8 text-emerald-600" />
+                        <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg border border-emerald-200">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-5 w-5 text-emerald-600" />
+                            <span className="text-sm text-emerald-700 font-medium">Pilihan Terkirim</span>
                           </div>
-                          <h3 className="text-lg font-semibold text-emerald-700 mb-2">Pilihan Terkirim!</h3>
-                          <p className="text-sm text-emerald-600 mb-4">
-                            Admin akan segera memproses berkas SKBT Anda sesuai pilihan pengambilan.
-                          </p>
-                          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
-                            savedPickupMethod === 'online' 
-                              ? 'bg-blue-100 text-blue-700' 
-                              : 'bg-amber-100 text-amber-700'
+                          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
+                            savedPickupMethod === 'online' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
                           }`}>
-                            {savedPickupMethod === 'online' ? (
-                              <>
-                                <Send className="h-4 w-4" />
-                                <span className="font-medium">Kirim Online (Email)</span>
-                              </>
-                            ) : (
-                              <>
-                                <HandCoins className="h-4 w-4" />
-                                <span className="font-medium">Ambil Langsung di Kantor</span>
-                              </>
-                            )}
+                            {savedPickupMethod === 'online' ? <Send className="h-3 w-3" /> : <HandCoins className="h-3 w-3" />}
+                            {savedPickupMethod === 'online' ? 'Online' : 'Ambil Langsung'}
                           </div>
                         </div>
                       ) : (
                         <>
-                          <p className="text-sm text-emerald-700 mb-4 p-3 bg-white/60 rounded-xl border border-emerald-100">
-                            Surat Keterangan Bebas Temuan (SKBT) Anda telah ditandatangani oleh Inspektur. 
-                            Silakan pilih metode pengambilan:
-                          </p>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Option 1: Online */}
+                          <div className="flex gap-2 mb-3">
                             <button
                               onClick={() => handlePickupChoice('online')}
                               disabled={isSendingPickupChoice}
-                              className="p-4 bg-white/80 rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="flex-1 flex items-center gap-2 p-3 bg-white/80 rounded-lg border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all disabled:opacity-50"
                             >
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                                  <Send className="h-5 w-5 text-blue-600" />
-                                </div>
-                                <p className="font-semibold text-blue-700">Kirim Online</p>
+                              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                <Send className="h-4 w-4 text-blue-600" />
                               </div>
-                              <p className="text-sm text-slate-600">
-                                Berkas SKBT akan dikirim ke email Anda dalam format PDF
-                              </p>
+                              <div className="text-left min-w-0">
+                                <p className="font-semibold text-sm text-blue-700">Kirim Online</p>
+                                <p className="text-[10px] text-slate-500 truncate">Dikirim via email</p>
+                              </div>
                             </button>
-                            
-                            {/* Option 2: Offline */}
                             <button
                               onClick={() => handlePickupChoice('offline')}
                               disabled={isSendingPickupChoice}
-                              className="p-4 bg-white/80 rounded-xl border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-50/50 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="flex-1 flex items-center gap-2 p-3 bg-white/80 rounded-lg border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-50/50 transition-all disabled:opacity-50"
                             >
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition-colors">
-                                  <HandCoins className="h-5 w-5 text-amber-600" />
-                                </div>
-                                <p className="font-semibold text-amber-700">Ambil Langsung</p>
+                              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                <HandCoins className="h-4 w-4 text-amber-600" />
                               </div>
-                              <p className="text-sm text-slate-600">
-                                Ambil berkas fisik di Kantor Inspektorat
-                              </p>
+                              <div className="text-left min-w-0">
+                                <p className="font-semibold text-sm text-amber-700">Ambil Langsung</p>
+                                <p className="text-[10px] text-slate-500 truncate">Di kantor Inspektorat</p>
+                              </div>
                             </button>
                           </div>
-                          
                           {isSendingPickupChoice && (
-                            <div className="mt-4 flex items-center justify-center gap-2 text-emerald-600">
+                            <div className="flex items-center justify-center gap-2 text-emerald-600 py-2">
                               <LoadingSpinner size="sm" />
-                              <span className="text-sm">Mengirim pilihan...</span>
+                              <span className="text-xs">Mengirim...</span>
                             </div>
                           )}
-                          
-                          <div className="mt-4 p-3 bg-white/60 rounded-xl border border-emerald-100">
-                            <p className="text-xs text-emerald-700">
-                              <strong>⚠️ Perhatian:</strong> Pilihan pengambilan hanya dapat dipilih <strong>1 kali</strong> dan tidak dapat diubah setelah dikonfirmasi.
-                            </p>
-                          </div>
+                          <p className="text-[10px] text-amber-700 bg-amber-50/50 p-2 rounded-lg">
+                            ⚠️ Pilihan hanya dapat dipilih 1 kali dan tidak dapat diubah
+                          </p>
                         </>
                       )}
                     </CardContent>
