@@ -267,7 +267,7 @@ export default function HomePage() {
               </Button>
             </Link>
             <Link href="/tracking">
-              <Button size="lg" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-700 px-10 font-semibold">
+              <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 shadow-lg shadow-blue-900/30 font-semibold px-10">
                 <ClipboardList className="mr-2 h-5 w-5" />
                 Cek Status
               </Button>
