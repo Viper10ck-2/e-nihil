@@ -555,15 +555,15 @@ export default function VerifikasiDetailPage() {
           <div className="relative">
             <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-500 via-violet-400 to-violet-300 rounded-full"></div>
             <Card className="ml-4 border-0 shadow-xl shadow-violet-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-2">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-200/50">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-200/50">
                     <Check className="h-5 w-5 text-white" />
                   </div>
                   <CardTitle className="text-lg text-slate-800">Aksi</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="p-5 space-y-3">
+              <CardContent className="px-5 pb-5 pt-2 space-y-3">
                 {canApprove() ? (
                   <>
                     <Button className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-lg shadow-emerald-200/50 transition-all duration-300 hover:scale-[1.02]" onClick={handleApprove} disabled={isApproving}>
