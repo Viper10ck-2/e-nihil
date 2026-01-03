@@ -69,8 +69,13 @@ export default function TrackingPage() {
                 <Input
                   placeholder="Contoh: SKBT-20260103-0001"
                   value={trackingNumber}
-                  onChange={(e) => setTrackingNumber(e.target.value.toUpperCase())}
-                  className="font-mono"
+                  onChange={(e) => setTrackingNumber(e.target.value.toUpperCase().replace(/\s/g, ''))}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ') {
+                      e.preventDefault()
+                    }
+                  }}
+                  className="font-mono uppercase"
                 />
               </div>
               <Button type="submit" disabled={isLoading}>
