@@ -7,7 +7,6 @@ export type ApplicationStatus =
   | 'Diparaf Kasubbag Anev'
   | 'Diproses Sekretaris'
   | 'Ditandatangani Inspektur'
-  | 'Selesai'
   | 'Diambil'
   | 'Ditolak'
 

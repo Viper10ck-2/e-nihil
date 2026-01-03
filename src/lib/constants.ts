@@ -137,6 +137,5 @@ export const STATUS_FLOW = [
   'Diparaf Kasubbag Anev',
   'Diproses Sekretaris',
   'Ditandatangani Inspektur',
-  'Selesai',
   'Diambil',
 ] as const

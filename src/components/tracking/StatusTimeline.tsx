@@ -54,8 +54,7 @@ export function StatusTimeline({ currentStatus, history, rejectionReason }: Stat
       'Diparaf Kasubbag Anev': 'Kasubbag',
       'Diproses Sekretaris': 'Sekretaris',
       'Ditandatangani Inspektur': 'Inspektur',
-      'Selesai': 'Selesai',
-      'Diambil': 'Diambil',
+      'Diambil': 'Selesai',
     }
     return labels[status] || status
   }

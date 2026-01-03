@@ -3,12 +3,12 @@ import type { ApplicationStatus, UserRole } from '@/types/database'
 
 // Valid status transitions
 const validTransitions: Record<ApplicationStatus, ApplicationStatus[]> = {
-  'Menunggu Verifikasi Admin': ['Diverifikasi Admin', 'Ditolak'],
+  'Menunggu Verifikasi Admin': ['Diverifikasi Admin', 'Ditolak', 'Dokumen Ditolak'],
+  'Dokumen Ditolak': ['Menunggu Verifikasi Admin'],
   'Diverifikasi Admin': ['Diparaf Kasubbag Anev', 'Menunggu Verifikasi Admin'], // Can return for revision
   'Diparaf Kasubbag Anev': ['Diproses Sekretaris'],
   'Diproses Sekretaris': ['Ditandatangani Inspektur', 'Diparaf Kasubbag Anev'], // Can return
-  'Ditandatangani Inspektur': ['Selesai'],
-  'Selesai': ['Diambil'],
+  'Ditandatangani Inspektur': ['Diambil'],
   'Diambil': [],
   'Ditolak': [],
 }
@@ -173,11 +173,10 @@ export async function finalizeApplication(
   const sequence = String((count || 0) + 1).padStart(3, '0')
   const nomorSurat = `${sequence}/SKBT/INSP/${year}`
 
-  // Update application
+  // Update application - status stays at 'Ditandatangani Inspektur', just add nomor_surat
   const { error } = await supabase
     .from('applications')
     .update({
-      status: 'Selesai',
       nomor_surat: nomorSurat,
     } as never)
     .eq('id', applicationId)
@@ -185,14 +184,6 @@ export async function finalizeApplication(
   if (error) {
     throw new Error('Gagal menyelesaikan permohonan')
   }
-
-  // Add to status history
-  await supabase.from('status_history').insert({
-    application_id: applicationId,
-    status: 'Selesai',
-    notes: `Surat diterbitkan dengan nomor: ${nomorSurat}`,
-    changed_by: userId,
-  } as never)
 
   return nomorSurat
 }

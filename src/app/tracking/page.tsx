@@ -530,6 +530,31 @@ export default function TrackingPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 pt-2">
+                      {/* Pickup Info */}
+                      <div className="mb-4 p-3 bg-white/60 rounded-xl border border-emerald-100">
+                        <p className="text-sm text-emerald-700">
+                          Surat Keterangan Bebas Temuan Anda telah ditandatangani oleh Inspektur dan siap untuk diambil.
+                        </p>
+                        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="p-3 bg-emerald-50/50 rounded-lg">
+                            <p className="font-semibold text-emerald-800 text-xs mb-1 flex items-center gap-1">
+                              <MapPin className="h-3 w-3" /> Lokasi
+                            </p>
+                            <p className="text-xs text-emerald-700">
+                              Kantor Inspektorat Daerah Kabupaten Bintan
+                            </p>
+                          </div>
+                          <div className="p-3 bg-emerald-50/50 rounded-lg">
+                            <p className="font-semibold text-emerald-800 text-xs mb-1 flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> Jam Operasional
+                            </p>
+                            <p className="text-xs text-emerald-700">
+                              Senin - Jumat: 08.00 - 16.00 WIB
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
                       {pickupChoiceSent ? (
                         <div className="flex items-center justify-between p-3 bg-white/70 rounded-lg border border-emerald-200">
                           <div className="flex items-center gap-2">
@@ -589,45 +614,33 @@ export default function TrackingPage() {
                 </div>
               )}
 
-              {/* Pickup Info (if completed) */}
-              {application.status === 'Selesai' && (
+              {/* Pickup Completed - Status Diambil */}
+              {application.status === 'Diambil' && (
                 <div className="relative">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
                   <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-gradient-to-br from-emerald-50 to-green-50 overflow-hidden">
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
-                          <CheckCircle className="h-5 w-5 text-white" />
+                    <CardHeader className="pb-2 pt-4 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-md">
+                          <CheckCircle className="h-4 w-4 text-white" />
                         </div>
-                        <CardTitle className="text-lg text-emerald-700">
-                          Surat Keterangan Bebas Temuan Siap Diambil
-                        </CardTitle>
+                        <div>
+                          <CardTitle className="text-base text-emerald-700">Permohonan Selesai</CardTitle>
+                          <CardDescription className="text-xs text-emerald-600">
+                            SKBT telah diambil
+                          </CardDescription>
+                        </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-5">
-                      <p className="text-sm text-emerald-700 mb-4 p-3 bg-white/60 rounded-xl border border-emerald-100">
-                        Silakan mengambil surat di kantor Inspektorat Daerah Kabupaten Bintan
-                        dengan membawa identitas diri (KTP/Kartu Pegawai).
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="p-4 bg-white/60 rounded-xl border border-emerald-100">
-                          <p className="font-semibold text-emerald-800 mb-1 flex items-center gap-2">
-                            <MapPin className="h-4 w-4" /> Lokasi Pengambilan
-                          </p>
-                          <p className="text-sm text-emerald-700">
-                            Kantor Inspektorat Daerah Kabupaten Bintan<br />
-                            Jl. Bintan Buyu, Bandar Seri Bentan<br />
-                            Kabupaten Bintan, Kepulauan Riau
-                          </p>
+                    <CardContent className="p-4 pt-2">
+                      <div className="p-3 bg-white/70 rounded-lg border border-emerald-200">
+                        <div className="flex items-center gap-2 text-emerald-700">
+                          <CheckCircle className="h-5 w-5" />
+                          <span className="text-sm font-medium">Surat Keterangan Bebas Temuan telah diambil</span>
                         </div>
-                        <div className="p-4 bg-white/60 rounded-xl border border-emerald-100">
-                          <p className="font-semibold text-emerald-800 mb-1 flex items-center gap-2">
-                            <Clock className="h-4 w-4" /> Jam Operasional
-                          </p>
-                          <p className="text-sm text-emerald-700">
-                            Senin - Jumat: 08.00 - 16.00 WIB
-                          </p>
-                        </div>
+                        <p className="text-xs text-emerald-600 mt-2">
+                          Terima kasih telah menggunakan layanan e-Nihil Inspektorat Daerah Kabupaten Bintan.
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
