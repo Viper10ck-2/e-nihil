@@ -14,7 +14,7 @@ import {
   Download,
   Shield,
   Zap,
-  HeadphonesIcon
+  Eye
 } from 'lucide-react'
 
 export default function HomePage() {
@@ -121,7 +121,7 @@ export default function HomePage() {
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-white to-purple-50">
               <CardContent className="pt-8 pb-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                  <HeadphonesIcon className="h-8 w-8 text-white" />
+                  <Eye className="h-8 w-8 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-800 mb-2">Transparan</h3>
                 <p className="text-slate-600">Pantau status permohonan Anda secara real-time</p>
