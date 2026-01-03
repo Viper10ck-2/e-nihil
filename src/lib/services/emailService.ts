@@ -1225,3 +1225,185 @@ export async function sendPickupChoiceEmail(params: SendPickupChoiceEmailParams)
     return { success: false, error }
   }
 }
+
+// Interface untuk pengiriman SKBT online
+interface SendSkbtOnlineEmailParams {
+  trackingNumber: string
+  nomorSurat: string
+  namaLengkap: string
+  nip: string
+  email: string
+  tujuanPermohonan: string
+  tanggalKirim: string
+}
+
+// Email template untuk pengiriman SKBT online
+const generateSkbtOnlineHTML = (params: SendSkbtOnlineEmailParams) => {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f6f9fc; font-family: 'Times New Roman', Times, serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f6f9fc; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <!-- Header with Checkmark -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center">
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td align="center" style="width: 70px; height: 70px; background-color: #22c55e; border-radius: 50%;">
+                          <span style="color: white; font-size: 36px; line-height: 70px;">✓</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 15px;">
+                    <h1 style="margin: 0; font-size: 18px; font-weight: bold; color: #22c55e; text-transform: uppercase; letter-spacing: 1px;">
+                      SKBT ANDA TELAH DIKIRIM
+                    </h1>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr style="border: none; border-top: 1px solid #e6ebf1; margin: 0;">
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <p style="margin: 0 0 20px 0; font-size: 14px; color: #333; line-height: 1.6;">
+                Yth. <strong>${params.namaLengkap}</strong>,
+              </p>
+              <p style="margin: 0 0 20px 0; font-size: 14px; color: #333; line-height: 1.6;">
+                Dengan hormat, kami informasikan bahwa Surat Keterangan Bebas Temuan (SKBT) Anda telah dikirim secara online melalui email ini.
+              </p>
+              
+              <!-- Receipt Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; margin: 20px 0;">
+                <tr>
+                  <td style="padding: 25px; text-align: center;">
+                    <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px;">BUKTI PENGIRIMAN DIGITAL</p>
+                    <hr style="border: none; border-top: 1px dashed #22c55e; margin: 15px 0;">
+                    
+                    <table width="100%" cellpadding="0" cellspacing="0" style="text-align: left;">
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px; width: 140px;">No. Registrasi</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px; font-weight: bold;">: ${params.trackingNumber}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px;">No. Surat</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px; font-weight: bold;">: ${params.nomorSurat}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px;">Nama Pemohon</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px;">: ${params.namaLengkap}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px;">NIP</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px;">: ${params.nip}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px;">Jenis Berkas</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px;">: Surat Keterangan Bebas Temuan (SKBT)</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px;">Metode Pengiriman</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px;">: Online (Email)</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px;">Tanggal Kirim</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px;">: ${params.tanggalKirim}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px;">Email Tujuan</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px;">: ${params.email}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; color: #666666; font-size: 13px;">Instansi</td>
+                        <td style="padding: 8px 0; color: #1e3a5f; font-size: 13px;">: Inspektorat Daerah Kabupaten Bintan</td>
+                      </tr>
+                    </table>
+                    
+                    <hr style="border: none; border-top: 1px dashed #22c55e; margin: 15px 0;">
+                    <p style="margin: 0; font-size: 11px; color: #666;">
+                      Email ini merupakan bukti sah pengiriman SKBT secara online
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Info Box -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border-radius: 8px; margin: 20px 0;">
+                <tr>
+                  <td style="padding: 15px;">
+                    <p style="margin: 0; font-size: 13px; color: #1e40af; line-height: 1.5;">
+                      <strong>Informasi Penting:</strong><br>
+                      • Simpan email ini sebagai bukti pengiriman SKBT<br>
+                      • Berkas SKBT akan dilampirkan pada email terpisah atau dapat diunduh melalui link yang disediakan<br>
+                      • Jika ada pertanyaan, silakan hubungi Inspektorat Daerah Kabupaten Bintan
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 40px;">
+              <hr style="border: none; border-top: 1px solid #e6ebf1; margin: 0;">
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; text-align: center;">
+              <p style="margin: 0 0 10px 0; font-size: 14px; color: #1e3a5f;">
+                Terima kasih telah menggunakan layanan e-Nihil.
+              </p>
+              <p style="margin: 0; font-size: 12px; color: #8898aa;">
+                e-Nihil - Inspektorat Daerah Kabupaten Bintan<br>
+                Jl. Bintan Buyu, Bandar Seri Bentan, Kabupaten Bintan, Kepulauan Riau
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `
+}
+
+export async function sendSkbtOnlineEmail(params: SendSkbtOnlineEmailParams) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+      to: params.email,
+      subject: `[e-Nihil] SKBT Anda Telah Dikirim - ${params.nomorSurat}`,
+      html: generateSkbtOnlineHTML(params),
+    })
+    console.log('SKBT online email sent:', info.messageId)
+    return { success: true, data: { messageId: info.messageId } }
+  } catch (error) {
+    console.error('Error sending SKBT online email:', error)
+    return { success: false, error }
+  }
+}
