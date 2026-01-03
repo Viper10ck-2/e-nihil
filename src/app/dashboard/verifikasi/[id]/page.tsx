@@ -24,7 +24,7 @@ import { supabase } from '@/lib/supabase'
 import { updateApplicationStatus, getApplicationDocuments, generateNomorSurat, updateNomorSurat } from '@/lib/services/applicationService'
 import { toast } from 'sonner'
 import {
-  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send, HandCoins, AlertTriangle
+  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send, HandCoins, AlertTriangle, Clock
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -676,6 +676,7 @@ export default function VerifikasiDetailPage() {
                     const rejection = documentRejections.get(doc.id)
                     const isSelected = selectedDocsForReject.has(doc.id)
                     const canSelect = canRejectDocument() && !rejection
+                    const isPending = application.status === 'Menunggu Verifikasi Admin' && !rejection
                     return (
                       <div 
                         key={doc.id} 
@@ -684,7 +685,9 @@ export default function VerifikasiDetailPage() {
                             ? 'bg-amber-50 border-amber-200' 
                             : isSelected
                               ? 'bg-red-50 border-red-200'
-                              : 'bg-slate-50 border-slate-100 hover:border-slate-200'
+                              : isPending
+                                ? 'bg-blue-50 border-blue-100 hover:border-blue-200'
+                                : 'bg-slate-50 border-slate-100 hover:border-slate-200'
                         } ${canSelect ? 'cursor-pointer hover:shadow-sm' : ''}`}
                         onClick={() => canSelect && toggleDocumentSelection(doc.id)}
                       >
@@ -695,12 +698,16 @@ export default function VerifikasiDetailPage() {
                                 ? 'bg-amber-100' 
                                 : isSelected
                                   ? 'bg-red-100'
-                                  : 'bg-emerald-100'
+                                  : isPending
+                                    ? 'bg-blue-100'
+                                    : 'bg-emerald-100'
                             }`}>
                               {rejection ? (
                                 <AlertTriangle className="h-4 w-4 text-amber-600" />
                               ) : isSelected ? (
                                 <Check className="h-4 w-4 text-red-600" />
+                              ) : isPending ? (
+                                <Clock className="h-4 w-4 text-blue-600" />
                               ) : (
                                 <Check className="h-4 w-4 text-emerald-600" />
                               )}
