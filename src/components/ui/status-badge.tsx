@@ -9,7 +9,8 @@ import {
   PenTool, 
   CheckCircle2, 
   Package, 
-  XCircle 
+  XCircle,
+  AlertTriangle
 } from 'lucide-react'
 
 interface StatusBadgeProps {
@@ -31,6 +32,13 @@ const statusConfig: Record<ApplicationStatus, {
     className: 'border-orange-500 text-orange-600 bg-orange-50',
     icon: Clock,
     emoji: '⏳',
+  },
+  'Dokumen Ditolak': {
+    label: 'Dokumen Ditolak',
+    variant: 'outline',
+    className: 'border-amber-500 text-amber-700 bg-amber-50',
+    icon: AlertTriangle,
+    emoji: '⚠️',
   },
   'Diverifikasi Admin': {
     label: 'Diverifikasi Admin',

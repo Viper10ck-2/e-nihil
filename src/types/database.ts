@@ -2,6 +2,7 @@ export type UserRole = 'admin' | 'kasubbag_anev' | 'sekretaris' | 'inspektur'
 
 export type ApplicationStatus =
   | 'Menunggu Verifikasi Admin'
+  | 'Dokumen Ditolak'
   | 'Diverifikasi Admin'
   | 'Diparaf Kasubbag Anev'
   | 'Diproses Sekretaris'
@@ -86,6 +87,21 @@ export interface AuditLog {
   created_at: string
 }
 
+export interface DocumentRejection {
+  id: string
+  document_id: string
+  application_id: string
+  rejection_reason: string
+  rejected_by?: string
+  rejected_at: string
+  resolved_at?: string
+  is_resolved: boolean
+}
+
+export interface DocumentWithRejection extends Document {
+  rejection?: DocumentRejection
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -113,6 +129,11 @@ export interface Database {
         Row: AuditLog
         Insert: Partial<AuditLog> & { action: string; entity_type: string }
         Update: Partial<AuditLog>
+      }
+      document_rejections: {
+        Row: DocumentRejection
+        Insert: Partial<DocumentRejection> & { document_id: string; application_id: string; rejection_reason: string }
+        Update: Partial<DocumentRejection>
       }
     }
   }

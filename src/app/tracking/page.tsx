@@ -7,11 +7,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { StatusBadge } from '@/components/ui/status-badge'
 import { StatusTimeline } from '@/components/tracking/StatusTimeline'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { Search, User, Building, MapPin, Calendar, Target, FileSearch, CheckCircle, Clock, Sparkles } from 'lucide-react'
+import { Search, User, Building, MapPin, Calendar, Target, FileSearch, CheckCircle, Clock, Sparkles, AlertTriangle, Upload, FileText } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { getApplicationByTrackingNumber, getStatusHistory } from '@/lib/services/applicationService'
-import type { Application, StatusHistory } from '@/types/database'
+import { toast } from 'sonner'
+import type { Application, StatusHistory, DocumentWithRejection } from '@/types/database'
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  surat_permohonan: 'Surat Permohonan',
+  surat_pernyataan_bebas_temuan: 'Surat Pernyataan Bebas Temuan',
+  surat_rekomendasi: 'Surat Rekomendasi',
+  sk_pns: 'SK PNS',
+  sk_pangkat_terakhir: 'SK Pangkat Terakhir',
+  daftar_riwayat_pekerjaan: 'Daftar Riwayat Pekerjaan',
+  skp: 'SKP',
+}
 
 export default function TrackingPage() {
   const [trackingNumber, setTrackingNumber] = useState('')
@@ -19,6 +30,8 @@ export default function TrackingPage() {
   const [error, setError] = useState<string | null>(null)
   const [application, setApplication] = useState<Application | null>(null)
   const [history, setHistory] = useState<StatusHistory[]>([])
+  const [rejectedDocuments, setRejectedDocuments] = useState<DocumentWithRejection[]>([])
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null)
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,6 +52,21 @@ export default function TrackingPage() {
         setApplication(app)
         const statusHistory = await getStatusHistory(app.id)
         setHistory(statusHistory as StatusHistory[])
+        
+        // Load rejected documents if status is "Dokumen Ditolak"
+        if (app.status === 'Dokumen Ditolak') {
+          try {
+            const response = await fetch(`/api/applications/${trackingNumber.toUpperCase()}/rejected-documents`)
+            const result = await response.json()
+            if (result.success) {
+              setRejectedDocuments(result.data.documents || [])
+            }
+          } catch (err) {
+            console.error('Error loading rejected documents:', err)
+          }
+        } else {
+          setRejectedDocuments([])
+        }
       } else {
         setError('Nomor tracking tidak ditemukan')
       }
@@ -47,6 +75,66 @@ export default function TrackingPage() {
       setError('Terjadi kesalahan. Silakan coba lagi.')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleReuploadDocument = async (doc: DocumentWithRejection, file: File) => {
+    if (!application) return
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format file tidak didukung. Gunakan PDF, JPG, atau PNG')
+      return
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 10MB')
+      return
+    }
+
+    setUploadingDocId(doc.id)
+    try {
+      const formData = new FormData()
+      formData.append('documentId', doc.id)
+      formData.append('applicationId', application.id)
+      formData.append('trackingNumber', application.tracking_number)
+      formData.append('file', file)
+
+      const response = await fetch('/api/documents/reupload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+      if (!result.success) throw new Error(result.message)
+
+      toast.success(result.message)
+      
+      // Reload application data
+      const app = await getApplicationByTrackingNumber(trackingNumber.toUpperCase())
+      if (app) {
+        setApplication(app)
+        const statusHistory = await getStatusHistory(app.id)
+        setHistory(statusHistory as StatusHistory[])
+        
+        // Reload rejected documents
+        if (app.status === 'Dokumen Ditolak') {
+          const rejResponse = await fetch(`/api/applications/${trackingNumber.toUpperCase()}/rejected-documents`)
+          const rejResult = await rejResponse.json()
+          if (rejResult.success) {
+            setRejectedDocuments(rejResult.data.documents || [])
+          }
+        } else {
+          setRejectedDocuments([])
+        }
+      }
+    } catch (error) {
+      console.error('Error reuploading document:', error)
+      toast.error('Gagal mengupload dokumen. Silakan coba lagi.')
+    } finally {
+      setUploadingDocId(null)
     }
   }
 
@@ -241,6 +329,93 @@ export default function TrackingPage() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Rejected Documents Section */}
+              {application.status === 'Dokumen Ditolak' && rejectedDocuments.length > 0 && (
+                <div className="relative">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 via-amber-400 to-amber-300 rounded-full"></div>
+                  <Card className="ml-4 border-0 shadow-xl shadow-amber-100/50 bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-200/50">
+                          <AlertTriangle className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg text-amber-700">Dokumen Perlu Diperbaiki</CardTitle>
+                          <CardDescription className="text-amber-600">
+                            Upload ulang dokumen yang ditolak untuk melanjutkan proses
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-5 space-y-4">
+                      {rejectedDocuments.map((doc) => (
+                        <div key={doc.id} className="p-4 bg-white/80 rounded-xl border border-amber-200">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                              <FileText className="h-5 w-5 text-amber-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-slate-800">
+                                {DOCUMENT_TYPE_LABELS[doc.document_type] || doc.document_type}
+                              </p>
+                              {doc.rejection && (
+                                <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-100">
+                                  <p className="text-xs text-amber-600 font-medium">Alasan Penolakan:</p>
+                                  <p className="text-sm text-amber-700 mt-1">{doc.rejection.rejection_reason}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Upload Form */}
+                          <div className="mt-3">
+                            <label className="block">
+                              <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
+                                uploadingDocId === doc.id 
+                                  ? 'border-amber-300 bg-amber-50' 
+                                  : 'border-amber-200 hover:border-amber-400 hover:bg-amber-50/50'
+                              }`}>
+                                {uploadingDocId === doc.id ? (
+                                  <div className="flex items-center justify-center gap-2">
+                                    <LoadingSpinner size="sm" />
+                                    <span className="text-sm text-amber-600">Mengupload...</span>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <Upload className="h-6 w-6 mx-auto text-amber-500 mb-2" />
+                                    <p className="text-sm text-amber-700 font-medium">Klik untuk upload dokumen baru</p>
+                                    <p className="text-xs text-amber-500 mt-1">PDF, JPG, PNG (Maks. 10MB)</p>
+                                  </>
+                                )}
+                              </div>
+                              <input
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                className="hidden"
+                                disabled={uploadingDocId !== null}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) {
+                                    handleReuploadDocument(doc, file)
+                                  }
+                                  e.target.value = ''
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <div className="p-3 bg-white/60 rounded-xl border border-amber-100">
+                        <p className="text-xs text-amber-700">
+                          <strong>Informasi:</strong> Setelah semua dokumen diperbaiki, permohonan Anda akan diverifikasi kembali oleh Admin.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               {/* Pickup Info (if completed) */}
               {application.status === 'Selesai' && (

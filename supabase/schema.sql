@@ -74,6 +74,18 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Document rejections table (for per-document rejection and reupload)
+CREATE TABLE IF NOT EXISTS document_rejections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  document_id UUID REFERENCES documents(id) ON DELETE CASCADE,
+  application_id UUID REFERENCES applications(id) ON DELETE CASCADE,
+  rejection_reason TEXT NOT NULL,
+  rejected_by UUID REFERENCES users(id),
+  rejected_at TIMESTAMPTZ DEFAULT NOW(),
+  resolved_at TIMESTAMPTZ,
+  is_resolved BOOLEAN DEFAULT false
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_applications_tracking_number ON applications(tracking_number);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
@@ -82,6 +94,8 @@ CREATE INDEX IF NOT EXISTS idx_documents_application_id ON documents(application
 CREATE INDEX IF NOT EXISTS idx_status_history_application_id ON status_history(application_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON audit_logs(entity_id);
+CREATE INDEX IF NOT EXISTS idx_document_rejections_document_id ON document_rejections(document_id);
+CREATE INDEX IF NOT EXISTS idx_document_rejections_application_id ON document_rejections(application_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -109,6 +123,7 @@ ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE status_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE document_rejections ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Anyone can read applications (for tracking)
 CREATE POLICY "Anyone can read applications by tracking number"
@@ -159,6 +174,21 @@ CREATE POLICY "Authenticated users can read users"
 CREATE POLICY "Admin can manage users"
   ON users FOR ALL
   USING (auth.role() = 'authenticated');
+
+-- Policy: Anyone can read document rejections
+CREATE POLICY "Anyone can read document rejections"
+  ON document_rejections FOR SELECT
+  USING (true);
+
+-- Policy: Anyone can insert document rejections
+CREATE POLICY "Anyone can insert document rejections"
+  ON document_rejections FOR INSERT
+  WITH CHECK (true);
+
+-- Policy: Anyone can update document rejections
+CREATE POLICY "Anyone can update document rejections"
+  ON document_rejections FOR UPDATE
+  USING (true);
 
 -- Insert default admin user (password: ipdn12345)
 INSERT INTO users (nip, nama, pangkat, jabatan, instansi, email, password_hash, roles, is_active)

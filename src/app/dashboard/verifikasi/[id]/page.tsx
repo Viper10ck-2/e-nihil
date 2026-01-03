@@ -24,11 +24,12 @@ import { supabase } from '@/lib/supabase'
 import { updateApplicationStatus, getApplicationDocuments, generateNomorSurat, updateNomorSurat } from '@/lib/services/applicationService'
 import { toast } from 'sonner'
 import {
-  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send, HandCoins
+  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send, HandCoins, AlertTriangle
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import type { Application, Document, ApplicationStatus } from '@/types/database'
+import type { Application, Document, ApplicationStatus, DocumentRejection } from '@/types/database'
+import { getDocumentsWithRejections } from '@/lib/services/documentRejectionService'
 
 export default function VerifikasiDetailPage() {
   const router = useRouter()
@@ -53,6 +54,13 @@ export default function VerifikasiDetailPage() {
   const [showOfflineDialog, setShowOfflineDialog] = useState(false)
   const [buktiPenyerahanFile, setBuktiPenyerahanFile] = useState<File | null>(null)
   const [isProcessingOffline, setIsProcessingOffline] = useState(false)
+  
+  // State untuk penolakan dokumen
+  const [showDocRejectDialog, setShowDocRejectDialog] = useState(false)
+  const [selectedDocForReject, setSelectedDocForReject] = useState<Document | null>(null)
+  const [docRejectionReason, setDocRejectionReason] = useState('')
+  const [isRejectingDoc, setIsRejectingDoc] = useState(false)
+  const [documentRejections, setDocumentRejections] = useState<Map<string, DocumentRejection>>(new Map())
 
   useEffect(() => {
     if (params.id) loadApplication()
@@ -67,6 +75,16 @@ export default function VerifikasiDetailPage() {
       setApplication(app as Application)
       const docs = await getApplicationDocuments(applicationId)
       setDocuments(docs as Document[])
+      
+      // Load document rejections
+      const docsWithRejections = await getDocumentsWithRejections(applicationId)
+      const rejectionMap = new Map<string, DocumentRejection>()
+      docsWithRejections.forEach(doc => {
+        if (doc.rejection) {
+          rejectionMap.set(doc.id, doc.rejection)
+        }
+      })
+      setDocumentRejections(rejectionMap)
     } catch (error) {
       console.error('Error loading application:', error)
       toast.error('Gagal memuat data permohonan')
@@ -358,6 +376,49 @@ export default function VerifikasiDetailPage() {
     }
   }
 
+  // Handler untuk menolak dokumen individual
+  const handleRejectDocument = async () => {
+    if (!application || !selectedDocForReject) return
+    if (!docRejectionReason.trim()) {
+      toast.error('Alasan penolakan wajib diisi')
+      return
+    }
+
+    setIsRejectingDoc(true)
+    try {
+      const response = await fetch('/api/documents/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentId: selectedDocForReject.id,
+          applicationId: application.id,
+          rejectionReason: docRejectionReason.trim(),
+          rejectedBy: user?.id,
+        }),
+      })
+
+      const result = await response.json()
+      if (!result.success) throw new Error(result.message)
+
+      toast.success('Dokumen berhasil ditolak. Notifikasi telah dikirim ke pemohon.')
+      setShowDocRejectDialog(false)
+      setSelectedDocForReject(null)
+      setDocRejectionReason('')
+      loadApplication() // Reload to get updated status
+    } catch (error) {
+      console.error('Error rejecting document:', error)
+      toast.error('Gagal menolak dokumen')
+    } finally {
+      setIsRejectingDoc(false)
+    }
+  }
+
+  // Cek apakah bisa menolak dokumen (hanya admin saat status Menunggu Verifikasi)
+  const canRejectDocument = () => {
+    if (!application) return false
+    return currentRole === 'admin' && application.status === 'Menunggu Verifikasi Admin'
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -523,27 +584,69 @@ export default function VerifikasiDetailPage() {
               </CardHeader>
               <CardContent className="p-5">
                 <div className="space-y-3">
-                  {documents.map((doc) => (
-                    <div key={doc.id} className="group flex items-center justify-between p-4 bg-slate-50 hover:bg-emerald-50 rounded-xl border border-slate-100 hover:border-emerald-200 transition-all duration-200">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors">
-                          <Check className="h-5 w-5 text-emerald-600" />
+                  {documents.map((doc) => {
+                    const rejection = documentRejections.get(doc.id)
+                    return (
+                      <div key={doc.id} className={`group p-4 rounded-xl border transition-all duration-200 ${
+                        rejection 
+                          ? 'bg-amber-50 border-amber-200 hover:border-amber-300' 
+                          : 'bg-slate-50 hover:bg-emerald-50 border-slate-100 hover:border-emerald-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                              rejection 
+                                ? 'bg-amber-100 group-hover:bg-amber-200' 
+                                : 'bg-emerald-100 group-hover:bg-emerald-200'
+                            }`}>
+                              {rejection ? (
+                                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                              ) : (
+                                <Check className="h-5 w-5 text-emerald-600" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm text-slate-800 truncate">{getDocumentLabel(doc.document_type)}</p>
+                              <p className="text-xs text-slate-500">{formatFileSize(doc.file_size)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} className="h-9 w-9 p-0 hover:bg-blue-100 hover:text-blue-600 rounded-lg">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(doc)} className="h-9 w-9 p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg">
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            {canRejectDocument() && !rejection && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                  setSelectedDocForReject(doc)
+                                  setShowDocRejectDialog(true)
+                                }} 
+                                className="h-9 w-9 p-0 hover:bg-red-100 hover:text-red-600 rounded-lg"
+                                title="Tolak Dokumen"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-sm text-slate-800 truncate">{getDocumentLabel(doc.document_type)}</p>
-                          <p className="text-xs text-slate-500">{formatFileSize(doc.file_size)}</p>
-                        </div>
+                        {rejection && (
+                          <div className="mt-3 pt-3 border-t border-amber-200">
+                            <div className="flex items-start gap-2">
+                              <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-xs font-medium text-amber-700">Dokumen Ditolak</p>
+                                <p className="text-xs text-amber-600 mt-1">{rejection.rejection_reason}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <Button variant="ghost" size="sm" onClick={() => handleViewDocument(doc)} className="h-9 w-9 p-0 hover:bg-blue-100 hover:text-blue-600 rounded-lg">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDownloadDocument(doc)} className="h-9 w-9 p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -849,6 +952,78 @@ export default function VerifikasiDetailPage() {
                 <>
                   <Check className="h-4 w-4 mr-2" />
                   Konfirmasi Penyerahan
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Rejection Dialog */}
+      <Dialog open={showDocRejectDialog} onOpenChange={setShowDocRejectDialog}>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="h-5 w-5" />
+              Tolak Dokumen
+            </DialogTitle>
+            <DialogDescription>
+              Dokumen yang ditolak akan memerlukan pemohon untuk mengupload ulang.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {selectedDocForReject && (
+              <div className="p-3 bg-slate-50 rounded-xl">
+                <p className="text-xs text-slate-500 mb-1">Dokumen yang akan ditolak:</p>
+                <p className="font-medium text-slate-800">{getDocumentLabel(selectedDocForReject.document_type)}</p>
+              </div>
+            )}
+            <div>
+              <Label htmlFor="doc-rejection-reason" className="text-sm font-medium text-slate-600">
+                Alasan Penolakan <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="doc-rejection-reason"
+                placeholder="Jelaskan alasan penolakan dokumen ini..."
+                value={docRejectionReason}
+                onChange={(e) => setDocRejectionReason(e.target.value)}
+                rows={3}
+                className="mt-2 bg-slate-50/50 border-slate-200 focus:border-amber-400 rounded-xl"
+              />
+            </div>
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+              <p className="text-xs text-amber-700">
+                <strong>Perhatian:</strong> Pemohon akan menerima email notifikasi dan dapat mengupload ulang dokumen melalui halaman tracking.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowDocRejectDialog(false)
+                setSelectedDocForReject(null)
+                setDocRejectionReason('')
+              }} 
+              className="w-full sm:w-auto rounded-xl"
+            >
+              Batal
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleRejectDocument} 
+              disabled={isRejectingDoc || !docRejectionReason.trim()} 
+              className="w-full sm:w-auto rounded-xl bg-amber-500 hover:bg-amber-600"
+            >
+              {isRejectingDoc ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Tolak Dokumen
                 </>
               )}
             </Button>
