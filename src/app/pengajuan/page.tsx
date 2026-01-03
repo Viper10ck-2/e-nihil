@@ -17,7 +17,7 @@ import { createApplication, generateUniqueTrackingNumber, uploadDocument } from 
 import { toast } from 'sonner'
 import { 
   CheckCircle, Copy, FileText, User, Upload, Shield,
-  ArrowRightLeft, TrendingUp, Users, UserX
+  ArrowRightLeft, TrendingUp, Users, UserX, Sparkles
 } from 'lucide-react'
 import type { DocumentType } from '@/types/database'
 
@@ -25,11 +25,10 @@ type TujuanPermohonan = 'mutasi' | 'promosi' | 'lainnya_asn' | 'lainnya_non_asn'
 
 const TUJUAN_PERMOHONAN_OPTIONS = [
   { value: 'mutasi', label: 'Mutasi', fullLabel: 'Perpindahan Antar Instansi', icon: ArrowRightLeft, color: 'blue' },
-  { value: 'promosi', label: 'Promosi', fullLabel: 'Promosi Jabatan', icon: TrendingUp, color: 'green' },
-  { value: 'lainnya_asn', label: 'Lainnya (ASN)', fullLabel: 'Tujuan Lain untuk ASN', icon: Users, color: 'purple' },
-  { value: 'lainnya_non_asn', label: 'Lainnya (Non-ASN)', fullLabel: 'Tujuan Lain untuk Non-ASN', icon: UserX, color: 'orange' },
+  { value: 'promosi', label: 'Promosi', fullLabel: 'Promosi Jabatan', icon: TrendingUp, color: 'emerald' },
+  { value: 'lainnya_asn', label: 'Lainnya (ASN)', fullLabel: 'Tujuan Lain untuk ASN', icon: Users, color: 'violet' },
+  { value: 'lainnya_non_asn', label: 'Lainnya (Non-ASN)', fullLabel: 'Tujuan Lain untuk Non-ASN', icon: UserX, color: 'amber' },
 ]
-
 
 export default function PengajuanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -81,7 +80,6 @@ export default function PengajuanPage() {
     }
   }, [tujuanPermohonan, form])
 
-
   const isFieldHidden = (fieldName: string): boolean => {
     if (!tujuanPermohonan) return false
     switch (tujuanPermohonan) {
@@ -111,7 +109,6 @@ export default function PengajuanPage() {
   }
   const visibleDocuments = getVisibleDocuments()
   const allDocumentsUploaded = tujuanPermohonan ? visibleDocuments.every(doc => uploadedFiles[doc.type] !== null) : false
-
 
   const onSubmit = async (data: ApplicationFormData) => {
     if (!allDocumentsUploaded) { toast.error('Semua dokumen wajib diupload'); return }
@@ -160,37 +157,36 @@ export default function PengajuanPage() {
     if (trackingNumber) { navigator.clipboard.writeText(trackingNumber); toast.success('Nomor tracking disalin!') }
   }
 
-
   // Success state
   if (trackingNumber) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-12">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 py-12">
         <div className="container">
-          <Card className="max-w-lg mx-auto text-center border-0 shadow-2xl">
+          <Card className="max-w-lg mx-auto text-center border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
             <CardHeader className="pb-4">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-200">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-200/50">
                 <CheckCircle className="h-10 w-10 text-white" />
               </div>
-              <CardTitle className="text-2xl text-green-700">Permohonan Berhasil!</CardTitle>
+              <CardTitle className="text-2xl text-emerald-700">Permohonan Berhasil!</CardTitle>
               <CardDescription>Permohonan Anda telah berhasil diajukan dan sedang menunggu verifikasi.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
-                <p className="text-sm text-muted-foreground mb-2">Nomor Tracking Anda:</p>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50">
+                <p className="text-sm text-slate-500 mb-2">Nomor Tracking Anda:</p>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl font-bold font-mono text-blue-700">{trackingNumber}</span>
-                  <Button variant="ghost" size="sm" onClick={copyTrackingNumber} className="hover:bg-blue-100">
+                  <span className="text-2xl font-bold font-mono text-blue-600">{trackingNumber}</span>
+                  <Button variant="ghost" size="sm" onClick={copyTrackingNumber} className="hover:bg-blue-100 rounded-full">
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-500">
                 Simpan nomor tracking ini untuk memantau status permohonan Anda.
                 Notifikasi juga akan dikirim ke email yang Anda daftarkan.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button variant="outline" onClick={() => window.location.href = '/tracking'}>Cek Status</Button>
-                <Button onClick={() => window.location.href = '/'} className="bg-gradient-to-r from-blue-600 to-blue-700">Kembali ke Beranda</Button>
+                <Button variant="outline" onClick={() => window.location.href = '/tracking'} className="rounded-full">Cek Status</Button>
+                <Button onClick={() => window.location.href = '/'} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-full">Kembali ke Beranda</Button>
               </div>
             </CardContent>
           </Card>
@@ -199,60 +195,81 @@ export default function PengajuanPage() {
     )
   }
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white py-8 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full -translate-x-1/2 translate-y-1/2"></div>
-        </div>
-        <div className="container relative z-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Hero Header - More Modern */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"30\" height=\"30\" viewBox=\"0 0 30 30\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z\" fill=\"rgba(255,255,255,0.07)\"%3E%3C/path%3E%3C/svg%3E')] opacity-100"></div>
+        <div className="relative container py-10">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <FileText className="h-6 w-6" />
+            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/20">
+              <FileText className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Form Pengajuan SKBT</h1>
-              <p className="text-blue-200 text-sm">Surat Keterangan Bebas Temuan - Inspektorat Kabupaten Bintan</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">Form Pengajuan SKBT</h1>
+              <p className="text-blue-100 text-sm md:text-base">Surat Keterangan Bebas Temuan - Inspektorat Kabupaten Bintan</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
-              <Shield className="h-4 w-4" /> <span>Aman & Terpercaya</span>
+          <div className="flex flex-wrap gap-3 text-sm">
+            <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+              <Shield className="h-4 w-4 text-blue-100" /> <span className="text-white">Aman & Terpercaya</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
-              <CheckCircle className="h-4 w-4" /> <span>100% Gratis</span>
+            <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+              <Sparkles className="h-4 w-4 text-blue-100" /> <span className="text-white">Proses Cepat</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+              <CheckCircle className="h-4 w-4 text-blue-100" /> <span className="text-white">100% Gratis</span>
             </div>
           </div>
+        </div>
+        {/* Decorative wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
+            <path d="M0 60V30C240 50 480 10 720 30C960 50 1200 10 1440 30V60H0Z" className="fill-slate-50/50"/>
+            <path d="M0 60V40C240 55 480 25 720 40C960 55 1200 25 1440 40V60H0Z" className="fill-blue-50"/>
+          </svg>
         </div>
       </div>
 
       {/* Tujuan Permohonan Selection */}
-      <div className="container py-6">
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-3">Pilih Tujuan Permohonan</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="container py-8">
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+            <h2 className="text-lg font-semibold text-slate-800">Pilih Tujuan Permohonan</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {TUJUAN_PERMOHONAN_OPTIONS.map((option) => {
               const Icon = option.icon
               const isSelected = tujuanPermohonan === option.value
-              const colorClasses = {
-                blue: isSelected ? 'bg-blue-600 text-white border-blue-600 shadow-blue-200' : 'bg-white hover:bg-blue-50 border-blue-200 text-blue-700',
-                green: isSelected ? 'bg-green-600 text-white border-green-600 shadow-green-200' : 'bg-white hover:bg-green-50 border-green-200 text-green-700',
-                purple: isSelected ? 'bg-purple-600 text-white border-purple-600 shadow-purple-200' : 'bg-white hover:bg-purple-50 border-purple-200 text-purple-700',
-                orange: isSelected ? 'bg-orange-600 text-white border-orange-600 shadow-orange-200' : 'bg-white hover:bg-orange-50 border-orange-200 text-orange-700',
+              const colorConfig = {
+                blue: { bg: 'bg-blue-500', light: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', hover: 'hover:border-blue-300 hover:bg-blue-50/50' },
+                emerald: { bg: 'bg-emerald-500', light: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', hover: 'hover:border-emerald-300 hover:bg-emerald-50/50' },
+                violet: { bg: 'bg-violet-500', light: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-600', hover: 'hover:border-violet-300 hover:bg-violet-50/50' },
+                amber: { bg: 'bg-amber-500', light: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', hover: 'hover:border-amber-300 hover:bg-amber-50/50' },
               }
+              const colors = colorConfig[option.color as keyof typeof colorConfig]
               return (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setTujuanPermohonan(option.value as TujuanPermohonan)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 ${colorClasses[option.color as keyof typeof colorClasses]} ${isSelected ? 'shadow-lg scale-[1.02]' : 'shadow-sm hover:shadow-md'}`}
+                  className={`relative p-5 rounded-2xl border-2 transition-all duration-300 bg-white group
+                    ${isSelected 
+                      ? `${colors.border} ${colors.light} shadow-lg scale-[1.02]` 
+                      : `border-slate-200 ${colors.hover} shadow-sm hover:shadow-md`
+                    }`}
                 >
-                  <Icon className={`h-6 w-6 mx-auto mb-2 ${isSelected ? 'text-white' : ''}`} />
-                  <p className="font-medium text-sm">{option.label}</p>
-                  <p className={`text-xs mt-1 ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>{option.fullLabel}</p>
+                  {isSelected && (
+                    <div className={`absolute top-3 right-3 w-2 h-2 rounded-full ${colors.bg} animate-pulse`}></div>
+                  )}
+                  <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-colors
+                    ${isSelected ? colors.bg : colors.light} ${isSelected ? '' : `group-hover:${colors.bg}`}`}>
+                    <Icon className={`h-6 w-6 transition-colors ${isSelected ? 'text-white' : colors.text} ${isSelected ? '' : 'group-hover:text-white'}`} />
+                  </div>
+                  <p className={`font-semibold text-sm ${isSelected ? colors.text : 'text-slate-700'}`}>{option.label}</p>
+                  <p className={`text-xs mt-1 ${isSelected ? colors.text + '/70' : 'text-slate-400'}`}>{option.fullLabel}</p>
                 </button>
               )
             })}
@@ -265,179 +282,194 @@ export default function PengajuanPage() {
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {/* Left Column - Data Pemohon */}
-                <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-b from-blue-400 via-blue-200 to-blue-50">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-500/30 flex items-center justify-center">
-                        <User className="h-5 w-5 text-blue-700" />
+                <div className="relative">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 rounded-full"></div>
+                  <Card className="ml-4 border-0 shadow-xl shadow-blue-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
+                    <CardHeader className="pb-4 bg-gradient-to-r from-blue-50 to-transparent">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
+                          <User className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base text-slate-800">Data Pemohon</CardTitle>
+                          <CardDescription className="text-xs text-slate-500">Isi data diri sesuai SK yang berlaku</CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-base text-blue-800">Data Pemohon</CardTitle>
-                        <CardDescription className="text-xs text-blue-600">Isi data diri sesuai SK yang berlaku</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-5 space-y-4 bg-blue-50/50">
-                    <FormField control={form.control} name="nama_lengkap" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm text-blue-700">Nama Lengkap (dengan gelar)</FormLabel>
-                        <FormControl><Input placeholder="Dr. Nama Lengkap, S.H., M.H." className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )} />
+                    </CardHeader>
+                    <CardContent className="p-5 space-y-4">
+                      <FormField control={form.control} name="nama_lengkap" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm text-slate-600 font-medium">Nama Lengkap (dengan gelar)</FormLabel>
+                          <FormControl><Input placeholder="Dr. Nama Lengkap, S.H., M.H." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {!isFieldHidden('nip') && (
-                        <FormField control={form.control} name="nip" render={({ field }) => (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {!isFieldHidden('nip') && (
+                          <FormField control={form.control} name="nip" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm text-slate-600 font-medium">NIP</FormLabel>
+                              <FormControl><Input placeholder="198501012010011001" maxLength={18} className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        )}
+                        {!isFieldHidden('pangkat_golongan') && (
+                          <FormField control={form.control} name="pangkat_golongan" render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm text-slate-600 font-medium">Pangkat/Golongan</FormLabel>
+                              <Select onValueChange={(value) => {
+                                if (value === 'lainnya') { setShowPangkatLainnya(true); field.onChange('') }
+                                else { setShowPangkatLainnya(false); setPangkatLainnya(''); field.onChange(value) }
+                              }} value={showPangkatLainnya ? 'lainnya' : field.value}>
+                                <FormControl><SelectTrigger className="bg-slate-50/50 border-slate-200 focus:border-blue-400 rounded-xl"><SelectValue placeholder="Pilih Pangkat" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                  {PANGKAT_GOLONGAN.map((pg) => (<SelectItem key={pg.value} value={pg.value}>{pg.label}</SelectItem>))}
+                                  <SelectItem value="lainnya">Lainnya</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )} />
+                        )}
+                      </div>
+
+                      {showPangkatLainnya && !isFieldHidden('pangkat_golongan') && (
+                        <FormField control={form.control} name="pangkat_golongan" render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm text-blue-700">NIP</FormLabel>
-                            <FormControl><Input placeholder="198501012010011001" maxLength={18} className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
+                            <FormLabel className="text-sm text-slate-600 font-medium">Isi Sendiri Pangkat/Golongan</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Masukkan pangkat/golongan..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl"
+                                value={pangkatLainnya} onChange={(e) => { setPangkatLainnya(e.target.value); field.onChange(e.target.value) }} />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                       )}
-                      {!isFieldHidden('pangkat_golongan') && (
-                        <FormField control={form.control} name="pangkat_golongan" render={({ field }) => (
+
+                      {showTujuanLainnya && (
+                        <div className="space-y-2">
+                          <FormLabel className="text-sm text-slate-600 font-medium">Tuliskan Tujuan dan Alasan <span className="text-red-500">*</span></FormLabel>
+                          <Textarea placeholder="Jelaskan tujuan dan alasan permohonan SKBT Anda..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl"
+                            value={tujuanLainnya} onChange={(e) => setTujuanLainnya(e.target.value)} rows={3} />
+                        </div>
+                      )}
+
+                      {!isFieldHidden('jabatan') && (
+                        <FormField control={form.control} name="jabatan" render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm text-blue-700">Pangkat/Golongan</FormLabel>
-                            <Select onValueChange={(value) => {
-                              if (value === 'lainnya') { setShowPangkatLainnya(true); field.onChange('') }
-                              else { setShowPangkatLainnya(false); setPangkatLainnya(''); field.onChange(value) }
-                            }} value={showPangkatLainnya ? 'lainnya' : field.value}>
-                              <FormControl><SelectTrigger className="bg-white border-blue-200"><SelectValue placeholder="Pilih Pangkat" /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                {PANGKAT_GOLONGAN.map((pg) => (<SelectItem key={pg.value} value={pg.value}>{pg.label}</SelectItem>))}
-                                <SelectItem value="lainnya">Lainnya</SelectItem>
-                              </SelectContent>
+                            <FormLabel className="text-sm text-slate-600 font-medium">Jabatan</FormLabel>
+                            <FormControl><Input placeholder="Kepala Seksi..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      )}
+
+                      {!isFieldHidden('unit_kerja_asal') && (
+                        <FormField control={form.control} name="unit_kerja_asal" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-slate-600 font-medium">Unit Kerja Asal</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl><SelectTrigger className="bg-slate-50/50 border-slate-200 focus:border-blue-400 rounded-xl"><SelectValue placeholder="Pilih Unit Kerja" /></SelectTrigger></FormControl>
+                              <SelectContent>{UNIT_KERJA.map((uk) => (<SelectItem key={uk.value} value={uk.value}>{uk.label}</SelectItem>))}</SelectContent>
                             </Select>
                             <FormMessage />
                           </FormItem>
                         )} />
                       )}
-                    </div>
 
-                    {showPangkatLainnya && !isFieldHidden('pangkat_golongan') && (
-                      <FormField control={form.control} name="pangkat_golongan" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-blue-700">Isi Sendiri Pangkat/Golongan</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Masukkan pangkat/golongan..." className="bg-white border-blue-200 focus:border-blue-400"
-                              value={pangkatLainnya} onChange={(e) => { setPangkatLainnya(e.target.value); field.onChange(e.target.value) }} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    )}
+                      {!isFieldHidden('instansi_tujuan') && (
+                        <FormField control={form.control} name="instansi_tujuan" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-slate-600 font-medium">Instansi Tujuan</FormLabel>
+                            <FormControl><Input placeholder="Instansi yang dituju..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      )}
 
-                    {showTujuanLainnya && (
-                      <div className="space-y-2">
-                        <FormLabel className="text-sm text-blue-700">Tuliskan Tujuan dan Alasan <span className="text-red-500">*</span></FormLabel>
-                        <Textarea placeholder="Jelaskan tujuan dan alasan permohonan SKBT Anda..." className="bg-white border-blue-200 focus:border-blue-400"
-                          value={tujuanLainnya} onChange={(e) => setTujuanLainnya(e.target.value)} rows={3} />
+                      {!isFieldHidden('alasan_permohonan') && (
+                        <FormField control={form.control} name="alasan_permohonan" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-slate-600 font-medium">Alasan Permohonan</FormLabel>
+                            <FormControl><Textarea placeholder="Jelaskan alasan pengajuan SKBT..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" rows={3} {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="email" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-slate-600 font-medium">Email</FormLabel>
+                            <FormControl><Input type="email" placeholder="email@example.com" className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="nomor_hp" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm text-slate-600 font-medium">Nomor HP</FormLabel>
+                            <FormControl><Input placeholder="08123456789" className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
                       </div>
-                    )}
-
-                    {!isFieldHidden('jabatan') && (
-                      <FormField control={form.control} name="jabatan" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-blue-700">Jabatan</FormLabel>
-                          <FormControl><Input placeholder="Kepala Seksi..." className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    )}
-
-                    {!isFieldHidden('unit_kerja_asal') && (
-                      <FormField control={form.control} name="unit_kerja_asal" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-blue-700">Unit Kerja Asal</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger className="bg-white border-blue-200"><SelectValue placeholder="Pilih Unit Kerja" /></SelectTrigger></FormControl>
-                            <SelectContent>{UNIT_KERJA.map((uk) => (<SelectItem key={uk.value} value={uk.value}>{uk.label}</SelectItem>))}</SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    )}
-
-                    {!isFieldHidden('instansi_tujuan') && (
-                      <FormField control={form.control} name="instansi_tujuan" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-blue-700">Instansi Tujuan</FormLabel>
-                          <FormControl><Input placeholder="Instansi yang dituju..." className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    )}
-
-                    {!isFieldHidden('alasan_permohonan') && (
-                      <FormField control={form.control} name="alasan_permohonan" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-blue-700">Alasan Permohonan</FormLabel>
-                          <FormControl><Textarea placeholder="Jelaskan alasan pengajuan SKBT..." className="bg-white border-blue-200 focus:border-blue-400" rows={3} {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField control={form.control} name="email" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-blue-700">Email</FormLabel>
-                          <FormControl><Input type="email" placeholder="email@example.com" className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={form.control} name="nomor_hp" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm text-blue-700">Nomor HP</FormLabel>
-                          <FormControl><Input placeholder="08123456789" className="bg-white border-blue-200 focus:border-blue-400" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
 
                 {/* Right Column - Upload Dokumen */}
-                <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-b from-emerald-400 via-emerald-200 to-emerald-50">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-emerald-500/30 flex items-center justify-center">
-                        <Upload className="h-5 w-5 text-emerald-700" />
+                <div className="relative">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
+                  <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
+                    <CardHeader className="pb-4 bg-gradient-to-r from-emerald-50 to-transparent">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200/50">
+                          <Upload className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base text-slate-800">Upload Dokumen</CardTitle>
+                          <CardDescription className="text-xs text-slate-500">Format PDF, maks. 10MB per file</CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-base text-emerald-800">Upload Dokumen</CardTitle>
-                        <CardDescription className="text-xs text-emerald-600">Format PDF, maks. 10MB per file</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-5 space-y-4">
+                      {visibleDocuments.map((doc, index) => (
+                        <div key={doc.type} className="relative">
+                          {index > 0 && <div className="absolute -top-2 left-4 right-4 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>}
+                          <DocumentUpload documentType={doc.type} label={doc.label}
+                            selectedFile={uploadedFiles[doc.type]} onFileSelect={(file) => handleFileSelect(doc.type, file)} />
+                        </div>
+                      ))}
+                      <div className="mt-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-100 rounded-xl">
+                        <p className="text-xs text-emerald-700 flex items-center gap-2">
+                          <CheckCircle className="h-4 w-4 text-emerald-500" />
+                          Pastikan semua dokumen sudah lengkap dan jelas terbaca
+                        </p>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-5 space-y-4 bg-emerald-50/50">
-                    {visibleDocuments.map((doc) => (
-                      <DocumentUpload key={doc.type} documentType={doc.type} label={doc.label}
-                        selectedFile={uploadedFiles[doc.type]} onFileSelect={(file) => handleFileSelect(doc.type, file)} />
-                    ))}
-                    <div className="mt-4 p-3 bg-white border border-emerald-200 rounded-lg">
-                      <p className="text-xs text-emerald-700 flex items-start gap-2">
-                        <span className="text-emerald-500">📄</span>
-                        Pastikan semua dokumen sudah lengkap dan jelas terbaca
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
 
               {/* Submit Button */}
-              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white rounded-xl shadow-lg border">
-                <div className="text-sm text-muted-foreground">
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100">
+                <div className="text-sm">
                   {!allDocumentsUploaded ? (
-                    <span className="text-amber-600">⚠️ Lengkapi semua dokumen untuk mengajukan</span>
+                    <div className="flex items-center gap-2 text-amber-600">
+                      <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
+                      <span>Lengkapi semua dokumen untuk mengajukan</span>
+                    </div>
                   ) : (
-                    <span className="text-green-600">✓ Semua dokumen sudah lengkap</span>
+                    <div className="flex items-center gap-2 text-emerald-600">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Semua dokumen sudah lengkap</span>
+                    </div>
                   )}
                 </div>
                 <Button type="submit" size="lg" disabled={isSubmitting || !allDocumentsUploaded}
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg">
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-200/50 rounded-xl px-8 transition-all duration-300 hover:scale-[1.02]">
                   {isSubmitting ? (<><LoadingSpinner size="sm" className="mr-2" />Mengirim...</>) : 'Ajukan Permohonan'}
                 </Button>
               </div>
@@ -446,9 +478,11 @@ export default function PengajuanPage() {
         )}
 
         {!tujuanPermohonan && (
-          <div className="text-center py-12 bg-white rounded-xl shadow-lg border">
-            <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-muted-foreground">Pilih tujuan permohonan di atas untuk melanjutkan</p>
+          <div className="text-center py-16 bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-slate-100 flex items-center justify-center">
+              <FileText className="h-8 w-8 text-slate-300" />
+            </div>
+            <p className="text-slate-500">Pilih tujuan permohonan di atas untuk melanjutkan</p>
           </div>
         )}
       </div>
