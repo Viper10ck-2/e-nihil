@@ -202,14 +202,14 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Manajemen User</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-slate-800">Manajemen User</h1>
+          <p className="text-slate-500">
             Kelola akun staff dan assign role
           </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-slate-800 hover:bg-slate-700">
               <Plus className="h-4 w-4 mr-2" />
               Tambah User
             </Button>
@@ -309,46 +309,49 @@ export default function UsersPage() {
         </Dialog>
       </div>
 
-      <Card>
+      <Card className="border border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Daftar User</CardTitle>
+          <CardTitle className="text-slate-800">Daftar User</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>NIP</TableHead>
-                <TableHead>Nama</TableHead>
-                <TableHead>Jabatan</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
+              <TableRow className="bg-slate-50 hover:bg-slate-50">
+                <TableHead className="text-slate-600 font-semibold">NIP</TableHead>
+                <TableHead className="text-slate-600 font-semibold">Nama</TableHead>
+                <TableHead className="text-slate-600 font-semibold">Jabatan</TableHead>
+                <TableHead className="text-slate-600 font-semibold">Role</TableHead>
+                <TableHead className="text-slate-600 font-semibold">Status</TableHead>
+                <TableHead className="text-right text-slate-600 font-semibold">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-mono">{user.nip}</TableCell>
+                <TableRow key={user.id} className="hover:bg-slate-50">
+                  <TableCell className="font-mono text-slate-700">{user.nip}</TableCell>
                   <TableCell>
                     <div>
-                      <p className="font-medium">{user.nama}</p>
+                      <p className="font-medium text-slate-800">{user.nama}</p>
                       {user.email && (
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <p className="text-sm text-slate-500">{user.email}</p>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{user.jabatan || '-'}</TableCell>
+                  <TableCell className="text-slate-600">{user.jabatan || '-'}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {user.roles.map((role) => (
-                        <Badge key={role} variant="secondary" className="text-xs">
+                        <Badge key={role} variant="secondary" className="text-xs bg-slate-100 text-slate-700">
                           {roleLabels[role]}
                         </Badge>
                       ))}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={user.is_active ? 'default' : 'destructive'}>
+                    <Badge 
+                      variant={user.is_active ? 'default' : 'destructive'}
+                      className={user.is_active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' : ''}
+                    >
                       {user.is_active ? 'Aktif' : 'Nonaktif'}
                     </Badge>
                   </TableCell>
@@ -358,18 +361,20 @@ export default function UsersPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => openEditDialog(user)}
+                        className="hover:bg-slate-100"
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4 text-slate-500" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleActive(user)}
+                        className="hover:bg-slate-100"
                       >
                         {user.is_active ? (
                           <UserX className="h-4 w-4 text-red-500" />
                         ) : (
-                          <UserCheck className="h-4 w-4 text-green-500" />
+                          <UserCheck className="h-4 w-4 text-emerald-500" />
                         )}
                       </Button>
                     </div>

@@ -174,28 +174,28 @@ export default function PermohonanPage() {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white shadow-lg">
-        <h1 className="text-2xl font-bold">Semua Permohonan</h1>
-        <p className="text-blue-100 mt-1">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-800">Semua Permohonan</h1>
+        <p className="text-slate-500 mt-1">
           Daftar semua permohonan SKBT yang masuk
         </p>
       </div>
 
       {/* Filters */}
-      <Card className="border-0 shadow-md">
+      <Card className="border border-slate-200 shadow-sm">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-blue-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Cari berdasarkan nama, NIP, atau no. tracking..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 border-blue-200 focus:border-blue-500 focus:ring-blue-500"
+                className="pl-10"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[250px] border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+              <SelectTrigger className="w-full md:w-[250px]">
                 <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
               <SelectContent>
@@ -212,24 +212,24 @@ export default function PermohonanPage() {
       </Card>
 
       {/* Applications Table */}
-      <Card className="border-0 shadow-md overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
-          <CardTitle className="text-blue-800 flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+      <Card className="border border-slate-200 shadow-sm overflow-hidden">
+        <CardHeader>
+          <CardTitle className="text-slate-800 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-slate-500" />
             Daftar Permohonan ({filteredApplications.length})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-blue-50/50 hover:bg-blue-50/50">
-                <TableHead className="text-blue-800 font-semibold">No. Tracking</TableHead>
-                <TableHead className="text-blue-800 font-semibold">Nama Pemohon</TableHead>
-                <TableHead className="text-blue-800 font-semibold">Unit Kerja</TableHead>
-                <TableHead className="text-blue-800 font-semibold">Tanggal</TableHead>
-                <TableHead className="text-blue-800 font-semibold">Status</TableHead>
-                <TableHead className="text-blue-800 font-semibold">No. Surat</TableHead>
-                <TableHead className="text-right text-blue-800 font-semibold">Aksi</TableHead>
+              <TableRow className="bg-slate-50 hover:bg-slate-50">
+                <TableHead className="text-slate-600 font-semibold">No. Tracking</TableHead>
+                <TableHead className="text-slate-600 font-semibold">Nama Pemohon</TableHead>
+                <TableHead className="text-slate-600 font-semibold">Unit Kerja</TableHead>
+                <TableHead className="text-slate-600 font-semibold">Tanggal</TableHead>
+                <TableHead className="text-slate-600 font-semibold">Status</TableHead>
+                <TableHead className="text-slate-600 font-semibold">No. Surat</TableHead>
+                <TableHead className="text-right text-slate-600 font-semibold">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -237,8 +237,8 @@ export default function PermohonanPage() {
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-12">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                        <FileText className="h-8 w-8 text-blue-400" />
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                        <FileText className="h-8 w-8 text-slate-400" />
                       </div>
                       <p className="text-muted-foreground">Tidak ada permohonan yang ditemukan</p>
                     </div>
@@ -248,9 +248,9 @@ export default function PermohonanPage() {
                 filteredApplications.map((app, index) => (
                   <TableRow 
                     key={app.id} 
-                    className={`hover:bg-blue-50/50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}
+                    className={`hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
                   >
-                    <TableCell className="font-mono text-sm text-blue-700 font-medium">
+                    <TableCell className="font-mono text-sm text-slate-700 font-medium">
                       {app.tracking_number}
                     </TableCell>
                     <TableCell>
@@ -278,14 +278,14 @@ export default function PermohonanPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => openPickupDialog(app)}
-                            className="border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800"
+                            className="border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
                             Konfirmasi Diambil
                           </Button>
                         )}
                         <Link href={`/dashboard/verifikasi/${app.id}`}>
-                          <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800 hover:bg-blue-50">
+                          <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800 hover:bg-slate-100">
                             Detail
                             <ArrowRight className="ml-1 h-4 w-4" />
                           </Button>
@@ -305,8 +305,8 @@ export default function PermohonanPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="h-6 w-6 text-emerald-600" />
               </div>
               <div>
                 <DialogTitle className="text-lg">Konfirmasi Pengambilan</DialogTitle>
@@ -318,38 +318,38 @@ export default function PermohonanPage() {
           </DialogHeader>
           {selectedApp && (
             <div className="space-y-4">
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 space-y-3">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-blue-600">No. Tracking</span>
-                  <span className="font-mono font-semibold text-blue-800">{selectedApp.tracking_number}</span>
+                  <span className="text-sm text-slate-500">No. Tracking</span>
+                  <span className="font-mono font-semibold text-slate-800">{selectedApp.tracking_number}</span>
                 </div>
-                <div className="border-t border-blue-200 pt-3 flex justify-between items-center">
-                  <span className="text-sm text-blue-600">Nama</span>
-                  <span className="font-medium text-blue-800">{selectedApp.nama_lengkap}</span>
+                <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                  <span className="text-sm text-slate-500">Nama</span>
+                  <span className="font-medium text-slate-800">{selectedApp.nama_lengkap}</span>
                 </div>
-                <div className="border-t border-blue-200 pt-3 flex justify-between items-center">
-                  <span className="text-sm text-blue-600">No. Surat</span>
-                  <span className="font-mono font-semibold text-blue-800">{selectedApp.nomor_surat}</span>
+                <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                  <span className="text-sm text-slate-500">No. Surat</span>
+                  <span className="font-mono font-semibold text-slate-800">{selectedApp.nomor_surat}</span>
                 </div>
               </div>
               
               {/* Upload Tanda Terima */}
               <div className="space-y-3">
                 <label className="text-sm font-medium flex items-center gap-2">
-                  <Upload className="h-4 w-4 text-blue-600" />
+                  <Upload className="h-4 w-4 text-slate-500" />
                   Upload Tanda Terima <span className="text-red-500">*</span>
                 </label>
                 {tandaTerimaFile ? (
-                  <div className="flex items-center justify-between p-4 border-2 rounded-xl bg-green-50 border-green-300">
+                  <div className="flex items-center justify-between p-4 border-2 rounded-xl bg-emerald-50 border-emerald-200">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-green-600" />
+                      <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-emerald-600" />
                       </div>
                       <div>
-                        <span className="text-sm font-medium text-green-800 block truncate max-w-[180px]">
+                        <span className="text-sm font-medium text-emerald-800 block truncate max-w-[180px]">
                           {tandaTerimaFile.name}
                         </span>
-                        <span className="text-xs text-green-600">
+                        <span className="text-xs text-emerald-600">
                           {(tandaTerimaFile.size / 1024).toFixed(1)} KB
                         </span>
                       </div>
@@ -364,7 +364,7 @@ export default function PermohonanPage() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-blue-300 rounded-xl p-6 text-center hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer">
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-slate-400 hover:bg-slate-50 transition-all cursor-pointer">
                     <input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
@@ -373,13 +373,13 @@ export default function PermohonanPage() {
                       id="tanda-terima-upload"
                     />
                     <label htmlFor="tanda-terima-upload" className="cursor-pointer">
-                      <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Upload className="h-7 w-7 text-blue-600" />
+                      <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Upload className="h-7 w-7 text-slate-500" />
                       </div>
-                      <p className="text-sm font-medium text-blue-700">
+                      <p className="text-sm font-medium text-slate-700">
                         Klik untuk upload tanda terima
                       </p>
-                      <p className="text-xs text-blue-500 mt-1">
+                      <p className="text-xs text-slate-500 mt-1">
                         PDF atau gambar (maks. 10MB)
                       </p>
                     </label>
@@ -406,7 +406,7 @@ export default function PermohonanPage() {
             <Button 
               onClick={handleConfirmPickup} 
               disabled={isConfirming || !tandaTerimaFile}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-emerald-600 hover:bg-emerald-700"
             >
               {isConfirming && <LoadingSpinner size="sm" className="mr-2" />}
               <CheckCircle className="h-4 w-4 mr-2" />

@@ -148,8 +148,8 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">{getRoleTitle()}</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-slate-800">{getRoleTitle()}</h1>
+        <p className="text-slate-500">
           Selamat datang, {user?.nama}
         </p>
       </div>
@@ -160,46 +160,53 @@ export default function DashboardPage() {
           title="Permohonan Masuk"
           value={stats.masuk}
           icon={Inbox}
-          iconClassName="text-orange-500"
+          iconClassName="text-amber-500"
         />
         <InfoCard
           title="Sedang Diproses"
           value={stats.diproses}
           icon={Clock}
-          iconClassName="text-blue-500"
+          iconClassName="text-sky-500"
         />
         <InfoCard
           title="Diverifikasi"
           value={stats.diverifikasi}
           icon={FileCheck}
-          iconClassName="text-purple-500"
+          iconClassName="text-violet-500"
         />
         <InfoCard
           title="Selesai"
           value={stats.selesai}
           icon={CheckCircle}
-          iconClassName="text-green-500"
+          iconClassName="text-emerald-500"
         />
       </div>
 
       {/* Chart */}
       {currentRole === 'admin' && (
-        <Card>
+        <Card className="border border-slate-200 shadow-sm">
           <CardHeader>
-            <CardTitle>Statistik Permohonan Bulanan</CardTitle>
+            <CardTitle className="text-slate-800">Statistik Permohonan Bulanan</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="month" stroke="#64748b" />
+                  <YAxis stroke="#64748b" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#fff', 
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }} 
+                  />
                   <Legend />
-                  <Bar dataKey="masuk" name="Masuk" fill="#f97316" />
-                  <Bar dataKey="diproses" name="Diproses" fill="#3b82f6" />
-                  <Bar dataKey="selesai" name="Selesai" fill="#22c55e" />
+                  <Bar dataKey="masuk" name="Masuk" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="diproses" name="Diproses" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="selesai" name="Selesai" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -208,9 +215,9 @@ export default function DashboardPage() {
       )}
 
       {/* Pending Applications Table */}
-      <Card>
+      <Card className="border border-slate-200 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Permohonan Menunggu Verifikasi</CardTitle>
+          <CardTitle className="text-slate-800">Permohonan Menunggu Verifikasi</CardTitle>
           <Link href="/dashboard/verifikasi">
             <Button variant="outline" size="sm">
               Lihat Semua

@@ -106,18 +106,18 @@ export default function VerifikasiPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Verifikasi Permohonan</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-slate-800">Verifikasi Permohonan</h1>
+        <p className="text-slate-500">
           Daftar permohonan yang perlu diverifikasi
         </p>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="border border-slate-200 shadow-sm">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Cari berdasarkan nama, NIP, atau no. tracking..."
                 value={searchQuery}
@@ -143,9 +143,9 @@ export default function VerifikasiPage() {
       </Card>
 
       {/* Applications Table */}
-      <Card>
+      <Card className="border border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Daftar Permohonan</CardTitle>
+          <CardTitle className="text-slate-800">Daftar Permohonan</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
