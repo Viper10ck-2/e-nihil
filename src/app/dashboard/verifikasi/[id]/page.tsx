@@ -24,7 +24,7 @@ import { supabase } from '@/lib/supabase'
 import { updateApplicationStatus, getApplicationDocuments, generateNomorSurat, updateNomorSurat } from '@/lib/services/applicationService'
 import { toast } from 'sonner'
 import {
-  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send
+  ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send, HandCoins
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -48,6 +48,11 @@ export default function VerifikasiDetailPage() {
   const [showSendOnlineDialog, setShowSendOnlineDialog] = useState(false)
   const [skbtFile, setSkbtFile] = useState<File | null>(null)
   const [isSendingOnline, setIsSendingOnline] = useState(false)
+  
+  // State untuk berkas diterima langsung
+  const [showOfflineDialog, setShowOfflineDialog] = useState(false)
+  const [buktiPenyerahanFile, setBuktiPenyerahanFile] = useState<File | null>(null)
+  const [isProcessingOffline, setIsProcessingOffline] = useState(false)
 
   useEffect(() => {
     if (params.id) loadApplication()
@@ -295,6 +300,64 @@ export default function VerifikasiDetailPage() {
     return application.status === 'Ditandatangani Inspektur' && currentRole === 'admin'
   }
 
+  // Handler untuk file bukti penyerahan
+  const handleBuktiPenyerahanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    // Validasi tipe file (PDF atau gambar)
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Hanya file PDF atau gambar (JPG, PNG) yang diperbolehkan')
+      e.target.value = ''
+      return
+    }
+    
+    // Validasi ukuran file (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 10MB')
+      e.target.value = ''
+      return
+    }
+    
+    setBuktiPenyerahanFile(file)
+  }
+
+  // Handler untuk berkas diterima langsung
+  const handleOfflineDelivery = async () => {
+    if (!application || !buktiPenyerahanFile) {
+      toast.error('Pilih file bukti penyerahan berkas')
+      return
+    }
+
+    setIsProcessingOffline(true)
+    try {
+      // 1. Upload file bukti penyerahan ke storage
+      const fileExt = buktiPenyerahanFile.name.split('.').pop()
+      const fileName = `bukti_penyerahan_${application.tracking_number}_${Date.now()}.${fileExt}`
+      const filePath = `bukti-penyerahan/${application.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, buktiPenyerahanFile)
+
+      if (uploadError) throw uploadError
+
+      // 2. Update status menjadi Diambil
+      await updateApplicationStatus(application.id, 'Diambil', 'Berkas diserahkan secara langsung', user?.id)
+
+      toast.success('Berkas berhasil diserahkan! Status diperbarui menjadi Diambil.')
+      setShowOfflineDialog(false)
+      setBuktiPenyerahanFile(null)
+      router.push('/dashboard/verifikasi')
+    } catch (error) {
+      console.error('Error processing offline delivery:', error)
+      toast.error('Gagal memproses penyerahan berkas')
+    } finally {
+      setIsProcessingOffline(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -371,13 +434,21 @@ export default function VerifikasiDetailPage() {
       
       {/* Mobile Send Online Button */}
       {canSendOnline() && (
-        <div className="lg:hidden">
+        <div className="lg:hidden space-y-3">
           <Button 
             className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl shadow-lg" 
             onClick={() => setShowSendOnlineDialog(true)}
           >
             <Send className="h-4 w-4 mr-2" />
             Kirim Berkas Online
+          </Button>
+          <Button 
+            variant="outline"
+            className="w-full h-12 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 rounded-xl" 
+            onClick={() => setShowOfflineDialog(true)}
+          >
+            <HandCoins className="h-4 w-4 mr-2" />
+            Berkas Diterima Langsung
           </Button>
         </div>
       )}
@@ -505,13 +576,23 @@ export default function VerifikasiDetailPage() {
                     </Button>
                   </>
                 ) : canSendOnline() ? (
-                  <Button 
-                    className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl shadow-lg shadow-blue-200/50 transition-all duration-300 hover:scale-[1.02]" 
-                    onClick={() => setShowSendOnlineDialog(true)}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Kirim Berkas Online
-                  </Button>
+                  <>
+                    <Button 
+                      className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl shadow-lg shadow-blue-200/50 transition-all duration-300 hover:scale-[1.02]" 
+                      onClick={() => setShowSendOnlineDialog(true)}
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Kirim Berkas Online
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="w-full h-12 border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 rounded-xl transition-all duration-300 hover:scale-[1.02]" 
+                      onClick={() => setShowOfflineDialog(true)}
+                    >
+                      <HandCoins className="h-4 w-4 mr-2" />
+                      Berkas Diterima Langsung
+                    </Button>
+                  </>
                 ) : (
                   <div className="text-center py-4">
                     <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -666,6 +747,108 @@ export default function VerifikasiDetailPage() {
                 <>
                   <Send className="h-4 w-4 mr-2" />
                   Kirim Sekarang
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Offline Delivery Dialog */}
+      <Dialog open={showOfflineDialog} onOpenChange={setShowOfflineDialog}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-600">
+              <HandCoins className="h-5 w-5" />
+              Berkas Diterima Secara Langsung
+            </DialogTitle>
+            <DialogDescription>
+              Upload bukti penyerahan berkas atau surat tanda terima berkas dari pemohon.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-5 py-2">
+            {/* Info Pemohon - Table Layout */}
+            <div className="bg-slate-50 rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-3 px-4 text-slate-500 w-28">Nama</td>
+                    <td className="py-3 px-4 font-medium text-slate-800 text-right">{application?.nama_lengkap}</td>
+                  </tr>
+                  <tr className="border-b border-slate-100">
+                    <td className="py-3 px-4 text-slate-500">NIP</td>
+                    <td className="py-3 px-4 font-medium text-slate-800 font-mono text-right">{application?.nip}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 text-slate-500">No. Surat</td>
+                    <td className="py-3 px-4 font-medium text-slate-800 font-mono text-right">{application?.nomor_surat || '-'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* File Upload */}
+            <div className="space-y-3">
+              <Label htmlFor="bukti-file" className="text-sm font-medium text-slate-700">
+                Upload Bukti Penyerahan / Tanda Terima
+              </Label>
+              <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 hover:border-emerald-300 transition-colors">
+                <Input
+                  id="bukti-file"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleBuktiPenyerahanChange}
+                  className="cursor-pointer border-0 p-0 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-emerald-500 file:text-white hover:file:bg-emerald-600 file:cursor-pointer"
+                />
+              </div>
+              {buktiPenyerahanFile && (
+                <div className="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-emerald-800 truncate">{buktiPenyerahanFile.name}</p>
+                    <p className="text-xs text-emerald-500">{(buktiPenyerahanFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-slate-500">
+                Format: PDF, JPG, PNG. Maksimal 10MB.
+              </p>
+            </div>
+
+            {/* Info */}
+            <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+              <p className="text-sm text-emerald-800">
+                <strong>Informasi:</strong> Setelah dikonfirmasi, status permohonan akan berubah menjadi &quot;Diambil&quot; dan proses dinyatakan selesai.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 pt-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowOfflineDialog(false)
+                setBuktiPenyerahanFile(null)
+              }} 
+              className="w-full sm:w-auto h-11 rounded-xl"
+            >
+              Batal
+            </Button>
+            <Button 
+              onClick={handleOfflineDelivery} 
+              disabled={isProcessingOffline || !buktiPenyerahanFile} 
+              className="w-full sm:w-auto h-11 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-200/50"
+            >
+              {isProcessingOffline ? (
+                <>
+                  <LoadingSpinner size="sm" className="mr-2" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Konfirmasi Penyerahan
                 </>
               )}
             </Button>
