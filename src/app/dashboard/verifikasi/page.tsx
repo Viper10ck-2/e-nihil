@@ -145,7 +145,7 @@ export default function VerifikasiPage() {
       {/* Applications Table */}
       <Card className="border border-slate-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-slate-800">Daftar Permohonan</CardTitle>
+          <CardTitle className="text-slate-800">Perlu Tindakan</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
