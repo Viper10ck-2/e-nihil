@@ -178,25 +178,22 @@ export function DocumentRequirementsCarousel() {
           <div 
             className={`transform transition-all duration-300 ease-out ${getAnimationClass()}`}
           >
-            <Card className="border-0 shadow-xl overflow-hidden bg-white">
-              {/* Header */}
-              <div className={`bg-gradient-to-r ${activeTujuan.color} p-6 transition-all duration-500`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center transition-transform duration-300 hover:scale-110">
+            <Card className={`border-0 shadow-xl overflow-hidden bg-gradient-to-br ${activeTujuan.bgColor}`}>
+              {/* Content */}
+              <CardContent className="p-6 md:p-8">
+                {/* Header inside content */}
+                <div className="flex items-center gap-4 mb-6 pb-4 border-b border-slate-100">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${activeTujuan.color} flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-110`}>
                     <ActiveIcon className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">{activeTujuan.title}</h3>
-                    <p className="text-white/80 text-sm">{activeTujuan.subtitle}</p>
+                    <h3 className="text-xl font-bold text-slate-800">{activeTujuan.title}</h3>
+                    <p className="text-slate-500 text-sm">{activeTujuan.subtitle}</p>
                   </div>
-                  <div className="ml-auto text-white/60 text-sm">
+                  <div className="ml-auto text-slate-400 text-sm">
                     {activeIndex + 1} / {TUJUAN_DOCUMENTS.length}
                   </div>
                 </div>
-              </div>
-
-              {/* Content */}
-              <CardContent className="p-6 md:p-8">
                 <div className="flex items-center gap-2 mb-4">
                   <FileText className="h-5 w-5 text-slate-500" />
                   <span className="font-medium text-slate-700">Dokumen yang Diperlukan ({activeTujuan.documents.length})</span>
