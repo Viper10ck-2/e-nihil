@@ -173,7 +173,7 @@ export default function HomePage() {
                 <div className="grid gap-4">
                   {[
                     'Surat Permohonan yang ditujukan kepada Inspektur',
-                    'Surat Pernyataan Bebas Temuan dari Kepala Dinas/Badan yang ditinggalkan',
+                    'Surat Pengantar dari Kepala Dinas/Badan',
                     'Surat Keterangan/Rekomendasi menerima dari Instansi yang dituju',
                     'SK PNS',
                     'SK Pangkat Terakhir',
