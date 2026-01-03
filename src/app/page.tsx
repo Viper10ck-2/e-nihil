@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { DocumentRequirementsCarousel } from '@/components/home/DocumentRequirementsCarousel'
 import { 
   FileText, 
   CheckCircle, 
@@ -159,44 +160,9 @@ export default function HomePage() {
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-800 mb-4">Persyaratan Dokumen</h2>
-            <p className="text-slate-600">Siapkan dokumen berikut sebelum mengajukan permohonan</p>
+            <p className="text-slate-600">Dokumen yang diperlukan berbeda berdasarkan tujuan permohonan</p>
           </div>
-          <div className="max-w-4xl mx-auto">
-            <Card className="border-0 shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
-                <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                  <FileText className="h-6 w-6" />
-                  Dokumen yang Diperlukan
-                </h3>
-              </div>
-              <CardContent className="p-8">
-                <div className="grid gap-4">
-                  {[
-                    'Surat Permohonan yang ditujukan kepada Inspektur',
-                    'Surat Pengantar dari Kepala Dinas/Badan',
-                    'Surat Keterangan/Rekomendasi menerima dari Instansi yang dituju',
-                    'SK PNS',
-                    'SK Pangkat Terakhir',
-                    'Daftar Riwayat Pekerjaan',
-                    'SKP satu tahun terakhir',
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 hover:bg-blue-50 transition-colors">
-                      <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white text-sm font-semibold flex items-center justify-center shadow-md">
-                        {index + 1}
-                      </span>
-                      <span className="text-slate-700 pt-1">{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                  <p className="text-sm text-amber-800 flex items-start gap-2">
-                    <span className="text-amber-500 mt-0.5">⚠️</span>
-                    Semua dokumen dalam format PDF dengan ukuran maksimal 10MB per file
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <DocumentRequirementsCarousel />
         </div>
       </section>
 
