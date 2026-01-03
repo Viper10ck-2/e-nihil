@@ -212,64 +212,52 @@ export default function PermohonanPage() {
       </Card>
 
       {/* Applications Table */}
-      <Card className="border border-slate-200 shadow-sm overflow-hidden">
+      <Card className="border border-slate-200 shadow-sm">
         <CardHeader>
           <CardTitle className="text-slate-800 flex items-center gap-2">
             <FileText className="h-5 w-5 text-slate-500" />
             Daftar Permohonan ({filteredApplications.length})
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50 hover:bg-slate-50">
-                <TableHead className="text-slate-600 font-semibold">No. Tracking</TableHead>
-                <TableHead className="text-slate-600 font-semibold">Nama Pemohon</TableHead>
-                <TableHead className="text-slate-600 font-semibold">Unit Kerja</TableHead>
-                <TableHead className="text-slate-600 font-semibold">Tanggal</TableHead>
-                <TableHead className="text-slate-600 font-semibold">Status</TableHead>
-                <TableHead className="text-slate-600 font-semibold">No. Surat</TableHead>
-                <TableHead className="text-right text-slate-600 font-semibold">Aksi</TableHead>
+              <TableRow>
+                <TableHead>No. Tracking</TableHead>
+                <TableHead>Nama Pemohon</TableHead>
+                <TableHead>Unit Kerja</TableHead>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredApplications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                        <FileText className="h-8 w-8 text-slate-400" />
-                      </div>
-                      <p className="text-muted-foreground">Tidak ada permohonan yang ditemukan</p>
-                    </div>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    Tidak ada permohonan yang ditemukan
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredApplications.map((app, index) => (
-                  <TableRow 
-                    key={app.id} 
-                    className={`hover:bg-slate-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
-                  >
-                    <TableCell className="font-mono text-sm text-slate-700 font-medium">
+                filteredApplications.map((app) => (
+                  <TableRow key={app.id}>
+                    <TableCell className="font-mono text-sm">
                       {app.tracking_number}
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium text-slate-800">{app.nama_lengkap}</p>
-                        <p className="text-sm text-slate-500">
+                        <p className="font-medium">{app.nama_lengkap}</p>
+                        <p className="text-sm text-muted-foreground">
                           NIP: {app.nip}
                         </p>
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-600">{app.unit_kerja_asal || '-'}</TableCell>
-                    <TableCell className="text-slate-600">
+                    <TableCell>{app.unit_kerja_asal || '-'}</TableCell>
+                    <TableCell>
                       {format(new Date(app.created_at), 'dd MMM yyyy', { locale: id })}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={app.status} />
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-slate-600">
-                      {app.nomor_surat || '-'}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -278,14 +266,13 @@ export default function PermohonanPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => openPickupDialog(app)}
-                            className="border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
                           >
                             <CheckCircle className="h-4 w-4 mr-1" />
-                            Konfirmasi Diambil
+                            Diambil
                           </Button>
                         )}
                         <Link href={`/dashboard/verifikasi/${app.id}`}>
-                          <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800 hover:bg-slate-100">
+                          <Button variant="ghost" size="sm">
                             Detail
                             <ArrowRight className="ml-1 h-4 w-4" />
                           </Button>
