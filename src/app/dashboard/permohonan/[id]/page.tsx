@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
+import { jsPDF } from 'jspdf'
 import type { Application, Document } from '@/types/database'
 
 interface DeliveryProof {
@@ -181,77 +182,90 @@ export default function PermohonanDetailPage() {
   const handleDownloadProof = () => {
     if (!deliveryProof || !application) return
     
-    // Generate HTML content for the proof
-    const htmlContent = generateProofHTML(deliveryProof)
+    // Generate PDF
+    const doc = new jsPDF()
     
-    // Create blob and download
-    const blob = new Blob([htmlContent], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `Bukti_Pengiriman_${application.tracking_number}.html`
-    a.click()
-    URL.revokeObjectURL(url)
+    // Header
+    doc.setFillColor(34, 197, 94) // green-500
+    doc.rect(0, 0, 210, 40, 'F')
+    
+    // Checkmark circle
+    doc.setFillColor(255, 255, 255)
+    doc.circle(105, 25, 12, 'F')
+    doc.setTextColor(34, 197, 94)
+    doc.setFontSize(20)
+    doc.text('✓', 102, 30)
+    
+    // Title
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(14)
+    doc.text('BUKTI PENGIRIMAN SKBT ONLINE', 105, 50, { align: 'center' })
+    
+    // Reset colors
+    doc.setTextColor(0, 0, 0)
+    
+    // Receipt box
+    doc.setDrawColor(34, 197, 94)
+    doc.setLineWidth(0.5)
+    doc.roundedRect(20, 60, 170, 120, 3, 3, 'S')
+    
+    // Receipt title
+    doc.setFontSize(10)
+    doc.setTextColor(100, 100, 100)
+    doc.text('BUKTI PENGIRIMAN DIGITAL', 105, 70, { align: 'center' })
+    
+    // Dashed line
+    doc.setLineDashPattern([2, 2], 0)
+    doc.line(30, 75, 180, 75)
+    doc.setLineDashPattern([], 0)
+    
+    // Content
+    doc.setFontSize(11)
+    const startY = 85
+    const lineHeight = 10
+    const labelX = 30
+    const valueX = 85
+    
+    const fields = [
+      ['No. Registrasi', deliveryProof.trackingNumber],
+      ['No. Surat', deliveryProof.nomorSurat],
+      ['Nama Pemohon', deliveryProof.namaLengkap],
+      ['NIP', deliveryProof.nip],
+      ['Email Tujuan', deliveryProof.email],
+      ['Metode Pengiriman', 'Online (Email)'],
+      ['Tanggal Kirim', format(new Date(deliveryProof.sentAt), 'dd MMMM yyyy, HH:mm', { locale: id }) + ' WIB'],
+      ['ID Pesan', deliveryProof.messageId || '-'],
+    ]
+    
+    fields.forEach((field, index) => {
+      const y = startY + (index * lineHeight)
+      doc.setTextColor(100, 100, 100)
+      doc.text(field[0], labelX, y)
+      doc.setTextColor(30, 58, 95)
+      doc.setFont('helvetica', index < 2 ? 'bold' : 'normal')
+      doc.text(field[1], valueX, y)
+      doc.setFont('helvetica', 'normal')
+    })
+    
+    // Bottom dashed line
+    doc.setLineDashPattern([2, 2], 0)
+    doc.line(30, 165, 180, 165)
+    doc.setLineDashPattern([], 0)
+    
+    // Note
+    doc.setFontSize(9)
+    doc.setTextColor(100, 100, 100)
+    doc.text('Dokumen ini merupakan bukti sah pengiriman SKBT secara online', 105, 173, { align: 'center' })
+    
+    // Footer
+    doc.setFontSize(10)
+    doc.text('e-Nihil - Inspektorat Daerah Kabupaten Bintan', 105, 200, { align: 'center' })
+    doc.setFontSize(8)
+    doc.text('Jl. Bintan Buyu, Bandar Seri Bentan, Kabupaten Bintan, Kepulauan Riau', 105, 207, { align: 'center' })
+    
+    // Save
+    doc.save(`Bukti_Pengiriman_${application.tracking_number}.pdf`)
     toast.success('Bukti pengiriman berhasil diunduh')
-  }
-
-  const generateProofHTML = (proof: DeliveryProof) => {
-    return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Bukti Pengiriman SKBT - ${proof.trackingNumber}</title>
-  <style>
-    body { font-family: 'Times New Roman', serif; margin: 40px; background: #f5f5f5; }
-    .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    .header { text-align: center; margin-bottom: 30px; }
-    .header h1 { color: #22c55e; font-size: 18px; margin: 0; }
-    .checkmark { width: 60px; height: 60px; background: #22c55e; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
-    .checkmark::after { content: '✓'; color: white; font-size: 30px; }
-    .receipt { background: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; padding: 20px; margin: 20px 0; }
-    .receipt-title { text-align: center; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
-    .divider { border-top: 1px dashed #22c55e; margin: 15px 0; }
-    table { width: 100%; border-collapse: collapse; }
-    td { padding: 8px 0; font-size: 13px; }
-    td:first-child { color: #666; width: 140px; }
-    td:last-child { color: #1e3a5f; }
-    .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
-    @media print { body { margin: 0; background: white; } .container { box-shadow: none; } }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="checkmark"></div>
-      <h1>BUKTI PENGIRIMAN SKBT ONLINE</h1>
-    </div>
-    <div class="receipt">
-      <div class="receipt-title">Bukti Pengiriman Digital</div>
-      <div class="divider"></div>
-      <table>
-        <tr><td>No. Registrasi</td><td><strong>${proof.trackingNumber}</strong></td></tr>
-        <tr><td>No. Surat</td><td><strong>${proof.nomorSurat}</strong></td></tr>
-        <tr><td>Nama Pemohon</td><td>${proof.namaLengkap}</td></tr>
-        <tr><td>NIP</td><td>${proof.nip}</td></tr>
-        <tr><td>Email Tujuan</td><td>${proof.email}</td></tr>
-        <tr><td>Metode Pengiriman</td><td>Online (Email)</td></tr>
-        <tr><td>Tanggal Kirim</td><td>${format(new Date(proof.sentAt), 'dd MMMM yyyy, HH:mm', { locale: id })} WIB</td></tr>
-        <tr><td>ID Pesan</td><td style="font-family: monospace; font-size: 11px;">${proof.messageId || '-'}</td></tr>
-      </table>
-      <div class="divider"></div>
-      <p style="text-align: center; font-size: 11px; color: #666; margin: 0;">
-        Dokumen ini merupakan bukti sah pengiriman SKBT secara online
-      </p>
-    </div>
-    <div class="footer">
-      <p>e-Nihil - Inspektorat Daerah Kabupaten Bintan</p>
-      <p>Jl. Bintan Buyu, Bandar Seri Bentan, Kabupaten Bintan, Kepulauan Riau</p>
-    </div>
-  </div>
-</body>
-</html>
-    `
   }
 
   const getDocumentLabel = (type: string) => DOCUMENT_TYPES.find(d => d.type === type)?.label || type
