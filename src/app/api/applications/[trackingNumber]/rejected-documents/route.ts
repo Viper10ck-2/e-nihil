@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { getDocumentsWithRejections } from '@/lib/services/documentRejectionService'
+import type { Application } from '@/types/database'
 
 export async function GET(
   request: NextRequest,
@@ -30,21 +31,23 @@ export async function GET(
       )
     }
 
+    const app = application as Application
+
     // Get documents with rejection info
-    const documents = await getDocumentsWithRejections(application.id)
+    const documents = await getDocumentsWithRejections(app.id)
 
     // Filter only rejected documents
     const rejectedDocuments = documents.filter(doc => doc.rejection)
 
     // Check if user can reupload (status must be "Dokumen Ditolak")
-    const canReupload = application.status === 'Dokumen Ditolak'
+    const canReupload = app.status === 'Dokumen Ditolak'
 
     return NextResponse.json({
       success: true,
       data: {
-        applicationId: application.id,
-        trackingNumber: application.tracking_number,
-        status: application.status,
+        applicationId: app.id,
+        trackingNumber: app.tracking_number,
+        status: app.status,
         documents: rejectedDocuments,
         canReupload,
       },
