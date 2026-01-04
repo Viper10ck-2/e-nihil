@@ -32,12 +32,39 @@ const SESSION_CHECK_INTERVAL = 60 * 1000
 // Warning threshold (15 minutes before expiry)
 const SESSION_WARNING_THRESHOLD = 15
 
+// Helper function to get initial auth state
+function getInitialAuthState(): { user: AuthUser | null; role: UserRole | null; remaining: number } {
+  if (typeof window === 'undefined') {
+    return { user: null, role: null, remaining: 0 }
+  }
+  
+  if (!isSessionValid()) {
+    return { user: null, role: null, remaining: 0 }
+  }
+
+  const storedUser = getCurrentUser()
+  const storedRole = getCurrentRole()
+  const remaining = getSessionTimeRemaining()
+
+  if (storedUser) {
+    return {
+      user: storedUser,
+      role: storedRole || storedUser.roles[0] || null,
+      remaining,
+    }
+  }
+
+  return { user: null, role: null, remaining: 0 }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [currentRole, setCurrentRoleState] = useState<UserRole | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [sessionTimeRemaining, setSessionTimeRemaining] = useState(0)
+  
+  // Use lazy initialization to avoid useEffect for initial state
+  const [user, setUser] = useState<AuthUser | null>(() => getInitialAuthState().user)
+  const [currentRole, setCurrentRoleState] = useState<UserRole | null>(() => getInitialAuthState().role)
+  const [isLoading] = useState(false) // Start as false since we initialize synchronously
+  const [sessionTimeRemaining, setSessionTimeRemaining] = useState(() => getInitialAuthState().remaining)
   const warningShownRef = useRef(false)
   const sessionCheckRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -96,10 +123,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         warningShownRef.current = false
       }
     }
-
-    // Initial check
-    refreshAuth()
-    setIsLoading(false)
 
     // Set up periodic session check
     sessionCheckRef.current = setInterval(checkSession, SESSION_CHECK_INTERVAL)
