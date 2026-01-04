@@ -73,48 +73,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        // First check localStorage for user data
-        const storedUser = getCurrentUser()
+        // Check localStorage for user data first
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+        const expiryStr = typeof window !== 'undefined' ? localStorage.getItem('sessionExpiresAt') : null
         
-        if (storedUser && isSessionValid()) {
-          // User data exists and session appears valid
-          setUser(storedUser)
-          setCurrentRoleState(getCurrentRole() || storedUser.roles[0] || null)
-          setSessionTimeRemaining(getSessionTimeRemaining())
-        } else {
-          // Try to verify session with server
-          const response = await fetch('/api/auth/session', {
-            method: 'GET',
-            credentials: 'include',
-          })
+        if (userStr && expiryStr) {
+          const expiryTime = parseInt(expiryStr, 10)
+          const isValid = !isNaN(expiryTime) && Date.now() < expiryTime
           
-          const result = await response.json()
-          
-          if (result.valid && storedUser) {
-            setUser(storedUser)
-            setCurrentRoleState(getCurrentRole() || storedUser.roles[0] || null)
-            setSessionTimeRemaining(result.remainingMinutes || 0)
-          } else {
-            // Clear any stale data
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem('user')
-              localStorage.removeItem('sessionExpiresAt')
-              localStorage.removeItem('currentRole')
+          if (isValid) {
+            try {
+              const storedUser = JSON.parse(userStr) as AuthUser
+              const storedRole = localStorage.getItem('currentRole') as UserRole | null
+              
+              setUser(storedUser)
+              setCurrentRoleState(storedRole || storedUser.roles[0] || null)
+              setSessionTimeRemaining(Math.max(0, Math.floor((expiryTime - Date.now()) / 60000)))
+              setIsLoading(false)
+              return
+            } catch (e) {
+              console.error('Error parsing stored user:', e)
             }
-            setUser(null)
-            setCurrentRoleState(null)
-            setSessionTimeRemaining(0)
           }
         }
+        
+        // No valid local session, clear any stale data
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('user')
+          localStorage.removeItem('sessionExpiresAt')
+          localStorage.removeItem('currentRole')
+        }
+        setUser(null)
+        setCurrentRoleState(null)
+        setSessionTimeRemaining(0)
       } catch (error) {
         console.error('Auth init error:', error)
-        // On error, try to use localStorage data if available
-        const storedUser = getCurrentUser()
-        if (storedUser && isSessionValid()) {
-          setUser(storedUser)
-          setCurrentRoleState(getCurrentRole() || storedUser.roles[0] || null)
-          setSessionTimeRemaining(getSessionTimeRemaining())
-        }
+        setUser(null)
+        setCurrentRoleState(null)
+        setSessionTimeRemaining(0)
       } finally {
         setIsLoading(false)
       }

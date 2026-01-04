@@ -73,27 +73,27 @@ export async function logout(): Promise<void> {
 }
 
 /**
- * Check if session is valid
+ * Check if session is valid based on localStorage expiry
+ * Cookie validation is done server-side for security
  */
 export function isSessionValid(): boolean {
   if (typeof window === 'undefined') {
     return false
   }
 
-  // Check if session-valid cookie exists (set by server)
-  const hasSessionCookie = document.cookie.includes('e-nihil-session-valid=true')
-  if (!hasSessionCookie) {
-    return false
-  }
-
-  // Also check local expiry as backup
+  // Check local expiry time
   const expiryStr = localStorage.getItem('sessionExpiresAt')
   if (!expiryStr) {
     return false
   }
 
   const expiryTime = parseInt(expiryStr, 10)
-  return !isNaN(expiryTime) && Date.now() < expiryTime
+  if (isNaN(expiryTime)) {
+    return false
+  }
+
+  // Check if session has expired
+  return Date.now() < expiryTime
 }
 
 /**
@@ -144,18 +144,24 @@ export async function extendSession(): Promise<void> {
 
 /**
  * Get current user from localStorage
+ * Returns user data if exists and session is valid
  */
 export function getCurrentUser(): AuthUser | null {
   if (typeof window === 'undefined') {
     return null
   }
 
-  if (!isSessionValid()) {
+  const userStr = localStorage.getItem('user')
+  if (!userStr) {
     return null
   }
 
-  const userStr = localStorage.getItem('user')
-  if (!userStr) {
+  // Check if session is still valid
+  if (!isSessionValid()) {
+    // Clear stale data
+    localStorage.removeItem('user')
+    localStorage.removeItem('sessionExpiresAt')
+    localStorage.removeItem('currentRole')
     return null
   }
 
