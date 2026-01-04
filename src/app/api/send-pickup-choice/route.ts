@@ -4,6 +4,10 @@ import { supabase } from '@/lib/supabase'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 
+interface PickupMethodData {
+  pickup_method: string | null
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -37,7 +41,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (existingApp?.pickup_method) {
+    const appData = existingApp as PickupMethodData
+
+    if (appData?.pickup_method) {
       return NextResponse.json(
         { success: false, error: 'Pickup method already selected', alreadySelected: true },
         { status: 400 }
