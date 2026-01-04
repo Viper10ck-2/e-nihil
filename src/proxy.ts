@@ -7,7 +7,7 @@ const protectedRoutes = ['/dashboard']
 // Routes that should redirect to dashboard if already logged in
 const authRoutes = ['/login']
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Check if user is logged in by looking for session token in cookies
