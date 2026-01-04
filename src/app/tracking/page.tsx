@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,7 +33,26 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   skp: 'SKP',
 }
 
+// Wrapper component with Suspense for useSearchParams
 export default function TrackingPage() {
+  return (
+    <Suspense fallback={<TrackingPageLoading />}>
+      <TrackingPageContent />
+    </Suspense>
+  )
+}
+
+// Loading fallback component
+function TrackingPageLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <LoadingSpinner size="lg" />
+    </div>
+  )
+}
+
+// Main content component
+function TrackingPageContent() {
   const searchParams = useSearchParams()
   const [trackingNumber, setTrackingNumber] = useState('')
   const [isLoading, setIsLoading] = useState(false)

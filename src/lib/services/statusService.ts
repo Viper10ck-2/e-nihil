@@ -11,6 +11,7 @@ const validTransitions: Record<ApplicationStatus, ApplicationStatus[]> = {
   'Ditandatangani Inspektur': ['Diambil'],
   'Diambil': [],
   'Ditolak': [],
+  'Selesai': [], // Legacy status - kept for backward compatibility
 }
 
 // Role permissions for status changes
