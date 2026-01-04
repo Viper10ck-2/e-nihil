@@ -322,6 +322,7 @@ export default function VerifikasiDetailPage() {
           email: application.email,
           tanggalTTD: format(new Date(), 'dd MMMM yyyy, HH:mm', { locale: id }) + ' WIB',
           downloadUrl: urlData.publicUrl,
+          sentBy: user?.nama || 'Admin',
         }),
       })
 

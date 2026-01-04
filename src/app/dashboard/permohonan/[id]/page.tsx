@@ -34,6 +34,7 @@ interface DeliveryProof {
   email: string
   sentAt: string
   messageId?: string
+  sentBy?: string
 }
 
 interface OfflinePickupProof {
@@ -207,10 +208,10 @@ export default function PermohonanDetailPage() {
     doc.text('BUKTI PENGIRIMAN SKBT ONLINE', 105, 68, { align: 'center' })
     doc.setFont('helvetica', 'normal')
     
-    // Receipt box - made taller for ID Pesan
+    // Receipt box - made taller for additional fields
     doc.setDrawColor(34, 197, 94)
     doc.setLineWidth(0.5)
-    doc.roundedRect(20, 78, 170, 115, 3, 3, 'S')
+    doc.roundedRect(20, 78, 170, 120, 3, 3, 'S')
     
     // Receipt title
     doc.setFontSize(10)
@@ -244,6 +245,7 @@ export default function PermohonanDetailPage() {
       ['Email Tujuan', deliveryProof.email],
       ['Metode Pengiriman', 'Online (Email)'],
       ['Tanggal Kirim', formattedDate],
+      ['Pengirim', deliveryProof.sentBy || 'Admin'],
     ]
     
     fields.forEach((field, index) => {
@@ -257,7 +259,7 @@ export default function PermohonanDetailPage() {
     })
     
     // ID Pesan - separate handling with smaller font for long text
-    const idPesanY = startY + (7 * lineHeight)
+    const idPesanY = startY + (8 * lineHeight)
     doc.setTextColor(100, 100, 100)
     doc.setFontSize(10)
     doc.text('ID Pesan', labelX, idPesanY)
@@ -269,20 +271,20 @@ export default function PermohonanDetailPage() {
     // Bottom dashed line - adjusted position
     doc.setLineDashPattern([2, 2], 0)
     doc.setDrawColor(34, 197, 94)
-    doc.line(30, 175, 180, 175)
+    doc.line(30, 180, 180, 180)
     doc.setLineDashPattern([], 0)
     
     // Note
     doc.setFontSize(8)
     doc.setTextColor(100, 100, 100)
-    doc.text('Dokumen ini merupakan bukti sah pengiriman SKBT secara online', 105, 183, { align: 'center' })
+    doc.text('Dokumen ini merupakan bukti sah pengiriman SKBT secara online', 105, 188, { align: 'center' })
     
     // Footer
     doc.setFontSize(10)
     doc.setTextColor(100, 100, 100)
-    doc.text('e-Nihil - Inspektorat Daerah Kabupaten Bintan', 105, 205, { align: 'center' })
+    doc.text('e-Nihil - Inspektorat Daerah Kabupaten Bintan', 105, 210, { align: 'center' })
     doc.setFontSize(8)
-    doc.text('Jl. Bintan Buyu, Bandar Seri Bentan, Kabupaten Bintan, Kepulauan Riau', 105, 212, { align: 'center' })
+    doc.text('Jl. Bintan Buyu, Bandar Seri Bentan, Kabupaten Bintan, Kepulauan Riau', 105, 217, { align: 'center' })
     
     // Save
     doc.save(`Bukti_Pengiriman_${application.tracking_number}.pdf`)
