@@ -1,0 +1,177 @@
+/**
+ * Security Utilities for e-Nihil Application
+ * Provides password hashing, token generation, and security helpers
+ */
+
+import bcrypt from 'bcryptjs'
+
+// Salt rounds for bcrypt (higher = more secure but slower)
+const SALT_ROUNDS = 12
+
+/**
+ * Hash a password using bcrypt
+ * @param password - Plain text password
+ * @returns Hashed password
+ */
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, SALT_ROUNDS)
+}
+
+/**
+ * Verify a password against a hash
+ * @param password - Plain text password to verify
+ * @param hash - Stored hash to compare against
+ * @returns True if password matches
+ */
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  // Handle legacy plain text passwords (for migration)
+  // If hash doesn't start with $2, it's likely plain text
+  if (!hash.startsWith('$2')) {
+    return password === hash
+  }
+  return bcrypt.compare(password, hash)
+}
+
+/**
+ * Generate a cryptographically secure random token
+ * @param length - Number of bytes (default 32 = 64 hex chars)
+ * @returns Hex-encoded random token
+ */
+export function generateSecureToken(length: number = 32): string {
+  const array = new Uint8Array(length)
+  crypto.getRandomValues(array)
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+/**
+ * Generate a CSRF token
+ * @returns CSRF token string
+ */
+export function generateCSRFToken(): string {
+  return generateSecureToken(32)
+}
+
+/**
+ * Sanitize user input to prevent XSS
+ * @param input - User input string
+ * @returns Sanitized string
+ */
+export function sanitizeInput(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+}
+
+/**
+ * Validate email format
+ * @param email - Email to validate
+ * @returns True if valid email format
+ */
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+/**
+ * Validate NIP format (18 digits)
+ * @param nip - NIP to validate
+ * @returns True if valid NIP format
+ */
+export function isValidNIP(nip: string): boolean {
+  const nipRegex = /^\d{18}$/
+  return nipRegex.test(nip)
+}
+
+/**
+ * Rate limiter store (in-memory, for production use Redis)
+ */
+const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
+
+/**
+ * Check rate limit for an identifier
+ * @param identifier - Unique identifier (IP, user ID, etc.)
+ * @param maxRequests - Maximum requests allowed
+ * @param windowMs - Time window in milliseconds
+ * @returns Object with allowed status and remaining requests
+ */
+export function checkRateLimit(
+  identifier: string,
+  maxRequests: number = 10,
+  windowMs: number = 60000
+): { allowed: boolean; remaining: number; resetIn: number } {
+  const now = Date.now()
+  const record = rateLimitStore.get(identifier)
+
+  if (!record || now > record.resetTime) {
+    // New window
+    rateLimitStore.set(identifier, { count: 1, resetTime: now + windowMs })
+    return { allowed: true, remaining: maxRequests - 1, resetIn: windowMs }
+  }
+
+  if (record.count >= maxRequests) {
+    return { allowed: false, remaining: 0, resetIn: record.resetTime - now }
+  }
+
+  record.count++
+  return { allowed: true, remaining: maxRequests - record.count, resetIn: record.resetTime - now }
+}
+
+/**
+ * Clean up expired rate limit entries (call periodically)
+ */
+export function cleanupRateLimitStore(): void {
+  const now = Date.now()
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (now > value.resetTime) {
+      rateLimitStore.delete(key)
+    }
+  }
+}
+
+// Clean up every 5 minutes
+if (typeof setInterval !== 'undefined') {
+  setInterval(cleanupRateLimitStore, 5 * 60 * 1000)
+}
+
+/**
+ * Mask sensitive data for logging
+ * @param data - Data to mask
+ * @param visibleChars - Number of visible characters at start/end
+ * @returns Masked string
+ */
+export function maskSensitiveData(data: string, visibleChars: number = 4): string {
+  if (data.length <= visibleChars * 2) {
+    return '*'.repeat(data.length)
+  }
+  const start = data.slice(0, visibleChars)
+  const end = data.slice(-visibleChars)
+  const masked = '*'.repeat(Math.max(data.length - visibleChars * 2, 4))
+  return `${start}${masked}${end}`
+}
+
+/**
+ * Secure cookie options for authentication
+ */
+export const SECURE_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/',
+}
+
+/**
+ * Get client IP from request headers
+ * @param headers - Request headers
+ * @returns Client IP address
+ */
+export function getClientIP(headers: Headers): string {
+  return (
+    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headers.get('x-real-ip') ||
+    'unknown'
+  )
+}

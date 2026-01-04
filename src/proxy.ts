@@ -7,6 +7,20 @@ const protectedRoutes = ['/dashboard']
 // Routes that should redirect to dashboard if already logged in
 const authRoutes = ['/login']
 
+// Content Security Policy
+const CSP_DIRECTIVES = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Next.js
+  "style-src 'self' 'unsafe-inline'", // Required for inline styles
+  "img-src 'self' data: blob: https://*.supabase.co",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join('; ')
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -34,6 +48,7 @@ export function proxy(request: NextRequest) {
     const response = NextResponse.redirect(loginUrl)
     response.cookies.delete('e-nihil-auth')
     response.cookies.delete('e-nihil-session-expiry')
+    response.cookies.delete('e-nihil-session-valid')
     return response
   }
 
@@ -45,18 +60,22 @@ export function proxy(request: NextRequest) {
   // Add security headers
   const response = NextResponse.next()
   
-  // Security headers
+  // Comprehensive Security Headers
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('X-XSS-Protection', '1; mode=block')
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()')
+  response.headers.set('X-DNS-Prefetch-Control', 'on')
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  response.headers.set('Content-Security-Policy', CSP_DIRECTIVES)
   
   // Prevent caching of protected pages
   if (isProtectedRoute) {
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, private')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
+    response.headers.set('Surrogate-Control', 'no-store')
   }
 
   return response

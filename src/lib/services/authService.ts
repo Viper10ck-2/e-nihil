@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { User, UserRole } from '@/types/database'
+import { hashPassword } from '@/lib/security'
 
 export type { User }
 
@@ -14,198 +15,141 @@ export interface AuthUser {
   roles: UserRole[]
 }
 
-interface SessionData {
-  user: AuthUser
-  sessionToken: string
-  expiresAt: number // timestamp
-  createdAt: number
-}
-
 // Session timeout in milliseconds (8 hours)
 const SESSION_TIMEOUT = 8 * 60 * 60 * 1000
 
-// Generate a random session token
-function generateSessionToken(): string {
-  const array = new Uint8Array(32)
-  crypto.getRandomValues(array)
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
-}
-
+/**
+ * Login using secure server-side API
+ * Cookies are set by the server with HttpOnly flag
+ */
 export async function login(nip: string, password: string): Promise<AuthUser | null> {
-  console.log('Attempting login for NIP:', nip)
-  
-  // Query user by NIP
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('nip', nip)
-    .eq('is_active', true)
-    .single()
+  try {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nip, password }),
+      credentials: 'include', // Important for cookies
+    })
 
-  console.log('Query result:', { user, error })
+    const result = await response.json()
 
-  if (error || !user) {
-    console.error('User not found or error:', error)
+    if (!result.success) {
+      console.error('Login failed:', result.error)
+      return null
+    }
+
+    // Store user data in localStorage (non-sensitive data only)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(result.user))
+      localStorage.setItem('sessionExpiresAt', result.expiresAt.toString())
+    }
+
+    return result.user as AuthUser
+  } catch (error) {
+    console.error('Login error:', error instanceof Error ? error.message : 'Unknown error')
     return null
-  }
-
-  const userData = user as unknown as User
-  console.log('User data:', { nip: userData.nip, password_hash: userData.password_hash })
-
-  // Compare password with stored password_hash
-  // Note: In production, use bcrypt for proper password hashing
-  const isValidPassword = password === userData.password_hash
-  console.log('Password check:', { inputPassword: password, storedHash: userData.password_hash, isValid: isValidPassword })
-
-  if (!isValidPassword) {
-    console.error('Invalid password')
-    return null
-  }
-
-  // Create auth user object
-  const authUser: AuthUser = {
-    id: userData.id,
-    nip: userData.nip,
-    nama: userData.nama,
-    pangkat: userData.pangkat || undefined,
-    jabatan: userData.jabatan || undefined,
-    instansi: userData.instansi || undefined,
-    email: userData.email || undefined,
-    roles: userData.roles as UserRole[],
-  }
-
-  // Generate session token and set expiry
-  const sessionToken = generateSessionToken()
-  const now = Date.now()
-  const expiresAt = now + SESSION_TIMEOUT
-
-  const sessionData: SessionData = {
-    user: authUser,
-    sessionToken,
-    expiresAt,
-    createdAt: now,
-  }
-
-  // Store session in localStorage
-  if (typeof window !== 'undefined') {
-    // Clear any existing session first
-    localStorage.removeItem('user')
-    localStorage.removeItem('session')
-    localStorage.removeItem('currentRole')
-    
-    localStorage.setItem('session', JSON.stringify(sessionData))
-    localStorage.setItem('user', JSON.stringify(authUser))
-    
-    // Set cookie for middleware auth check (with session token)
-    const cookieExpiry = Math.floor((expiresAt - now) / 1000) // in seconds
-    document.cookie = `e-nihil-auth=${sessionToken}; path=/; max-age=${cookieExpiry}; SameSite=Strict; Secure`
-    document.cookie = `e-nihil-session-expiry=${expiresAt}; path=/; max-age=${cookieExpiry}; SameSite=Strict; Secure`
-  }
-
-  // Update last login time in database
-  await supabase
-    .from('users')
-    .update({ updated_at: new Date().toISOString() } as never)
-    .eq('id', userData.id)
-
-  return authUser
-}
-
-export function logout(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('user')
-    localStorage.removeItem('session')
-    localStorage.removeItem('currentRole')
-    // Remove auth cookies
-    document.cookie = 'e-nihil-auth=; path=/; max-age=0; SameSite=Strict'
-    document.cookie = 'e-nihil-session-expiry=; path=/; max-age=0; SameSite=Strict'
   }
 }
 
-// Check if session is valid and not expired
+/**
+ * Logout using secure server-side API
+ */
+export async function logout(): Promise<void> {
+  try {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch (error) {
+    console.error('Logout error:', error)
+  }
+
+  // Clear local storage
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('user')
+    localStorage.removeItem('sessionExpiresAt')
+    localStorage.removeItem('currentRole')
+  }
+}
+
+/**
+ * Check if session is valid
+ */
 export function isSessionValid(): boolean {
   if (typeof window === 'undefined') {
     return false
   }
 
-  const sessionStr = localStorage.getItem('session')
-  if (!sessionStr) {
+  // Check if session-valid cookie exists (set by server)
+  const hasSessionCookie = document.cookie.includes('e-nihil-session-valid=true')
+  if (!hasSessionCookie) {
     return false
   }
 
-  try {
-    const session = JSON.parse(sessionStr) as SessionData
-    const now = Date.now()
-    
-    // Check if session has expired
-    if (now >= session.expiresAt) {
-      // Session expired, clean up
-      logout()
-      return false
-    }
-    
-    return true
-  } catch {
+  // Also check local expiry as backup
+  const expiryStr = localStorage.getItem('sessionExpiresAt')
+  if (!expiryStr) {
     return false
   }
+
+  const expiryTime = parseInt(expiryStr, 10)
+  return !isNaN(expiryTime) && Date.now() < expiryTime
 }
 
-// Get remaining session time in minutes
+/**
+ * Get remaining session time in minutes
+ */
 export function getSessionTimeRemaining(): number {
   if (typeof window === 'undefined') {
     return 0
   }
 
-  const sessionStr = localStorage.getItem('session')
-  if (!sessionStr) {
+  const expiryStr = localStorage.getItem('sessionExpiresAt')
+  if (!expiryStr) {
     return 0
   }
 
-  try {
-    const session = JSON.parse(sessionStr) as SessionData
-    const remaining = session.expiresAt - Date.now()
-    return Math.max(0, Math.floor(remaining / 60000)) // in minutes
-  } catch {
+  const expiryTime = parseInt(expiryStr, 10)
+  if (isNaN(expiryTime)) {
     return 0
   }
+
+  const remaining = expiryTime - Date.now()
+  return Math.max(0, Math.floor(remaining / 60000))
 }
 
-// Extend session (refresh timeout)
-export function extendSession(): void {
+/**
+ * Extend session via server API
+ */
+export async function extendSession(): Promise<void> {
   if (typeof window === 'undefined') {
     return
   }
 
-  const sessionStr = localStorage.getItem('session')
-  if (!sessionStr) {
-    return
-  }
-
   try {
-    const session = JSON.parse(sessionStr) as SessionData
-    const now = Date.now()
-    
-    // Only extend if session is still valid
-    if (now < session.expiresAt) {
-      session.expiresAt = now + SESSION_TIMEOUT
-      localStorage.setItem('session', JSON.stringify(session))
-      
-      // Update cookie expiry
-      const cookieExpiry = Math.floor(SESSION_TIMEOUT / 1000)
-      document.cookie = `e-nihil-auth=${session.sessionToken}; path=/; max-age=${cookieExpiry}; SameSite=Strict; Secure`
-      document.cookie = `e-nihil-session-expiry=${session.expiresAt}; path=/; max-age=${cookieExpiry}; SameSite=Strict; Secure`
+    const response = await fetch('/api/auth/session', {
+      method: 'POST',
+      credentials: 'include',
+    })
+
+    const result = await response.json()
+
+    if (result.success) {
+      localStorage.setItem('sessionExpiresAt', result.expiresAt.toString())
     }
-  } catch {
-    // Ignore errors
+  } catch (error) {
+    console.error('Session extend error:', error)
   }
 }
 
+/**
+ * Get current user from localStorage
+ */
 export function getCurrentUser(): AuthUser | null {
   if (typeof window === 'undefined') {
     return null
   }
 
-  // First check if session is valid
   if (!isSessionValid()) {
     return null
   }
@@ -232,7 +176,6 @@ export function getCurrentRole(): UserRole | null {
     return role as UserRole
   }
 
-  // Default to first role
   const user = getCurrentUser()
   if (user && user.roles.length > 0) {
     return user.roles[0]
@@ -281,6 +224,9 @@ export async function createUser(userData: {
   email?: string
   roles: UserRole[]
 }): Promise<User> {
+  // Hash password before storing
+  const hashedPassword = await hashPassword(userData.password)
+
   const { data, error } = await supabase
     .from('users')
     .insert({
@@ -290,7 +236,7 @@ export async function createUser(userData: {
       jabatan: userData.jabatan || null,
       instansi: userData.instansi || 'Inspektorat Daerah Kabupaten Bintan',
       email: userData.email || null,
-      password_hash: userData.password,
+      password_hash: hashedPassword,
       roles: userData.roles,
       is_active: true,
     } as never)
@@ -351,9 +297,12 @@ export async function toggleUserActive(userId: string, isActive: boolean): Promi
 }
 
 export async function updateUserPassword(userId: string, newPassword: string): Promise<void> {
+  // Hash password before storing
+  const hashedPassword = await hashPassword(newPassword)
+
   const { error } = await supabase
     .from('users')
-    .update({ password_hash: newPassword } as never)
+    .update({ password_hash: hashedPassword } as never)
     .eq('id', userId)
 
   if (error) {

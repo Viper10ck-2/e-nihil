@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Use lazy initialization to avoid useEffect for initial state
   const [user, setUser] = useState<AuthUser | null>(() => getInitialAuthState().user)
   const [currentRole, setCurrentRoleState] = useState<UserRole | null>(() => getInitialAuthState().role)
-  const [isLoading] = useState(false) // Start as false since we initialize synchronously
+  const [isLoading] = useState(false)
   const [sessionTimeRemaining, setSessionTimeRemaining] = useState(() => getInitialAuthState().remaining)
   const warningShownRef = useRef(false)
   const sessionCheckRef = useRef<NodeJS.Timeout | null>(null)
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for storage changes (login from another tab)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'session' || e.key === 'user' || e.key === 'currentRole') {
+      if (e.key === 'user' || e.key === 'sessionExpiresAt' || e.key === 'currentRole') {
         refreshAuth()
       }
     }
@@ -183,8 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const logout = () => {
-    authLogout()
+  const logout = async () => {
+    await authLogout()
     setUser(null)
     setCurrentRoleState(null)
     setSessionTimeRemaining(0)
