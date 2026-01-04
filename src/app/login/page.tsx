@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,13 +14,30 @@ import { Lock, User, Shield, Building2 } from 'lucide-react'
 import Image from 'next/image'
 
 export default function LoginPage() {
-  const { refreshAuth } = useAuth()
+  const { refreshAuth, user } = useAuth()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     nip: '',
     password: '',
   })
   const [error, setError] = useState<string | null>(null)
+  const [loginSuccess, setLoginSuccess] = useState(false)
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (user) {
+      router.replace('/dashboard')
+    }
+  }, [user, router])
+
+  // Handle redirect after successful login
+  useEffect(() => {
+    if (loginSuccess && user) {
+      console.log('[LoginPage] Login successful, redirecting to dashboard')
+      router.replace('/dashboard')
+    }
+  }, [loginSuccess, user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,13 +45,13 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const user = await login(formData.nip, formData.password)
+      const loggedInUser = await login(formData.nip, formData.password)
 
-      if (user) {
+      if (loggedInUser) {
+        console.log('[LoginPage] Login successful, refreshing auth')
         refreshAuth()
+        setLoginSuccess(true)
         toast.success('Login berhasil!')
-        // Use window.location for full page navigation to ensure cookies are sent
-        window.location.href = '/dashboard'
       } else {
         setError('NIP atau Password salah')
       }

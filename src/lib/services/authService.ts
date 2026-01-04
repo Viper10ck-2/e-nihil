@@ -24,6 +24,8 @@ const SESSION_TIMEOUT = 8 * 60 * 60 * 1000
  */
 export async function login(nip: string, password: string): Promise<AuthUser | null> {
   try {
+    console.log('[authService] Attempting login for NIP:', nip)
+    
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -32,6 +34,7 @@ export async function login(nip: string, password: string): Promise<AuthUser | n
     })
 
     const result = await response.json()
+    console.log('[authService] Login response:', result.success ? 'success' : 'failed')
 
     if (!result.success) {
       console.error('Login failed:', result.error)
@@ -40,8 +43,18 @@ export async function login(nip: string, password: string): Promise<AuthUser | n
 
     // Store user data in localStorage (non-sensitive data only)
     if (typeof window !== 'undefined') {
+      console.log('[authService] Storing user data to localStorage')
+      console.log('[authService] User:', result.user?.nama)
+      console.log('[authService] ExpiresAt:', result.expiresAt)
+      
       localStorage.setItem('user', JSON.stringify(result.user))
       localStorage.setItem('sessionExpiresAt', result.expiresAt.toString())
+      
+      // Verify storage
+      const storedUser = localStorage.getItem('user')
+      const storedExpiry = localStorage.getItem('sessionExpiresAt')
+      console.log('[authService] Verified storage - user:', storedUser ? 'exists' : 'missing')
+      console.log('[authService] Verified storage - expiry:', storedExpiry)
     }
 
     return result.user as AuthUser

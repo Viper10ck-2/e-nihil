@@ -1,17 +1,12 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useState, ReactNode, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { UserRole } from '@/types/database'
 import {
   AuthUser,
-  getCurrentUser,
-  getCurrentRole,
   setCurrentRole as setStoredRole,
   logout as authLogout,
-  isSessionValid,
-  getSessionTimeRemaining,
-  extendSession,
 } from '@/lib/services/authService'
 import { toast } from 'sonner'
 
@@ -27,33 +22,66 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Session check interval (every minute)
-const SESSION_CHECK_INTERVAL = 60 * 1000
-// Warning threshold (15 minutes before expiry)
-const SESSION_WARNING_THRESHOLD = 15
+// Helper to get user from localStorage
+function getStoredUser(): AuthUser | null {
+  if (typeof window === 'undefined') return null
+  
+  try {
+    const userStr = localStorage.getItem('user')
+    const expiryStr = localStorage.getItem('sessionExpiresAt')
+    
+    if (!userStr || !expiryStr) return null
+    
+    const expiryTime = parseInt(expiryStr, 10)
+    if (isNaN(expiryTime) || Date.now() >= expiryTime) {
+      // Session expired, clear data
+      localStorage.removeItem('user')
+      localStorage.removeItem('sessionExpiresAt')
+      localStorage.removeItem('currentRole')
+      return null
+    }
+    
+    return JSON.parse(userStr) as AuthUser
+  } catch {
+    return null
+  }
+}
+
+function getStoredRole(): UserRole | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('currentRole') as UserRole | null
+}
+
+function getTimeRemaining(): number {
+  if (typeof window === 'undefined') return 0
+  
+  const expiryStr = localStorage.getItem('sessionExpiresAt')
+  if (!expiryStr) return 0
+  
+  const expiryTime = parseInt(expiryStr, 10)
+  if (isNaN(expiryTime)) return 0
+  
+  return Math.max(0, Math.floor((expiryTime - Date.now()) / 60000))
+}
+
+// Use this for SSR-safe useLayoutEffect
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   
+  // Start with null/loading state - will be populated after mount
   const [user, setUser] = useState<AuthUser | null>(null)
   const [currentRole, setCurrentRoleState] = useState<UserRole | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [sessionTimeRemaining, setSessionTimeRemaining] = useState(0)
-  const warningShownRef = useRef(false)
-  const sessionCheckRef = useRef<NodeJS.Timeout | null>(null)
-  const initializedRef = useRef(false)
 
   const refreshAuth = useCallback(() => {
-    if (!isSessionValid()) {
-      setUser(null)
-      setCurrentRoleState(null)
-      setSessionTimeRemaining(0)
-      return
-    }
+    const storedUser = getStoredUser()
+    const storedRole = getStoredRole()
+    const remaining = getTimeRemaining()
 
-    const storedUser = getCurrentUser()
-    const storedRole = getCurrentRole()
-    const remaining = getSessionTimeRemaining()
+    console.log('[AuthContext] refreshAuth - user:', storedUser?.nama || 'none')
 
     if (storedUser) {
       setUser(storedUser)
@@ -66,143 +94,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Initialize auth state on mount
-  useEffect(() => {
-    if (initializedRef.current) return
-    initializedRef.current = true
+  // Initialize auth state after mount - use layout effect for earlier execution
+  useIsomorphicLayoutEffect(() => {
+    const storedUser = getStoredUser()
+    const storedRole = getStoredRole()
+    const remaining = getTimeRemaining()
+    
+    console.log('[AuthContext] Init - user:', storedUser?.nama || 'none', 'remaining:', remaining)
 
-    const initAuth = async () => {
-      try {
-        // Check localStorage for user data first
-        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
-        const expiryStr = typeof window !== 'undefined' ? localStorage.getItem('sessionExpiresAt') : null
-        
-        if (userStr && expiryStr) {
-          const expiryTime = parseInt(expiryStr, 10)
-          const isValid = !isNaN(expiryTime) && Date.now() < expiryTime
-          
-          if (isValid) {
-            try {
-              const storedUser = JSON.parse(userStr) as AuthUser
-              const storedRole = localStorage.getItem('currentRole') as UserRole | null
-              
-              setUser(storedUser)
-              setCurrentRoleState(storedRole || storedUser.roles[0] || null)
-              setSessionTimeRemaining(Math.max(0, Math.floor((expiryTime - Date.now()) / 60000)))
-              setIsLoading(false)
-              return
-            } catch (e) {
-              console.error('Error parsing stored user:', e)
-            }
-          }
-        }
-        
-        // No valid local session, clear any stale data
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user')
-          localStorage.removeItem('sessionExpiresAt')
-          localStorage.removeItem('currentRole')
-        }
-        setUser(null)
-        setCurrentRoleState(null)
-        setSessionTimeRemaining(0)
-      } catch (error) {
-        console.error('Auth init error:', error)
-        setUser(null)
-        setCurrentRoleState(null)
-        setSessionTimeRemaining(0)
-      } finally {
-        setIsLoading(false)
-      }
+    if (storedUser) {
+      setUser(storedUser)
+      setCurrentRoleState(storedRole || storedUser.roles[0] || null)
+      setSessionTimeRemaining(remaining)
     }
-
-    initAuth()
+    
+    setIsLoading(false)
   }, [])
 
-  // Session monitoring
+  // Session monitoring - check every minute
   useEffect(() => {
+    if (isLoading) return // Don't start monitoring until loaded
+
     const checkSession = () => {
-      if (!isSessionValid()) {
+      const storedUser = getStoredUser()
+      
+      if (!storedUser && user) {
         // Session expired
-        if (user) {
-          toast.error('Sesi Anda telah berakhir. Silakan login kembali.')
-          authLogout()
-          setUser(null)
-          setCurrentRoleState(null)
-          setSessionTimeRemaining(0)
-          router.push('/login')
-        }
+        toast.error('Sesi Anda telah berakhir. Silakan login kembali.')
+        setUser(null)
+        setCurrentRoleState(null)
+        setSessionTimeRemaining(0)
+        router.push('/login')
         return
       }
 
-      const remaining = getSessionTimeRemaining()
+      const remaining = getTimeRemaining()
       setSessionTimeRemaining(remaining)
 
-      // Show warning when session is about to expire
-      if (remaining <= SESSION_WARNING_THRESHOLD && remaining > 0 && !warningShownRef.current) {
-        warningShownRef.current = true
-        toast.warning(`Sesi Anda akan berakhir dalam ${remaining} menit. Lakukan aktivitas untuk memperpanjang sesi.`, {
+      // Show warning when session is about to expire (15 minutes)
+      if (remaining <= 15 && remaining > 0 && user) {
+        toast.warning(`Sesi Anda akan berakhir dalam ${remaining} menit.`, {
           duration: 10000,
+          id: 'session-warning',
         })
-      }
-
-      // Reset warning flag when session is extended
-      if (remaining > SESSION_WARNING_THRESHOLD) {
-        warningShownRef.current = false
       }
     }
 
-    // Set up periodic session check
-    sessionCheckRef.current = setInterval(checkSession, SESSION_CHECK_INTERVAL)
-
+    const interval = setInterval(checkSession, 60000)
+    
     // Listen for storage changes (login from another tab)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user' || e.key === 'sessionExpiresAt' || e.key === 'currentRole') {
+      if (e.key === 'user' || e.key === 'sessionExpiresAt') {
         refreshAuth()
       }
     }
-
-    // Extend session on user activity
-    const handleActivity = () => {
-      if (isSessionValid()) {
-        extendSession()
-        const remaining = getSessionTimeRemaining()
-        setSessionTimeRemaining(remaining)
-        warningShownRef.current = false
-      }
-    }
-
-    // Listen for user activity to extend session
-    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart']
-    let activityTimeout: NodeJS.Timeout | null = null
-    
-    const throttledActivity = () => {
-      if (activityTimeout) return
-      activityTimeout = setTimeout(() => {
-        handleActivity()
-        activityTimeout = null
-      }, 60000) // Throttle to once per minute
-    }
-
-    activityEvents.forEach(event => {
-      window.addEventListener(event, throttledActivity, { passive: true })
-    })
-
     window.addEventListener('storage', handleStorageChange)
 
     return () => {
-      if (sessionCheckRef.current) {
-        clearInterval(sessionCheckRef.current)
-      }
-      if (activityTimeout) {
-        clearTimeout(activityTimeout)
-      }
-      activityEvents.forEach(event => {
-        window.removeEventListener(event, throttledActivity)
-      })
+      clearInterval(interval)
       window.removeEventListener('storage', handleStorageChange)
     }
-  }, [refreshAuth, router, user])
+  }, [refreshAuth, router, user, isLoading])
 
   const setCurrentRole = (role: UserRole) => {
     if (user?.roles.includes(role)) {
