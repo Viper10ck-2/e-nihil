@@ -10,24 +10,35 @@ const authRoutes = ['/login']
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Check if user is logged in by looking for user data in cookies
-  // Note: We use a simple cookie check since we're using localStorage for auth
-  // In production, use proper session tokens/JWT
-  const userCookie = request.cookies.get('e-nihil-auth')
+  // Check if user is logged in by looking for session token in cookies
+  const sessionToken = request.cookies.get('e-nihil-auth')
+  const sessionExpiry = request.cookies.get('e-nihil-session-expiry')
+
+  // Check if session is valid and not expired
+  let isValidSession = false
+  if (sessionToken && sessionExpiry) {
+    const expiryTime = parseInt(sessionExpiry.value, 10)
+    isValidSession = !isNaN(expiryTime) && Date.now() < expiryTime
+  }
 
   // Check protected routes
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
 
-  // If accessing protected route without auth, redirect to login
-  if (isProtectedRoute && !userCookie) {
+  // If accessing protected route without valid session, redirect to login
+  if (isProtectedRoute && !isValidSession) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
+    
+    // Clear expired cookies
+    const response = NextResponse.redirect(loginUrl)
+    response.cookies.delete('e-nihil-auth')
+    response.cookies.delete('e-nihil-session-expiry')
+    return response
   }
 
-  // If accessing auth route while logged in, redirect to dashboard
-  if (isAuthRoute && userCookie) {
+  // If accessing auth route while logged in with valid session, redirect to dashboard
+  if (isAuthRoute && isValidSession) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
@@ -39,6 +50,14 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  
+  // Prevent caching of protected pages
+  if (isProtectedRoute) {
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+  }
 
   return response
 }

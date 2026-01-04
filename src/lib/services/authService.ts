@@ -14,6 +14,23 @@ export interface AuthUser {
   roles: UserRole[]
 }
 
+interface SessionData {
+  user: AuthUser
+  sessionToken: string
+  expiresAt: number // timestamp
+  createdAt: number
+}
+
+// Session timeout in milliseconds (8 hours)
+const SESSION_TIMEOUT = 8 * 60 * 60 * 1000
+
+// Generate a random session token
+function generateSessionToken(): string {
+  const array = new Uint8Array(32)
+  crypto.getRandomValues(array)
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
 export async function login(nip: string, password: string): Promise<AuthUser | null> {
   console.log('Attempting login for NIP:', nip)
   
@@ -45,7 +62,7 @@ export async function login(nip: string, password: string): Promise<AuthUser | n
     return null
   }
 
-  // Store session
+  // Create auth user object
   const authUser: AuthUser = {
     id: userData.id,
     nip: userData.nip,
@@ -57,12 +74,39 @@ export async function login(nip: string, password: string): Promise<AuthUser | n
     roles: userData.roles as UserRole[],
   }
 
-  // Store in localStorage and set cookie for middleware
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('user', JSON.stringify(authUser))
-    // Set cookie for middleware auth check (expires in 7 days)
-    document.cookie = `e-nihil-auth=${authUser.id}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`
+  // Generate session token and set expiry
+  const sessionToken = generateSessionToken()
+  const now = Date.now()
+  const expiresAt = now + SESSION_TIMEOUT
+
+  const sessionData: SessionData = {
+    user: authUser,
+    sessionToken,
+    expiresAt,
+    createdAt: now,
   }
+
+  // Store session in localStorage
+  if (typeof window !== 'undefined') {
+    // Clear any existing session first
+    localStorage.removeItem('user')
+    localStorage.removeItem('session')
+    localStorage.removeItem('currentRole')
+    
+    localStorage.setItem('session', JSON.stringify(sessionData))
+    localStorage.setItem('user', JSON.stringify(authUser))
+    
+    // Set cookie for middleware auth check (with session token)
+    const cookieExpiry = Math.floor((expiresAt - now) / 1000) // in seconds
+    document.cookie = `e-nihil-auth=${sessionToken}; path=/; max-age=${cookieExpiry}; SameSite=Strict; Secure`
+    document.cookie = `e-nihil-session-expiry=${expiresAt}; path=/; max-age=${cookieExpiry}; SameSite=Strict; Secure`
+  }
+
+  // Update last login time in database
+  await supabase
+    .from('users')
+    .update({ updated_at: new Date().toISOString() } as never)
+    .eq('id', userData.id)
 
   return authUser
 }
@@ -70,14 +114,99 @@ export async function login(nip: string, password: string): Promise<AuthUser | n
 export function logout(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('user')
+    localStorage.removeItem('session')
     localStorage.removeItem('currentRole')
-    // Remove auth cookie
+    // Remove auth cookies
     document.cookie = 'e-nihil-auth=; path=/; max-age=0; SameSite=Strict'
+    document.cookie = 'e-nihil-session-expiry=; path=/; max-age=0; SameSite=Strict'
+  }
+}
+
+// Check if session is valid and not expired
+export function isSessionValid(): boolean {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  const sessionStr = localStorage.getItem('session')
+  if (!sessionStr) {
+    return false
+  }
+
+  try {
+    const session = JSON.parse(sessionStr) as SessionData
+    const now = Date.now()
+    
+    // Check if session has expired
+    if (now >= session.expiresAt) {
+      // Session expired, clean up
+      logout()
+      return false
+    }
+    
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Get remaining session time in minutes
+export function getSessionTimeRemaining(): number {
+  if (typeof window === 'undefined') {
+    return 0
+  }
+
+  const sessionStr = localStorage.getItem('session')
+  if (!sessionStr) {
+    return 0
+  }
+
+  try {
+    const session = JSON.parse(sessionStr) as SessionData
+    const remaining = session.expiresAt - Date.now()
+    return Math.max(0, Math.floor(remaining / 60000)) // in minutes
+  } catch {
+    return 0
+  }
+}
+
+// Extend session (refresh timeout)
+export function extendSession(): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  const sessionStr = localStorage.getItem('session')
+  if (!sessionStr) {
+    return
+  }
+
+  try {
+    const session = JSON.parse(sessionStr) as SessionData
+    const now = Date.now()
+    
+    // Only extend if session is still valid
+    if (now < session.expiresAt) {
+      session.expiresAt = now + SESSION_TIMEOUT
+      localStorage.setItem('session', JSON.stringify(session))
+      
+      // Update cookie expiry
+      const cookieExpiry = Math.floor(SESSION_TIMEOUT / 1000)
+      document.cookie = `e-nihil-auth=${session.sessionToken}; path=/; max-age=${cookieExpiry}; SameSite=Strict; Secure`
+      document.cookie = `e-nihil-session-expiry=${session.expiresAt}; path=/; max-age=${cookieExpiry}; SameSite=Strict; Secure`
+    }
+  } catch {
+    // Ignore errors
   }
 }
 
 export function getCurrentUser(): AuthUser | null {
   if (typeof window === 'undefined') {
+    return null
+  }
+
+  // First check if session is valid
+  if (!isSessionValid()) {
     return null
   }
 
@@ -124,7 +253,7 @@ export function hasRole(role: UserRole): boolean {
 }
 
 export function isAuthenticated(): boolean {
-  return getCurrentUser() !== null
+  return isSessionValid() && getCurrentUser() !== null
 }
 
 // User Management Functions
