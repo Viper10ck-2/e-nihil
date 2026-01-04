@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Save pickup method to database
-    const { error: updateError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateError } = await (supabase as any)
       .from('applications')
       .update({
         pickup_method: pickupMethod,
