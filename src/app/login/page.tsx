@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,7 +13,6 @@ import { Lock, User, Shield, Building2 } from 'lucide-react'
 import Image from 'next/image'
 
 export default function LoginPage() {
-  const router = useRouter()
   const { refreshAuth } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -34,7 +32,8 @@ export default function LoginPage() {
       if (user) {
         refreshAuth()
         toast.success('Login berhasil!')
-        router.push('/dashboard')
+        // Use window.location for full page navigation to ensure cookies are sent
+        window.location.href = '/dashboard'
       } else {
         setError('NIP atau Password salah')
       }
