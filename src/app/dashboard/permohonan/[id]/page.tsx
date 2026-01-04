@@ -187,45 +187,52 @@ export default function PermohonanDetailPage() {
     
     // Header - green background
     doc.setFillColor(34, 197, 94) // green-500
-    doc.rect(0, 0, 210, 50, 'F')
+    doc.rect(0, 0, 210, 55, 'F')
     
     // White circle for checkmark
     doc.setFillColor(255, 255, 255)
-    doc.circle(105, 28, 15, 'F')
+    doc.circle(105, 30, 18, 'F')
     
-    // Draw checkmark manually using lines
+    // Draw checkmark manually using lines - improved proportions
     doc.setDrawColor(34, 197, 94)
-    doc.setLineWidth(2.5)
-    doc.line(97, 28, 102, 34) // short line going down-right
-    doc.line(102, 34, 113, 22) // long line going up-right
+    doc.setLineWidth(3)
+    doc.setLineCap('round')
+    doc.line(95, 30, 101, 38) // short line going down-right
+    doc.line(101, 38, 115, 22) // long line going up-right
     
     // Title below header
     doc.setTextColor(34, 197, 94)
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
-    doc.text('BUKTI PENGIRIMAN SKBT ONLINE', 105, 62, { align: 'center' })
+    doc.text('BUKTI PENGIRIMAN SKBT ONLINE', 105, 68, { align: 'center' })
     doc.setFont('helvetica', 'normal')
     
-    // Receipt box
+    // Receipt box - made taller for ID Pesan
     doc.setDrawColor(34, 197, 94)
     doc.setLineWidth(0.5)
-    doc.roundedRect(20, 72, 170, 105, 3, 3, 'S')
+    doc.roundedRect(20, 78, 170, 115, 3, 3, 'S')
     
     // Receipt title
     doc.setFontSize(10)
     doc.setTextColor(100, 100, 100)
-    doc.text('BUKTI PENGIRIMAN DIGITAL', 105, 82, { align: 'center' })
+    doc.text('BUKTI PENGIRIMAN DIGITAL', 105, 88, { align: 'center' })
     
     // Dashed line top
     doc.setLineDashPattern([2, 2], 0)
     doc.setDrawColor(34, 197, 94)
-    doc.line(30, 87, 180, 87)
+    doc.line(30, 93, 180, 93)
     doc.setLineDashPattern([], 0)
+    
+    // Convert to Jakarta timezone (GMT+7)
+    const sentDate = new Date(deliveryProof.sentAt)
+    // Add 7 hours for GMT+7 if the date is in UTC
+    const jakartaDate = new Date(sentDate.getTime() + (7 * 60 * 60 * 1000))
+    const formattedDate = format(jakartaDate, 'dd MMMM yyyy, HH:mm', { locale: id }) + ' WIB'
     
     // Content - reduced line height
     doc.setFontSize(10)
-    const startY = 96
-    const lineHeight = 8 // reduced from 10
+    const startY = 102
+    const lineHeight = 8
     const labelX = 30
     const valueX = 80
     
@@ -236,8 +243,7 @@ export default function PermohonanDetailPage() {
       ['NIP', deliveryProof.nip || '-'],
       ['Email Tujuan', deliveryProof.email],
       ['Metode Pengiriman', 'Online (Email)'],
-      ['Tanggal Kirim', format(new Date(deliveryProof.sentAt), 'dd MMMM yyyy, HH:mm', { locale: id }) + ' WIB'],
-      ['ID Pesan', deliveryProof.messageId || '-'],
+      ['Tanggal Kirim', formattedDate],
     ]
     
     fields.forEach((field, index) => {
@@ -246,29 +252,37 @@ export default function PermohonanDetailPage() {
       doc.text(field[0], labelX, y)
       doc.setTextColor(30, 58, 95)
       doc.setFont('helvetica', index < 2 ? 'bold' : 'normal')
-      // Truncate long text if needed
-      const value = field[1].length > 50 ? field[1].substring(0, 47) + '...' : field[1]
-      doc.text(value, valueX, y)
+      doc.text(field[1], valueX, y)
       doc.setFont('helvetica', 'normal')
     })
+    
+    // ID Pesan - separate handling with smaller font for long text
+    const idPesanY = startY + (7 * lineHeight)
+    doc.setTextColor(100, 100, 100)
+    doc.setFontSize(10)
+    doc.text('ID Pesan', labelX, idPesanY)
+    doc.setTextColor(30, 58, 95)
+    doc.setFontSize(7) // smaller font for long ID
+    const messageId = deliveryProof.messageId || '-'
+    doc.text(messageId, valueX, idPesanY)
     
     // Bottom dashed line - adjusted position
     doc.setLineDashPattern([2, 2], 0)
     doc.setDrawColor(34, 197, 94)
-    doc.line(30, 162, 180, 162)
+    doc.line(30, 175, 180, 175)
     doc.setLineDashPattern([], 0)
     
     // Note
     doc.setFontSize(8)
     doc.setTextColor(100, 100, 100)
-    doc.text('Dokumen ini merupakan bukti sah pengiriman SKBT secara online', 105, 170, { align: 'center' })
+    doc.text('Dokumen ini merupakan bukti sah pengiriman SKBT secara online', 105, 183, { align: 'center' })
     
     // Footer
     doc.setFontSize(10)
     doc.setTextColor(100, 100, 100)
-    doc.text('e-Nihil - Inspektorat Daerah Kabupaten Bintan', 105, 195, { align: 'center' })
+    doc.text('e-Nihil - Inspektorat Daerah Kabupaten Bintan', 105, 205, { align: 'center' })
     doc.setFontSize(8)
-    doc.text('Jl. Bintan Buyu, Bandar Seri Bentan, Kabupaten Bintan, Kepulauan Riau', 105, 202, { align: 'center' })
+    doc.text('Jl. Bintan Buyu, Bandar Seri Bentan, Kabupaten Bintan, Kepulauan Riau', 105, 212, { align: 'center' })
     
     // Save
     doc.save(`Bukti_Pengiriman_${application.tracking_number}.pdf`)
