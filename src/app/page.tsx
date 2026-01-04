@@ -16,12 +16,18 @@ import {
   Zap,
   Eye
 } from 'lucide-react'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'e-Nihil Bintan | Layanan SKBT Online Inspektorat Kabupaten Bintan',
+  description: 'e-Nihil adalah layanan penerbitan Surat Keterangan Bebas Temuan (SKBT) online dari Inspektorat Daerah Kabupaten Bintan. Ajukan permohonan SKBT untuk mutasi, promosi jabatan secara gratis, cepat, dan transparan.',
+}
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-blue-50/30">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden" aria-label="Hero">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900">
           <div className="absolute inset-0 opacity-10">
@@ -39,20 +45,20 @@ export default function HomePage() {
                 Layanan Resmi Inspektorat Kab. Bintan
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                e-Nihil
+                e-Nihil Bintan
                 <span className="block text-2xl md:text-3xl font-normal text-blue-200 mt-2">
-                  Surat Keterangan Bebas Temuan
+                  Surat Keterangan Bebas Temuan Online
                 </span>
               </h1>
               <p className="text-lg text-blue-100 mb-8 max-w-xl mx-auto lg:mx-0">
-                Layanan penerbitan Surat Keterangan Bebas Temuan secara online, 
+                Layanan penerbitan Surat Keterangan Bebas Temuan (SKBT) secara online, 
                 cepat, transparan, dan tanpa biaya dari Inspektorat Daerah Kabupaten Bintan
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/pengajuan">
                   <Button size="lg" className="w-full sm:w-auto bg-white text-blue-700 hover:bg-blue-50 shadow-lg shadow-blue-900/20 font-semibold px-8">
                     <FileText className="mr-2 h-5 w-5" />
-                    Ajukan Permohonan
+                    Ajukan Permohonan SKBT
                   </Button>
                 </Link>
                 <Link href="/tracking">
@@ -69,10 +75,11 @@ export default function HomePage() {
                 <div className="w-80 h-80 bg-white rounded-3xl shadow-2xl flex items-center justify-center relative z-10">
                   <Image 
                     src="/logo-inspektorat.png" 
-                    alt="Logo Inspektorat" 
+                    alt="Logo Inspektorat Daerah Kabupaten Bintan" 
                     width={200} 
                     height={200}
                     className="opacity-90"
+                    priority
                   />
                 </div>
               </div>
@@ -82,49 +89,49 @@ export default function HomePage() {
         
         {/* Wave Divider */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="white"/>
           </svg>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white" aria-label="Keunggulan Layanan">
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-800 mb-4">Mengapa Menggunakan e-Nihil?</h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
-              Layanan digital yang memudahkan proses pengajuan Surat Keterangan Bebas Temuan
+              Layanan digital yang memudahkan proses pengajuan Surat Keterangan Bebas Temuan di Kabupaten Bintan
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
               <CardContent className="pt-8 pb-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <Zap className="h-8 w-8 text-white" />
+                  <Zap className="h-8 w-8 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-800 mb-2">Cepat & Efisien</h3>
-                <p className="text-slate-600">Proses pengajuan hanya membutuhkan waktu 3 hari kerja</p>
+                <p className="text-slate-600">Proses pengajuan SKBT hanya membutuhkan waktu 3 hari kerja</p>
               </CardContent>
             </Card>
 
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
               <CardContent className="pt-8 pb-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/30">
-                  <CheckCircle className="h-8 w-8 text-white" />
+                  <CheckCircle className="h-8 w-8 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-800 mb-2">100% Gratis</h3>
-                <p className="text-slate-600">Tidak dipungut biaya apapun untuk layanan ini</p>
+                <p className="text-slate-600">Tidak dipungut biaya apapun untuk layanan SKBT ini</p>
               </CardContent>
             </Card>
 
             <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white">
               <CardContent className="pt-8 pb-6 text-center">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                  <Eye className="h-8 w-8 text-white" />
+                  <Eye className="h-8 w-8 text-white" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-slate-800 mb-2">Transparan</h3>
-                <p className="text-slate-600">Pantau status permohonan Anda secara real-time</p>
+                <p className="text-slate-600">Pantau status permohonan SKBT Anda secara real-time</p>
               </CardContent>
             </Card>
           </div>
@@ -132,7 +139,7 @@ export default function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 bg-gradient-to-r from-blue-600 to-blue-800">
+      <section className="py-12 bg-gradient-to-r from-blue-600 to-blue-800" aria-label="Statistik Layanan">
         <div className="container">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
             <div>
@@ -156,22 +163,22 @@ export default function HomePage() {
       </section>
 
       {/* Persyaratan Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white" aria-label="Persyaratan Dokumen SKBT">
         <div className="container">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-800 mb-4">Persyaratan Dokumen</h2>
-            <p className="text-slate-600">Dokumen yang diperlukan berbeda berdasarkan tujuan permohonan</p>
+            <h2 className="text-3xl font-bold text-slate-800 mb-4">Persyaratan Dokumen SKBT</h2>
+            <p className="text-slate-600">Dokumen yang diperlukan berbeda berdasarkan tujuan permohonan Surat Keterangan Bebas Temuan</p>
           </div>
           <DocumentRequirementsCarousel />
         </div>
       </section>
 
       {/* Prosedur Section */}
-      <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
+      <section className="py-16 bg-gradient-to-b from-blue-50 to-white" aria-label="Alur Prosedur SKBT">
         <div className="container">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-800 mb-4">Alur Prosedur Online</h2>
-            <p className="text-slate-600">Proses pengajuan yang mudah dan transparan</p>
+            <h2 className="text-3xl font-bold text-slate-800 mb-4">Alur Prosedur Pengajuan SKBT Online</h2>
+            <p className="text-slate-600">Proses pengajuan Surat Keterangan Bebas Temuan yang mudah dan transparan</p>
           </div>
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -248,22 +255,22 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 relative overflow-hidden">
+      <section className="py-20 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 relative overflow-hidden" aria-label="Ajukan Permohonan">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 -translate-y-1/2"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 translate-y-1/2"></div>
         </div>
         <div className="container relative z-10 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Siap Mengajukan Permohonan?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Siap Mengajukan Permohonan SKBT?</h2>
           <p className="text-blue-100 mb-8 max-w-xl mx-auto text-lg">
             Pastikan Anda telah menyiapkan semua dokumen persyaratan dalam format PDF 
-            sebelum memulai pengajuan.
+            sebelum memulai pengajuan Surat Keterangan Bebas Temuan.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/pengajuan">
               <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 shadow-lg shadow-blue-900/30 font-semibold px-10">
                 <FileText className="mr-2 h-5 w-5" />
-                Mulai Pengajuan Sekarang
+                Mulai Pengajuan SKBT Sekarang
               </Button>
             </Link>
             <Link href="/tracking">
@@ -277,46 +284,47 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
+      <footer className="bg-slate-900 text-white py-12" role="contentinfo">
         <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <Image 
                   src="/logo-inspektorat.png" 
-                  alt="Logo" 
+                  alt="Logo Inspektorat Kabupaten Bintan" 
                   width={40} 
                   height={40}
                   className="brightness-0 invert"
                 />
                 <div>
-                  <h3 className="font-bold text-lg">e-Nihil</h3>
+                  <h3 className="font-bold text-lg">e-Nihil Bintan</h3>
                   <p className="text-slate-400 text-sm">Inspektorat Kab. Bintan</p>
                 </div>
               </div>
               <p className="text-slate-400 text-sm">
-                Sistem Layanan Keterangan Bebas Temuan secara online dari Inspektorat Daerah Kabupaten Bintan
+                Sistem Layanan Surat Keterangan Bebas Temuan (SKBT) secara online dari Inspektorat Daerah Kabupaten Bintan, Kepulauan Riau
               </p>
             </div>
-            <div>
+            <nav aria-label="Layanan">
               <h4 className="font-semibold mb-4">Layanan</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="/pengajuan" className="hover:text-white transition-colors">Ajukan Permohonan</Link></li>
-                <li><Link href="/tracking" className="hover:text-white transition-colors">Cek Status</Link></li>
+                <li><Link href="/pengajuan" className="hover:text-white transition-colors">Ajukan Permohonan SKBT</Link></li>
+                <li><Link href="/tracking" className="hover:text-white transition-colors">Cek Status Permohonan</Link></li>
                 <li><Link href="/login" className="hover:text-white transition-colors">Login Admin</Link></li>
               </ul>
-            </div>
-            <div>
+            </nav>
+            <address className="not-italic">
               <h4 className="font-semibold mb-4">Kontak</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
                 <li>Inspektorat Daerah Kabupaten Bintan</li>
                 <li>Jl. Bintan Buyu, Bandar Seri Bentan</li>
                 <li>Kabupaten Bintan, Kepulauan Riau</li>
+                <li>Indonesia</li>
               </ul>
-            </div>
+            </address>
           </div>
           <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-500 text-sm">
-            © {new Date().getFullYear()} e-Nihil - Inspektorat Daerah Kabupaten Bintan. All rights reserved.
+            <p>© {new Date().getFullYear()} e-Nihil Bintan - Inspektorat Daerah Kabupaten Bintan. All rights reserved.</p>
           </div>
         </div>
       </footer>

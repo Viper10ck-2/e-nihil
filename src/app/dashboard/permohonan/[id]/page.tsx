@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { PDFViewer } from '@/components/ui/pdf-viewer'
+import { LazyPDFViewer } from '@/components/ui/lazy-pdf-viewer'
 import {
   Dialog,
   DialogContent,
@@ -571,7 +571,7 @@ export default function PermohonanDetailPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden">
-            {previewDoc && <PDFViewer url={previewDoc.url} fileName={previewDoc.name} onDownload={handleDownloadPreview} />}
+            {previewDoc && <LazyPDFViewer url={previewDoc.url} fileName={previewDoc.name} onDownload={handleDownloadPreview} />}
           </div>
         </DialogContent>
       </Dialog>

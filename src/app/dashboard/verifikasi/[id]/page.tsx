@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
-import { PDFViewer } from '@/components/ui/pdf-viewer'
 import {
   Dialog,
   DialogContent,

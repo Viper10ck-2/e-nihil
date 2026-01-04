@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://e-nihil.vercel.app/sitemap.xml
+
+# Disallow admin/dashboard pages from indexing
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api

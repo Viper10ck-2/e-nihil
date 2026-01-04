@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DocumentUpload } from '@/components/forms/DocumentUpload'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { SimpleCaptcha } from '@/components/ui/simple-captcha'
 import { applicationFormSchema, type ApplicationFormData } from '@/lib/validations'
 import { DOCUMENT_TYPES, PANGKAT_GOLONGAN, UNIT_KERJA } from '@/lib/constants'
 import { createApplication, generateUniqueTrackingNumber, uploadDocument } from '@/lib/services/applicationService'
@@ -37,6 +38,7 @@ export default function PengajuanPage() {
   const [tujuanLainnya, setTujuanLainnya] = useState('')
   const [pangkatLainnya, setPangkatLainnya] = useState('')
   const [showPangkatLainnya, setShowPangkatLainnya] = useState(false)
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<Record<DocumentType, File | null>>({
     surat_permohonan: null,
     surat_pernyataan_bebas_temuan: null,
@@ -114,6 +116,7 @@ export default function PengajuanPage() {
     if (!allDocumentsUploaded) { toast.error('Semua dokumen wajib diupload'); return }
     if (!tujuanPermohonan) { toast.error('Pilih tujuan permohonan terlebih dahulu'); return }
     if (showTujuanLainnya && !tujuanLainnya.trim()) { toast.error('Tuliskan tujuan permohonan Anda'); return }
+    if (!isCaptchaVerified) { toast.error('Selesaikan verifikasi anti-robot terlebih dahulu'); return }
 
     setIsSubmitting(true)
     try {
@@ -456,22 +459,35 @@ export default function PengajuanPage() {
                 </div>
               </div>
 
+              {/* Captcha Section */}
+              <div className="mt-6">
+                <SimpleCaptcha 
+                  onVerified={setIsCaptchaVerified} 
+                  isVerified={isCaptchaVerified} 
+                />
+              </div>
+
               {/* Submit Button */}
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100">
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-5 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100">
                 <div className="text-sm">
                   {!allDocumentsUploaded ? (
                     <div className="flex items-center gap-2 text-amber-600">
                       <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
                       <span>Lengkapi semua dokumen untuk mengajukan</span>
                     </div>
+                  ) : !isCaptchaVerified ? (
+                    <div className="flex items-center gap-2 text-amber-600">
+                      <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
+                      <span>Selesaikan verifikasi anti-robot</span>
+                    </div>
                   ) : (
                     <div className="flex items-center gap-2 text-emerald-600">
                       <CheckCircle className="h-4 w-4" />
-                      <span>Semua dokumen sudah lengkap</span>
+                      <span>Siap untuk diajukan</span>
                     </div>
                   )}
                 </div>
-                <Button type="submit" size="lg" disabled={isSubmitting || !allDocumentsUploaded}
+                <Button type="submit" size="lg" disabled={isSubmitting || !allDocumentsUploaded || !isCaptchaVerified}
                   className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-200/50 rounded-xl px-8 transition-all duration-300 hover:scale-[1.02]">
                   {isSubmitting ? (<><LoadingSpinner size="sm" className="mr-2" />Mengirim...</>) : 'Ajukan Permohonan'}
                 </Button>

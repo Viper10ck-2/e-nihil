@@ -25,8 +25,19 @@ const nextConfig: NextConfig = {
   
   // Experimental features for better performance
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', 'recharts'],
+    optimizePackageImports: [
+      'lucide-react', 
+      'date-fns', 
+      'recharts',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+    ],
   },
+
+  // Turbopack configuration (Next.js 16+)
+  turbopack: {},
 };
 
 export default nextConfig;
