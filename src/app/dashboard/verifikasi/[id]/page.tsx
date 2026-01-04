@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { LazyPDFViewer } from '@/components/ui/lazy-pdf-viewer'
 import {
   Dialog,
   DialogContent,
@@ -327,8 +328,19 @@ export default function VerifikasiDetailPage() {
       const result = await response.json()
       if (!result.success) throw new Error('Gagal mengirim email')
 
-      // 4. Update status menjadi Selesai
-      await updateApplicationStatus(application.id, 'Selesai', 'Berkas dikirim secara online', user?.id)
+      // 4. Update status menjadi Diambil dan set pickup_method jika belum ada
+      await updateApplicationStatus(application.id, 'Diambil', 'Berkas dikirim secara online', user?.id)
+      
+      // Set pickup_method ke 'online' jika belum dipilih oleh pemohon
+      if (!application.pickup_method) {
+        await supabase
+          .from('applications')
+          .update({ 
+            pickup_method: 'online',
+            pickup_method_selected_at: new Date().toISOString()
+          } as never)
+          .eq('id', application.id)
+      }
 
       toast.success('Berkas berhasil dikirim! Email notifikasi telah dikirim ke pemohon.')
       setShowSendOnlineDialog(false)
@@ -391,8 +403,19 @@ export default function VerifikasiDetailPage() {
 
       if (uploadError) throw uploadError
 
-      // 2. Update status menjadi Diambil
+      // 2. Update status menjadi Diambil dan set pickup_method jika belum ada
       await updateApplicationStatus(application.id, 'Diambil', 'Berkas diserahkan secara langsung', user?.id)
+      
+      // Set pickup_method ke 'offline' jika belum dipilih oleh pemohon
+      if (!application.pickup_method) {
+        await supabase
+          .from('applications')
+          .update({ 
+            pickup_method: 'offline',
+            pickup_method_selected_at: new Date().toISOString()
+          } as never)
+          .eq('id', application.id)
+      }
 
       toast.success('Berkas berhasil diserahkan! Status diperbarui menjadi Diambil.')
       setShowOfflineDialog(false)
@@ -867,7 +890,7 @@ export default function VerifikasiDetailPage() {
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 overflow-hidden">
-            {previewDoc && <PDFViewer url={previewDoc.url} fileName={previewDoc.name} onDownload={handleDownloadPreview} />}
+            {previewDoc && <LazyPDFViewer url={previewDoc.url} fileName={previewDoc.name} onDownload={handleDownloadPreview} />}
           </div>
         </DialogContent>
       </Dialog>
