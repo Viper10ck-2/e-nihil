@@ -23,7 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, ArrowRight } from 'lucide-react'
+import { Search, ArrowRight, FileText } from 'lucide-react'
+import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
@@ -35,6 +36,7 @@ export default function VerifikasiPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [applications, setApplications] = useState<Application[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   useEffect(() => {
     loadApplications()
@@ -81,6 +83,53 @@ export default function VerifikasiPage() {
   }
 
   const relevantStatuses = getRelevantStatuses()
+
+  // Cek apakah status sudah bisa download draft SKBT
+  const canDownloadDraft = (status: ApplicationStatus): boolean => {
+    const allowedStatuses: ApplicationStatus[] = [
+      'Diverifikasi Admin',
+      'Diparaf Kasubbag Anev',
+      'Diproses Sekretaris',
+      'Ditandatangani Inspektur',
+      'Diambil',
+      'Selesai'
+    ]
+    return allowedStatuses.includes(status)
+  }
+
+  // Handler download draft SKBT
+  const handleDownloadDraft = async (app: Application) => {
+    setDownloadingId(app.id)
+    try {
+      const response = await fetch('/api/generate-skbt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: app.id }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Gagal generate surat')
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `SKBT_${app.tracking_number}.docx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      toast.success('Draft surat SKBT berhasil diunduh')
+    } catch (error) {
+      console.error('Error downloading draft:', error)
+      toast.error(error instanceof Error ? error.message : 'Gagal mengunduh draft')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   // Filter applications
   const filteredApplications = applications.filter((app) => {
@@ -190,12 +239,29 @@ export default function VerifikasiPage() {
                       <StatusBadge status={app.status} />
                     </TableCell>
                     <TableCell>
-                      <Link href={`/dashboard/verifikasi/${app.id}`}>
-                        <Button variant="ghost" size="sm">
-                          Detail
-                          <ArrowRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      </Link>
+                      <div className="flex items-center gap-1">
+                        {canDownloadDraft(app.status) && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDownloadDraft(app)}
+                            disabled={downloadingId === app.id}
+                            title="Download Draft SKBT"
+                          >
+                            {downloadingId === app.id ? (
+                              <LoadingSpinner size="sm" />
+                            ) : (
+                              <FileText className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                        <Link href={`/dashboard/verifikasi/${app.id}`}>
+                          <Button variant="ghost" size="sm">
+                            Detail
+                            <ArrowRight className="ml-1 h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

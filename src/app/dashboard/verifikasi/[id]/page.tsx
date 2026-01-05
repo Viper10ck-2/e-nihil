@@ -67,6 +67,9 @@ export default function VerifikasiDetailPage() {
   const [showMultiRejectDialog, setShowMultiRejectDialog] = useState(false)
   const [multiRejectReasons, setMultiRejectReasons] = useState<Map<string, string>>(new Map())
   const [isRejectingMultiple, setIsRejectingMultiple] = useState(false)
+  
+  // State untuk download surat SKBT
+  const [isDownloadingSKBT, setIsDownloadingSKBT] = useState(false)
 
   useEffect(() => {
     if (params.id) loadApplication()
@@ -359,6 +362,56 @@ export default function VerifikasiDetailPage() {
   const canSendOnline = () => {
     if (!application) return false
     return application.status === 'Ditandatangani Inspektur' && currentRole === 'admin'
+  }
+
+  // Cek apakah bisa download surat SKBT (status minimal sudah Diverifikasi Admin)
+  const canDownloadSKBT = () => {
+    if (!application) return false
+    const allowedStatuses = [
+      'Diverifikasi Admin',
+      'Diparaf Kasubbag Anev',
+      'Diproses Sekretaris',
+      'Ditandatangani Inspektur',
+      'Diambil',
+      'Selesai'
+    ]
+    return allowedStatuses.includes(application.status)
+  }
+
+  // Handler untuk download surat SKBT
+  const handleDownloadSKBT = async () => {
+    if (!application) return
+    setIsDownloadingSKBT(true)
+    try {
+      const response = await fetch('/api/generate-skbt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: application.id }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Gagal generate surat')
+      }
+
+      // Download file
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `SKBT_${application.tracking_number}.docx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      toast.success('Surat SKBT berhasil diunduh')
+    } catch (error) {
+      console.error('Error downloading SKBT:', error)
+      toast.error(error instanceof Error ? error.message : 'Gagal mengunduh surat SKBT')
+    } finally {
+      setIsDownloadingSKBT(false)
+    }
   }
 
   // Handler untuk file bukti penyerahan
@@ -818,6 +871,17 @@ export default function VerifikasiDetailPage() {
                       <X className="h-4 w-4 mr-2" />
                       Tolak Permohonan
                     </Button>
+                    {canDownloadSKBT() && (
+                      <Button 
+                        variant="outline"
+                        className="w-full h-12 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 rounded-xl transition-all duration-300 hover:scale-[1.02]" 
+                        onClick={handleDownloadSKBT}
+                        disabled={isDownloadingSKBT}
+                      >
+                        {isDownloadingSKBT ? <LoadingSpinner size="sm" className="mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                        Download Surat SKBT
+                      </Button>
+                    )}
                   </>
                 ) : canSendOnline() ? (
                   <>
@@ -836,13 +900,36 @@ export default function VerifikasiDetailPage() {
                       <HandCoins className="h-4 w-4 mr-2" />
                       Berkas Diterima Langsung
                     </Button>
+                    <Button 
+                      variant="outline"
+                      className="w-full h-12 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 rounded-xl transition-all duration-300 hover:scale-[1.02]" 
+                      onClick={handleDownloadSKBT}
+                      disabled={isDownloadingSKBT}
+                    >
+                      {isDownloadingSKBT ? <LoadingSpinner size="sm" className="mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                      Download Surat SKBT
+                    </Button>
                   </>
                 ) : (
                   <div className="text-center py-4">
-                    <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-100 flex items-center justify-center">
-                      <Check className="h-6 w-6 text-slate-400" />
-                    </div>
-                    <p className="text-sm text-slate-500">Tidak ada aksi yang diperlukan</p>
+                    {canDownloadSKBT() ? (
+                      <Button 
+                        variant="outline"
+                        className="w-full h-12 border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300 rounded-xl transition-all duration-300 hover:scale-[1.02]" 
+                        onClick={handleDownloadSKBT}
+                        disabled={isDownloadingSKBT}
+                      >
+                        {isDownloadingSKBT ? <LoadingSpinner size="sm" className="mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                        Download Surat SKBT
+                      </Button>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-slate-100 flex items-center justify-center">
+                          <Check className="h-6 w-6 text-slate-400" />
+                        </div>
+                        <p className="text-sm text-slate-500">Tidak ada aksi yang diperlukan</p>
+                      </>
+                    )}
                   </div>
                 )}
               </CardContent>
