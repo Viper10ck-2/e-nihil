@@ -65,7 +65,7 @@ export default function PermohonanDetailPage() {
       const applicationId = params.id as string
       const detail = await getApplicationDetail(applicationId)
       setApplication(detail.application)
-      setDocuments(detail.documents as Document[])
+      setDocuments(detail.documents as unknown as Document[])
       
       // Load delivery proof if status is Selesai
       if (detail.application.status === 'Selesai') {

@@ -80,7 +80,7 @@ export default function VerifikasiDetailPage() {
       const applicationId = params.id as string
       const detail = await getApplicationDetailWithRejections(applicationId)
       setApplication(detail.application)
-      setDocuments(detail.documents as Document[])
+      setDocuments(detail.documents as unknown as Document[])
       
       // Load document rejections
       const rejectionMap = new Map<string, DocumentRejection>()
