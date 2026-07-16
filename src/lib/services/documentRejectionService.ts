@@ -36,7 +36,7 @@ export async function rejectDocument(params: RejectDocumentParams): Promise<Docu
       rejected_by: rejectedBy || null,
       is_resolved: false,
     } as never)
-    .select()
+    .select('*')
     .single()
 
   if (error) {

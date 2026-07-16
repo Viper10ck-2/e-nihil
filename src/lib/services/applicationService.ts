@@ -103,7 +103,7 @@ export async function createApplication(
   const { data: application, error } = await supabase
     .from('applications')
     .insert(insertData as never)
-    .select()
+    .select('*')
     .single()
 
   if (error) {
