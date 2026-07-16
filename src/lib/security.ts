@@ -102,7 +102,7 @@ export async function validateSession(sessionToken: string): Promise<string | nu
 
   if (!data) return null
 
-  const session = data as { user_id: string; expires_at: string; revoked_at: string | null }
+  const session = data as unknown as { user_id: string; expires_at: string; revoked_at: string | null }
 
   // Check if revoked
   if (session.revoked_at) return null
