@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       .select('*')
       .in('id', documentIds)
 
-    if (docsError || !documents || documents.length === 0) {
+    if (docsError || !documents || (documents as unknown[]).length === 0) {
       return NextResponse.json(
         { success: false, message: 'Dokumen tidak ditemukan' },
         { status: 404 }
