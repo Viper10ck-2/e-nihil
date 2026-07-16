@@ -34,15 +34,13 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-select',
       '@radix-ui/react-tabs',
     ],
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
 
-  // Don't bundle Node.js packages for client (moved from experimental in Next.js 16)
+  // Don't bundle Node.js packages for client
   serverExternalPackages: ['postgres'],
-
-  // Allow up to 10MB file uploads via Server Actions
-  serverActions: {
-    bodySizeLimit: '10mb',
-  },
   
   // Turbopack configuration (Next.js 16+)
   turbopack: {},
