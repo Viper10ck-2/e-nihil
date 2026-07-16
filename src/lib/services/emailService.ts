@@ -1,15 +1,11 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 
-// Create transporter with Gmail SMTP
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-})
+// Resend client
+const resend = new Resend(process.env.RESEND_API_KEY)
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || process.env.GMAIL_USER || 'noreply@inspektorat.bintankab.go.id'
+const FROM_NAME = 'e-Nihil Inspektorat'
 
 interface SendNewApplicationEmailParams {
   trackingNumber: string
@@ -268,24 +264,24 @@ export async function sendNewApplicationEmail(params: SendNewApplicationEmailPar
 
   try {
     // Send email to admin
-    const adminInfo = await transporter.sendMail({
-      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+    const adminInfo = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: adminEmail,
       subject: `[e-Nihil] Permohonan SKBT Baru - ${params.trackingNumber}`,
       html: generateEmailHTML({ ...params, tanggalPengajuan }),
     })
-    console.log('Admin email sent:', adminInfo.messageId)
+    console.log('Admin email sent:', adminInfo.data?.id)
 
     // Send confirmation email to applicant
-    const applicantInfo = await transporter.sendMail({
-      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+    const applicantInfo = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: params.email,
       subject: `[e-Nihil] Permohonan SKBT Anda Berhasil Diajukan - ${params.trackingNumber}`,
       html: generateApplicantEmailHTML({ ...params, tanggalPengajuan }),
     })
-    console.log('Applicant email sent:', applicantInfo.messageId)
+    console.log('Applicant email sent:', applicantInfo.data?.id)
 
-    return { success: true, data: { adminId: adminInfo.messageId, applicantId: applicantInfo.messageId } }
+    return { success: true, data: { adminId: adminInfo.data?.id, applicantId: applicantInfo.data?.id } }
   } catch (error) {
     console.error('Error sending email:', error)
     return { success: false, error }
@@ -473,14 +469,14 @@ const generateDigitalReceiptHTML = (params: SendDigitalReceiptParams) => {
 
 export async function sendDigitalReceiptEmail(params: SendDigitalReceiptParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+    const info = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: params.email,
       subject: `[e-Nihil] SKBT Anda Telah Selesai - ${params.nomorSurat}`,
       html: generateDigitalReceiptHTML(params),
     })
-    console.log('Digital receipt email sent:', info.messageId)
-    return { success: true, data: { messageId: info.messageId } }
+    console.log('Digital receipt email sent:', info.data?.id)
+    return { success: true, data: { messageId: info.data?.id } }
   } catch (error) {
     console.error('Error sending digital receipt email:', error)
     return { success: false, error }
@@ -638,14 +634,14 @@ const generateDocumentRejectionHTML = (params: SendDocumentRejectionEmailParams)
 
 export async function sendDocumentRejectionEmail(params: SendDocumentRejectionEmailParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+    const info = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: params.email,
       subject: `[e-Nihil] Dokumen Perlu Diperbaiki - ${params.trackingNumber}`,
       html: generateDocumentRejectionHTML(params),
     })
-    console.log('Document rejection email sent:', info.messageId)
-    return { success: true, data: { messageId: info.messageId } }
+    console.log('Document rejection email sent:', info.data?.id)
+    return { success: true, data: { messageId: info.data?.id } }
   } catch (error) {
     console.error('Error sending document rejection email:', error)
     return { success: false, error }
@@ -819,14 +815,14 @@ const generateMultipleDocumentRejectionHTML = (params: SendMultipleDocumentRejec
 
 export async function sendMultipleDocumentRejectionEmail(params: SendMultipleDocumentRejectionEmailParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+    const info = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: params.email,
       subject: `[e-Nihil] ${params.rejectedDocuments.length} Dokumen Perlu Diperbaiki - ${params.trackingNumber}`,
       html: generateMultipleDocumentRejectionHTML(params),
     })
-    console.log('Multiple document rejection email sent:', info.messageId)
-    return { success: true, data: { messageId: info.messageId } }
+    console.log('Multiple document rejection email sent:', info.data?.id)
+    return { success: true, data: { messageId: info.data?.id } }
   } catch (error) {
     console.error('Error sending multiple document rejection email:', error)
     return { success: false, error }
@@ -1033,14 +1029,14 @@ const generateSkbtReadyHTML = (params: SendSkbtReadyEmailParams) => {
 
 export async function sendSkbtReadyEmail(params: SendSkbtReadyEmailParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+    const info = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: params.email,
       subject: `[e-Nihil] SKBT Anda Telah Selesai - ${params.nomorSurat}`,
       html: generateSkbtReadyHTML(params),
     })
-    console.log('SKBT ready email sent:', info.messageId)
-    return { success: true, data: { messageId: info.messageId } }
+    console.log('SKBT ready email sent:', info.data?.id)
+    return { success: true, data: { messageId: info.data?.id } }
   } catch (error) {
     console.error('Error sending SKBT ready email:', error)
     return { success: false, error }
@@ -1212,14 +1208,14 @@ export async function sendPickupChoiceEmail(params: SendPickupChoiceEmailParams)
   
   try {
     const methodLabel = params.pickupMethod === 'online' ? 'Online' : 'Offline'
-    const info = await transporter.sendMail({
-      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+    const info = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: adminEmail,
       subject: `[e-Nihil] Pemohon Pilih Pengambilan ${methodLabel} - ${params.trackingNumber}`,
       html: generatePickupChoiceHTML(params),
     })
-    console.log('Pickup choice email sent to admin:', info.messageId)
-    return { success: true, data: { messageId: info.messageId } }
+    console.log('Pickup choice email sent to admin:', info.data?.id)
+    return { success: true, data: { messageId: info.data?.id } }
   } catch (error) {
     console.error('Error sending pickup choice email:', error)
     return { success: false, error }
@@ -1394,14 +1390,14 @@ const generateSkbtOnlineHTML = (params: SendSkbtOnlineEmailParams) => {
 
 export async function sendSkbtOnlineEmail(params: SendSkbtOnlineEmailParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
+    const info = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: params.email,
       subject: `[e-Nihil] SKBT Anda Telah Dikirim - ${params.nomorSurat}`,
       html: generateSkbtOnlineHTML(params),
     })
-    console.log('SKBT online email sent:', info.messageId)
-    return { success: true, data: { messageId: info.messageId } }
+    console.log('SKBT online email sent:', info.data?.id)
+    return { success: true, data: { messageId: info.data?.id } }
   } catch (error) {
     console.error('Error sending SKBT online email:', error)
     return { success: false, error }
