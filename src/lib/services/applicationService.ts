@@ -123,7 +123,7 @@ export async function createApplication(
     // Don't throw - application was created successfully
   }
 
-  return application as Application
+  return application as unknown as Application
 }
 
 export async function uploadDocument(
@@ -349,7 +349,7 @@ export async function getDataForSuratSKBT(applicationId: string): Promise<{
     return null
   }
 
-  const application = app as Application
+  const application = app as unknown as Application
 
   // Get timestamp verifikasi admin
   const tanggalSurat = await getTimestampVerifikasiAdmin(applicationId)

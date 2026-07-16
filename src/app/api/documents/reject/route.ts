@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const app = application as Application
+    const app = application as unknown as Application
 
     // Create rejection record
     await rejectDocument({

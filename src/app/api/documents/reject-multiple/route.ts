@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const app = application as Application
+    const app = application as unknown as Application
 
     // Get all documents info
     const documentIds = rejections.map(r => r.documentId)
