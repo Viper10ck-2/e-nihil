@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       jabatan: userData.jabatan || undefined,
       instansi: userData.instansi || undefined,
       email: userData.email || undefined,
-      roles: userData.roles as UserRole[],
+      roles: userData.roles as unknown as UserRole[],
     }
 
     // Update last login time

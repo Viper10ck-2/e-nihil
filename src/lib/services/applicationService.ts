@@ -114,7 +114,7 @@ export async function createApplication(
   // Create initial status history (don't fail if this fails)
   try {
     await supabase.from('status_history').insert({
-      application_id: (application as Application).id,
+      application_id: (application as unknown as Application).id,
       status: 'Menunggu Verifikasi Admin',
       notes: 'Permohonan baru diajukan',
     } as never)
@@ -252,7 +252,7 @@ export async function getApplicationsByStatus(status: ApplicationStatus) {
     throw new Error('Gagal mengambil data permohonan')
   }
 
-  return data as Application[]
+  return data as unknown as Application[]
 }
 
 export async function getAllApplications() {
@@ -266,7 +266,7 @@ export async function getAllApplications() {
     throw new Error('Gagal mengambil data permohonan')
   }
 
-  return data as Application[]
+  return data as unknown as Application[]
 }
 
 /**

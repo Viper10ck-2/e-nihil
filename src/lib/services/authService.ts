@@ -196,7 +196,7 @@ export function getCurrentRole(): UserRole | null {
 
   const role = localStorage.getItem('currentRole')
   if (role) {
-    return role as UserRole
+    return role as unknown as UserRole
   }
 
   const user = getCurrentUser()

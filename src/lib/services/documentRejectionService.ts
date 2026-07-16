@@ -43,7 +43,7 @@ export async function rejectDocument(params: RejectDocumentParams): Promise<Docu
     throw new Error(`Failed to reject document: ${error.message}`)
   }
 
-  return data as DocumentRejection
+  return data as unknown as DocumentRejection
 }
 
 /**
@@ -60,7 +60,7 @@ export async function getDocumentRejections(applicationId: string): Promise<Docu
     throw new Error(`Failed to get document rejections: ${error.message}`)
   }
 
-  return (data || []) as DocumentRejection[]
+  return (data || []) as unknown as DocumentRejection[]
 }
 
 
@@ -78,7 +78,7 @@ export async function getUnresolvedRejections(applicationId: string): Promise<Do
     throw new Error(`Failed to get unresolved rejections: ${error.message}`)
   }
 
-  return (data || []) as DocumentRejection[]
+  return (data || []) as unknown as DocumentRejection[]
 }
 
 /**
@@ -148,14 +148,14 @@ export async function getDocumentsWithRejections(applicationId: string): Promise
   const rejectionMap = new Map<string, DocumentRejection>()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   for (const rejection of (rejections || []) as any[]) {
-    rejectionMap.set(rejection.document_id, rejection as DocumentRejection)
+    rejectionMap.set(rejection.document_id, rejection as unknown as DocumentRejection)
   }
 
   // Combine documents with rejections
   return (documents || []).map((doc: Document) => ({
     ...doc,
     rejection: rejectionMap.get(doc.id),
-  })) as DocumentWithRejection[]
+  })) as unknown as DocumentWithRejection[]
 }
 
 /**
@@ -173,5 +173,5 @@ export async function getDocumentRejectionHistory(documentId: string): Promise<D
     throw new Error(`Failed to get rejection history: ${error.message}`)
   }
 
-  return (data || []) as DocumentRejection[]
+  return (data || []) as unknown as DocumentRejection[]
 }

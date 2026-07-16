@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const doc = document as Document
+    const doc = document as unknown as Document
 
     // Upload new file to storage
     const fileExt = file.name.split('.').pop()

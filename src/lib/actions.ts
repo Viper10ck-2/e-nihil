@@ -61,7 +61,7 @@ export async function getPendingApplications(status: string, limit = 5) {
     .order('created_at', { ascending: false })
     .limit(limit)
 
-  return (data || []) as Application[]
+  return (data || []) as unknown as Application[]
 }
 
 // All applications for verifikasi/permohonan pages
@@ -71,7 +71,7 @@ export async function getAllApplications() {
     .select('*')
     .order('created_at', { ascending: false })
 
-  return (data || []) as Application[]
+  return (data || []) as unknown as Application[]
 }
 
 // Users management
@@ -80,7 +80,7 @@ export async function getAllUsers() {
     .from('users')
     .select('*')
     .order('created_at', { ascending: false })
-  return (data || []) as User[]
+  return (data || []) as unknown as User[]
 }
 
 export async function createUser(userData: {
@@ -150,10 +150,10 @@ export async function getTrackingApplication(trackingNumber: string) {
 
   const { data: history } = await supabase
     .from('status_history').select('*')
-    .eq('application_id', (app as Application).id)
+    .eq('application_id', (app as unknown as Application).id)
     .order('changed_at', { ascending: true })
 
-  return { application: app as Application, statusHistory: (history || []) as unknown[] }
+  return { application: app as unknown as Application, statusHistory: (history || []) as unknown[] }
 }
 
 // ============== Detail Page Actions ==============
@@ -166,7 +166,7 @@ export async function getApplicationDetail(applicationId: string) {
   const { data: docs } = await supabase
     .from('documents').select('*').eq('application_id', applicationId)
 
-  return { application: app as Application, documents: (docs || []) as Record<string, unknown>[] }
+  return { application: app as unknown as Application, documents: (docs || []) as Record<string, unknown>[] }
 }
 
 export async function getApplicationDetailWithRejections(applicationId: string) {
