@@ -27,12 +27,5 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
   return { valid: true }
 }
 
-export function generateTrackingNumber(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  const random = String(Math.floor(Math.random() * 10000)).padStart(4, '0')
-  
-  return `SKBT-${year}${month}${day}-${random}`
-}
+// Note: Tracking number generation is handled server-side in applicationService.ts
+// to ensure uniqueness via database sequence. Use generateUniqueTrackingNumber() instead.

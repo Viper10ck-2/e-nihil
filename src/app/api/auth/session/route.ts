@@ -1,71 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { SECURE_COOKIE_OPTIONS } from '@/lib/security'
+import { validateSession, SECURE_COOKIE_OPTIONS } from '@/lib/security'
+import { createServerClient } from '@/lib/supabase'
+import type { UserRole } from '@/types/database'
 
 // Session timeout in milliseconds (8 hours)
 const SESSION_TIMEOUT = 8 * 60 * 60 * 1000
 
 export async function GET(request: NextRequest) {
-  const sessionToken = request.cookies.get('e-nihil-auth')
-  const sessionExpiry = request.cookies.get('e-nihil-session-expiry')
+  const sessionToken = request.cookies.get('e-nihil-auth')?.value
+  const sessionExpiry = request.cookies.get('e-nihil-session-expiry')?.value
 
-  if (!sessionToken || !sessionExpiry) {
-    return NextResponse.json({ valid: false })
+  // Quick expiry check first
+  if (sessionExpiry) {
+    const expiryTime = parseInt(sessionExpiry, 10)
+    if (!isNaN(expiryTime) && Date.now() >= expiryTime) {
+      const response = NextResponse.json({ valid: false })
+      response.cookies.delete('e-nihil-auth')
+      response.cookies.delete('e-nihil-session-expiry')
+      response.cookies.delete('e-nihil-session-valid')
+      response.cookies.delete('e-nihil-csrf')
+      return response
+    }
   }
 
-  const expiryTime = parseInt(sessionExpiry.value, 10)
-  const now = Date.now()
+  // Validasi session ke database
+  const userId = await validateSession(sessionToken || '')
 
-  if (isNaN(expiryTime) || now >= expiryTime) {
-    // Session expired, clear cookies
+  if (!userId) {
     const response = NextResponse.json({ valid: false })
     response.cookies.delete('e-nihil-auth')
     response.cookies.delete('e-nihil-session-expiry')
     response.cookies.delete('e-nihil-session-valid')
+    response.cookies.delete('e-nihil-csrf')
     return response
   }
 
+  // Ambil data user dari database
+  const supabase = createServerClient()
+  const { data: user } = await supabase
+    .from('users')
+    .select('id, nip, nama, pangkat, jabatan, instansi, email, roles')
+    .eq('id', userId)
+    .single()
+
   return NextResponse.json({
     valid: true,
-    expiresAt: expiryTime,
-    remainingMinutes: Math.floor((expiryTime - now) / 60000),
+    expiresAt: sessionExpiry ? parseInt(sessionExpiry, 10) : Date.now() + SESSION_TIMEOUT,
+    remainingMinutes: sessionExpiry 
+      ? Math.max(0, Math.floor((parseInt(sessionExpiry, 10) - Date.now()) / 60000))
+      : 480,
+    user: user || null,
   })
-}
-
-// Extend session
-export async function POST(request: NextRequest) {
-  const sessionToken = request.cookies.get('e-nihil-auth')
-  const sessionExpiry = request.cookies.get('e-nihil-session-expiry')
-
-  if (!sessionToken || !sessionExpiry) {
-    return NextResponse.json({ success: false, error: 'No session' }, { status: 401 })
-  }
-
-  const expiryTime = parseInt(sessionExpiry.value, 10)
-  const now = Date.now()
-
-  if (isNaN(expiryTime) || now >= expiryTime) {
-    return NextResponse.json({ success: false, error: 'Session expired' }, { status: 401 })
-  }
-
-  // Extend session
-  const newExpiryTime = now + SESSION_TIMEOUT
-  const cookieMaxAge = Math.floor(SESSION_TIMEOUT / 1000)
-
-  const response = NextResponse.json({
-    success: true,
-    expiresAt: newExpiryTime,
-  })
-
-  response.cookies.set('e-nihil-session-expiry', newExpiryTime.toString(), {
-    ...SECURE_COOKIE_OPTIONS,
-    maxAge: cookieMaxAge,
-  })
-
-  response.cookies.set('e-nihil-session-valid', 'true', {
-    ...SECURE_COOKIE_OPTIONS,
-    httpOnly: false,
-    maxAge: cookieMaxAge,
-  })
-
-  return response
 }

@@ -241,7 +241,7 @@ function TrackingPageContent() {
 
       setSavedPickupMethod(pendingPickupMethod)
       setPickupChoiceSent(true)
-      const methodLabel = pendingPickupMethod === 'online' ? 'dikirim via email' : 'diambil langsung di kantor'
+      const methodLabel = pendingPickupMethod === 'online' ? 'dikirim via email' : 'diproses di kantor'
       toast.success(`Pilihan pengambilan berhasil dikirim! Admin akan segera memproses berkas untuk ${methodLabel}.`)
     } catch (error) {
       console.error('Error sending pickup choice:', error)
@@ -541,7 +541,7 @@ function TrackingPageContent() {
                           <CheckCircle className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                          <CardTitle className="text-base text-emerald-700">SKBT Siap Diambil!</CardTitle>
+                          <CardTitle className="text-base text-emerald-700">SKBT telah selesai diproses!</CardTitle>
                           <CardDescription className="text-xs text-emerald-600">
                             {pickupChoiceSent ? 'Pilihan telah dikonfirmasi' : 'Pilih metode pengambilan'}
                           </CardDescription>
@@ -552,7 +552,7 @@ function TrackingPageContent() {
                       {/* Pickup Info */}
                       <div className="mb-4 p-3 bg-white/60 rounded-xl border border-emerald-100">
                         <p className="text-sm text-emerald-700">
-                          Surat Keterangan Bebas Temuan Anda telah ditandatangani oleh Inspektur dan siap untuk diambil.
+                          Surat Keterangan Bebas Temuan Anda telah ditandatangani oleh Inspektur dan siap untuk diselesaikan.
                         </p>
                         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="p-3 bg-emerald-50/50 rounded-lg">
@@ -633,8 +633,8 @@ function TrackingPageContent() {
                 </div>
               )}
 
-              {/* Pickup Completed - Status Diambil */}
-              {application.status === 'Diambil' && (
+              {/* Pickup Completed - Status Selesai */}
+              {application.status === 'Selesai' && (
                 <div className="relative">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 via-emerald-400 to-emerald-300 rounded-full"></div>
                   <Card className="ml-4 border-0 shadow-xl shadow-emerald-100/50 bg-gradient-to-br from-emerald-50 to-green-50 overflow-hidden">
@@ -646,7 +646,7 @@ function TrackingPageContent() {
                         <div>
                           <CardTitle className="text-base text-emerald-700">Permohonan Selesai</CardTitle>
                           <CardDescription className="text-xs text-emerald-600">
-                            SKBT telah diambil
+                            SKBT telah selesai diproses
                           </CardDescription>
                         </div>
                       </div>
@@ -655,7 +655,7 @@ function TrackingPageContent() {
                       <div className="p-3 bg-white/70 rounded-lg border border-emerald-200">
                         <div className="flex items-center gap-2 text-emerald-700">
                           <CheckCircle className="h-5 w-5" />
-                          <span className="text-sm font-medium">Surat Keterangan Bebas Temuan telah diambil</span>
+                          <span className="text-sm font-medium">Surat Keterangan Bebas Temuan telah selesai</span>
                         </div>
                         <p className="text-xs text-emerald-600 mt-2">
                           Terima kasih telah menggunakan layanan e-Nihil Inspektorat Daerah Kabupaten Bintan.

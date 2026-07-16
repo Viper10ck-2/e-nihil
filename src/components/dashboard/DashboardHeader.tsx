@@ -12,9 +12,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, Menu } from 'lucide-react'
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  onMenuClick: () => void
+}
+
+export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   const { user, logout } = useAuth()
 
   const getInitials = (name: string) => {
@@ -27,19 +31,28 @@ export function DashboardHeader() {
   }
 
   return (
-    <header className="h-16 bg-white border-b flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold text-primary">e-Nihil Dashboard</h1>
+    <header className="h-14 sm:h-16 bg-white border-b flex items-center justify-between px-3 sm:px-6 sticky top-0 z-30">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"
+          aria-label="Buka menu"
+        >
+          <Menu size={20} />
+        </button>
+        <h1 className="text-sm sm:text-lg font-semibold text-primary truncate">e-Nihil Dashboard</h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        <RoleSelector />
+      <div className="flex items-center gap-2 sm:gap-4">
+        <div className="hidden sm:block">
+          <RoleSelector />
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-primary text-primary-foreground">
+            <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full">
+              <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
                   {user ? getInitials(user.nama) : 'U'}
                 </AvatarFallback>
               </Avatar>

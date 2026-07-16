@@ -86,6 +86,18 @@ CREATE TABLE IF NOT EXISTS document_rejections (
   is_resolved BOOLEAN DEFAULT false
 );
 
+-- Sessions table (for server-side session validation)
+CREATE TABLE IF NOT EXISTS sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+  token_hash VARCHAR(128) NOT NULL UNIQUE,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  revoked_at TIMESTAMPTZ
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_applications_tracking_number ON applications(tracking_number);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
@@ -96,6 +108,9 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_id ON audit_logs(entity_id);
 CREATE INDEX IF NOT EXISTS idx_document_rejections_document_id ON document_rejections(document_id);
 CREATE INDEX IF NOT EXISTS idx_document_rejections_application_id ON document_rejections(application_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_token_hash ON sessions(token_hash);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -124,6 +139,7 @@ ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE status_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_rejections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Anyone can read applications (for tracking)
 CREATE POLICY "Anyone can read applications by tracking number"
@@ -190,6 +206,21 @@ CREATE POLICY "Anyone can update document rejections"
   ON document_rejections FOR UPDATE
   USING (true);
 
+-- Policy: Authenticated users can read their own sessions
+CREATE POLICY "Users can read own sessions"
+  ON sessions FOR SELECT
+  USING (auth.role() = 'authenticated');
+
+-- Policy: Authenticated users can insert sessions
+CREATE POLICY "Users can insert sessions"
+  ON sessions FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated');
+
+-- Policy: Authenticated users can delete their own sessions
+CREATE POLICY "Users can delete own sessions"
+  ON sessions FOR DELETE
+  USING (auth.role() = 'authenticated');
+
 -- Insert default admin user (password: ipdn12345)
 INSERT INTO users (nip, nama, pangkat, jabatan, instansi, email, password_hash, roles, is_active)
 VALUES (
@@ -207,6 +238,14 @@ ON CONFLICT (nip) DO NOTHING;
 
 -- Create storage bucket for documents
 -- Note: Run this in Supabase Dashboard > Storage
+
+-- ============================================
+-- Migration: Rename 'Diambil' status to 'Selesai'
+-- Run this to update existing records
+-- ============================================
+UPDATE applications SET status = 'Selesai' WHERE status = 'Diambil';
+UPDATE status_history SET status = 'Selesai' WHERE status = 'Diambil';
+UPDATE status_history SET notes = REPLACE(notes, 'diambil', 'selesai') WHERE notes ILIKE '%diambil%';
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('documents', 'documents', false);
 
 -- =====================================================

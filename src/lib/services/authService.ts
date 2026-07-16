@@ -1,8 +1,6 @@
-import { supabase } from '@/lib/supabase'
 import type { User, UserRole } from '@/types/database'
-import { hashPassword } from '@/lib/security'
-
 export type { User }
+export type { UserRole }
 
 export interface AuthUser {
   id: string
@@ -41,7 +39,7 @@ export async function login(nip: string, password: string): Promise<AuthUser | n
       return null
     }
 
-    // Store user data in localStorage (non-sensitive data only)
+    // Store user data and CSRF token in localStorage (non-sensitive data only)
     if (typeof window !== 'undefined') {
       console.log('[authService] Storing user data to localStorage')
       console.log('[authService] User:', result.user?.nama)
@@ -49,6 +47,11 @@ export async function login(nip: string, password: string): Promise<AuthUser | n
       
       localStorage.setItem('user', JSON.stringify(result.user))
       localStorage.setItem('sessionExpiresAt', result.expiresAt.toString())
+      
+      // Store CSRF token for mutating requests
+      if (result.csrfToken) {
+        localStorage.setItem('csrfToken', result.csrfToken)
+      }
       
       // Verify storage
       const storedUser = localStorage.getItem('user')
@@ -82,6 +85,7 @@ export async function logout(): Promise<void> {
     localStorage.removeItem('user')
     localStorage.removeItem('sessionExpiresAt')
     localStorage.removeItem('currentRole')
+    localStorage.removeItem('csrfToken')
   }
 }
 
@@ -203,6 +207,43 @@ export function getCurrentRole(): UserRole | null {
   return null
 }
 
+/**
+ * Get CSRF token from localStorage
+ */
+export function getCSRFToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('csrfToken')
+}
+
+/**
+ * Fetch wrapper that includes CSRF token for mutating requests
+ */
+export async function authFetch(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const headers = new Headers(options.headers)
+  
+  // Add CSRF token for mutating requests
+  const method = (options.method || 'GET').toUpperCase()
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    const csrfToken = getCSRFToken()
+    if (csrfToken) {
+      headers.set('x-csrf-token', csrfToken)
+    }
+  }
+  
+  if (!headers.has('Content-Type') && method !== 'GET') {
+    headers.set('Content-Type', 'application/json')
+  }
+
+  return fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include',
+  })
+}
+
 export function setCurrentRole(role: UserRole): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem('currentRole', role)
@@ -216,116 +257,4 @@ export function hasRole(role: UserRole): boolean {
 
 export function isAuthenticated(): boolean {
   return isSessionValid() && getCurrentUser() !== null
-}
-
-// User Management Functions
-export async function getAllUsers(): Promise<User[]> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    console.error('Error fetching users:', error)
-    throw error
-  }
-
-  return (data as unknown as User[]) || []
-}
-
-export async function createUser(userData: {
-  nip: string
-  nama: string
-  password: string
-  pangkat?: string
-  jabatan?: string
-  instansi?: string
-  email?: string
-  roles: UserRole[]
-}): Promise<User> {
-  // Hash password before storing
-  const hashedPassword = await hashPassword(userData.password)
-
-  const { data, error } = await supabase
-    .from('users')
-    .insert({
-      nip: userData.nip,
-      nama: userData.nama,
-      pangkat: userData.pangkat || null,
-      jabatan: userData.jabatan || null,
-      instansi: userData.instansi || 'Inspektorat Daerah Kabupaten Bintan',
-      email: userData.email || null,
-      password_hash: hashedPassword,
-      roles: userData.roles,
-      is_active: true,
-    } as never)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error creating user:', error)
-    throw error
-  }
-
-  return data as User
-}
-
-export async function updateUser(
-  userId: string,
-  userData: {
-    nama: string
-    pangkat?: string
-    jabatan?: string
-    instansi?: string
-    email?: string
-    roles: UserRole[]
-  }
-): Promise<User> {
-  const { data, error } = await supabase
-    .from('users')
-    .update({
-      nama: userData.nama,
-      pangkat: userData.pangkat || null,
-      jabatan: userData.jabatan || null,
-      instansi: userData.instansi || null,
-      email: userData.email || null,
-      roles: userData.roles,
-    } as never)
-    .eq('id', userId)
-    .select()
-    .single()
-
-  if (error) {
-    console.error('Error updating user:', error)
-    throw error
-  }
-
-  return data as User
-}
-
-export async function toggleUserActive(userId: string, isActive: boolean): Promise<void> {
-  const { error } = await supabase
-    .from('users')
-    .update({ is_active: isActive } as never)
-    .eq('id', userId)
-
-  if (error) {
-    console.error('Error toggling user status:', error)
-    throw error
-  }
-}
-
-export async function updateUserPassword(userId: string, newPassword: string): Promise<void> {
-  // Hash password before storing
-  const hashedPassword = await hashPassword(newPassword)
-
-  const { error } = await supabase
-    .from('users')
-    .update({ password_hash: hashedPassword } as never)
-    .eq('id', userId)
-
-  if (error) {
-    console.error('Error updating password:', error)
-    throw error
-  }
 }

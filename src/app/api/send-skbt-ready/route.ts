@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendSkbtReadyEmail } from '@/lib/services/emailService'
+import { withAuth } from '@/lib/api-middleware'
 
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (request, userId) => {
     const body = await request.json()
     const { trackingNumber, nomorSurat, namaLengkap, email, trackingUrl } = body
 
@@ -30,11 +31,5 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-  } catch (error) {
-    console.error('Error in send-skbt-ready API:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
+  })
 }

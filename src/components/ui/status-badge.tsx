@@ -75,13 +75,6 @@ const statusConfig: Record<ApplicationStatus, {
     icon: CheckCircle2,
     emoji: '✅',
   },
-  'Diambil': {
-    label: 'Diambil',
-    variant: 'default',
-    className: 'bg-green-700 text-white',
-    icon: Package,
-    emoji: '📦',
-  },
   'Ditolak': {
     label: 'Ditolak',
     variant: 'destructive',

@@ -26,7 +26,7 @@ import {
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { toast } from 'sonner'
 import { Plus, Pencil, UserX, UserCheck } from 'lucide-react'
-import { getAllUsers, createUser, updateUser, toggleUserActive, updateUserPassword } from '@/lib/services/authService'
+import { getAllUsers, createUser, updateUser, toggleUserActive, updateUserPassword } from '@/lib/actions'
 import type { User, UserRole } from '@/types/database'
 
 const roleLabels: Record<UserRole, string> = {
@@ -199,22 +199,22 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Manajemen User</h1>
-          <p className="text-slate-500">
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-800">Manajemen User</h1>
+          <p className="text-xs sm:text-sm text-slate-500">
             Kelola akun staff dan assign role
           </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-slate-800 hover:bg-slate-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah User
+            <Button className="bg-slate-800 hover:bg-slate-700 text-sm" size="sm">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Tambah User</span>
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Tambah User Baru</DialogTitle>
               <DialogDescription>
@@ -310,10 +310,42 @@ export default function UsersPage() {
       </div>
 
       <Card className="border border-slate-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-slate-800">Daftar User</CardTitle>
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-sm sm:text-base text-slate-800">Daftar User</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
+          {/* Mobile card list */}
+          <div className="block md:hidden divide-y">
+            {users.map((user) => (
+              <div key={user.id} className="px-4 py-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-sm">{user.nama}</p>
+                  <Badge variant={user.is_active ? "default" : "secondary"} className="text-[10px]">
+                    {user.is_active ? 'Aktif' : 'Nonaktif'}
+                  </Badge>
+                </div>
+                <p className="text-xs text-gray-400 font-mono">{user.nip}</p>
+                <div className="flex flex-wrap gap-1">
+                  {user.roles.map((role) => (
+                    <Badge key={role} variant="secondary" className="text-[10px] bg-slate-100 text-slate-700">
+                      {roleLabels[role]}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => openEditDialog(user)}>
+                    <Pencil className="h-3 w-3 mr-1" />Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleToggleActive(user)}>
+                    {user.is_active ? <UserX className="h-3 w-3 mr-1" /> : <UserCheck className="h-3 w-3 mr-1" />}
+                    {user.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50 hover:bg-slate-50">
@@ -383,12 +415,13 @@ export default function UsersPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>

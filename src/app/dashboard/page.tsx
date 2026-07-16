@@ -34,7 +34,7 @@ import {
 } from 'recharts'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
+import { getDashboardStats, getMonthlyData, getPendingApplications } from '@/lib/actions'
 import type { Application } from '@/types/database'
 
 export default function DashboardPage() {
@@ -51,59 +51,20 @@ export default function DashboardPage() {
   const loadDashboardData = async () => {
     setIsLoading(true)
     try {
-      // Load statistics
-      const [masukRes, diprosesRes, diverifikasiRes, selesaiRes] = await Promise.all([
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Menunggu Verifikasi Admin'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).in('status', ['Diverifikasi Admin', 'Diparaf Kasubbag Anev', 'Diproses Sekretaris']),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).eq('status', 'Ditandatangani Inspektur'),
-        supabase.from('applications').select('*', { count: 'exact', head: true }).in('status', ['Selesai', 'Diambil']),
-      ])
+      // Load statistics via server actions
+      const statsData = await getDashboardStats()
+      setStats(statsData)
 
-      setStats({
-        masuk: masukRes.count || 0,
-        diproses: diprosesRes.count || 0,
-        diverifikasi: diverifikasiRes.count || 0,
-        selesai: selesaiRes.count || 0,
-      })
-
-      // Load pending applications based on role
+      // Load pending applications
       const pendingStatus = getPendingStatus()
-      const { data: pending } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('status', pendingStatus)
-        .order('created_at', { ascending: false })
-        .limit(5)
+      const pending = await getPendingApplications(pendingStatus, 5)
+      setPendingApplications(pending)
 
-      setPendingApplications((pending as Application[]) || [])
-
-      // Load monthly data for chart (last 6 months)
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
-      const currentMonth = new Date().getMonth()
-      const chartData = []
-      
-      for (let i = 5; i >= 0; i--) {
-        const monthIndex = (currentMonth - i + 12) % 12
-        const year = new Date().getFullYear() - (currentMonth - i < 0 ? 1 : 0)
-        const startDate = new Date(year, monthIndex, 1).toISOString()
-        const endDate = new Date(year, monthIndex + 1, 0).toISOString()
-
-        const [masuk, selesai] = await Promise.all([
-          supabase.from('applications').select('*', { count: 'exact', head: true })
-            .gte('created_at', startDate).lte('created_at', endDate),
-          supabase.from('applications').select('*', { count: 'exact', head: true })
-            .in('status', ['Selesai', 'Diambil'])
-            .gte('updated_at', startDate).lte('updated_at', endDate),
-        ])
-
-        chartData.push({
-          month: months[monthIndex],
-          masuk: masuk.count || 0,
-          diproses: Math.floor((masuk.count || 0) * 0.8),
-          selesai: selesai.count || 0,
-        })
+      // Load chart data (admin only)
+      if (currentRole === 'admin') {
+        const chartData = await getMonthlyData()
+        setMonthlyData(chartData)
       }
-      setMonthlyData(chartData)
 
     } catch (error) {
       console.error('Error loading dashboard data:', error)
@@ -145,17 +106,17 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">{getRoleTitle()}</h1>
-        <p className="text-slate-500">
+        <h1 className="text-lg sm:text-2xl font-bold text-slate-800">{getRoleTitle()}</h1>
+        <p className="text-sm text-slate-500">
           Selamat datang, {user?.nama}
         </p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <InfoCard
           title="Permohonan Masuk"
           value={stats.masuk}
@@ -185,25 +146,26 @@ export default function DashboardPage() {
       {/* Chart */}
       {currentRole === 'admin' && (
         <Card className="border border-slate-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-slate-800">Statistik Permohonan Bulanan</CardTitle>
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="text-sm sm:text-base text-slate-800">Statistik Permohonan Bulanan</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
+          <CardContent className="px-2 sm:px-6">
+            <div className="h-[200px] sm:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#64748b" />
-                  <YAxis stroke="#64748b" />
+                  <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 12 }} />
+                  <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#fff', 
                       border: '1px solid #e2e8f0',
                       borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      fontSize: '12px'
                     }} 
                   />
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '12px' }} />
                   <Bar dataKey="masuk" name="Masuk" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="diproses" name="Diproses" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="selesai" name="Selesai" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -214,18 +176,48 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Pending Applications Table */}
+      {/* Pending Applications */}
       <Card className="border border-slate-200 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-slate-800">Permohonan Menunggu Verifikasi</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
+          <CardTitle className="text-sm sm:text-base text-slate-800">Permohonan Menunggu Verifikasi</CardTitle>
           <Link href="/dashboard/verifikasi">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
               Lihat Semua
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </Link>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
+          {/* Mobile: card list */}
+          <div className="block md:hidden divide-y">
+            {pendingApplications.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8 text-sm">
+                Tidak ada permohonan yang menunggu verifikasi
+              </div>
+            ) : (
+              pendingApplications.map((app) => (
+                <Link
+                  key={app.id}
+                  href={`/dashboard/verifikasi/${app.id}`}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  <div className="min-w-0 flex-1 mr-3">
+                    <p className="font-medium text-sm truncate">{app.nama_lengkap}</p>
+                    <p className="text-xs text-gray-500 truncate">{app.unit_kerja_asal}</p>
+                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">{app.tracking_number}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <StatusBadge status={app.status} />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {format(new Date(app.created_at), 'dd/MM/yy')}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+          {/* Desktop: table */}
+          <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -278,6 +270,7 @@ export default function DashboardPage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

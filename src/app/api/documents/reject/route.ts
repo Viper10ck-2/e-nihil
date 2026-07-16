@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { rejectDocument } from '@/lib/services/documentRejectionService'
 import { sendDocumentRejectionEmail } from '@/lib/services/emailService'
+import { withAuth } from '@/lib/api-middleware'
 import type { Application, Document } from '@/types/database'
 
 const documentTypeLabels: Record<string, string> = {
@@ -15,7 +16,7 @@ const documentTypeLabels: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (request, userId) => {
     const body = await request.json()
     const { documentId, applicationId, rejectionReason, rejectedBy } = body
 
@@ -111,11 +112,5 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Dokumen berhasil ditolak dan notifikasi telah dikirim',
     })
-  } catch (error) {
-    console.error('Error rejecting document:', error)
-    return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan saat menolak dokumen' },
-      { status: 500 }
-    )
-  }
+  })
 }

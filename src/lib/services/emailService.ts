@@ -844,7 +844,7 @@ interface SendSkbtReadyEmailParams {
   adminWhatsApp?: string
 }
 
-// Email template untuk SKBT siap diambil
+// Email template untuk SKBT selesai
 const generateSkbtReadyHTML = (params: SendSkbtReadyEmailParams) => {
   const adminWhatsApp = params.adminWhatsApp || '6281234567890'
   const waMessage = encodeURIComponent(`Halo Admin e-Nihil, saya ${params.namaLengkap} dengan nomor tracking ${params.trackingNumber}. Saya ingin menanyakan tentang pengambilan SKBT saya.`)
@@ -920,7 +920,7 @@ const generateSkbtReadyHTML = (params: SendSkbtReadyEmailParams) => {
                       </tr>
                       <tr>
                         <td style="padding: 8px 0; color: #666666; font-size: 13px;">Status</td>
-                        <td style="padding: 8px 0; color: #22c55e; font-size: 13px; font-weight: bold;">: Siap Diambil</td>
+                        <td style="padding: 8px 0; color: #22c55e; font-size: 13px; font-weight: bold;">: Selesai</td>
                       </tr>
                     </table>
                   </td>
@@ -1036,7 +1036,7 @@ export async function sendSkbtReadyEmail(params: SendSkbtReadyEmailParams) {
     const info = await transporter.sendMail({
       from: `"e-Nihil Inspektorat" <${process.env.GMAIL_USER}>`,
       to: params.email,
-      subject: `[e-Nihil] SKBT Anda Siap Diambil - ${params.nomorSurat}`,
+      subject: `[e-Nihil] SKBT Anda Telah Selesai - ${params.nomorSurat}`,
       html: generateSkbtReadyHTML(params),
     })
     console.log('SKBT ready email sent:', info.messageId)
@@ -1064,7 +1064,7 @@ interface SendPickupChoiceEmailParams {
 const generatePickupChoiceHTML = (params: SendPickupChoiceEmailParams) => {
   const methodLabel = params.pickupMethod === 'online' 
     ? '📧 DIKIRIM ONLINE (Email)' 
-    : '🏢 DIAMBIL LANGSUNG DI KANTOR'
+    : '🏢 SELESAI DIPROSES'
   
   const methodColor = params.pickupMethod === 'online' ? '#3b82f6' : '#f59e0b'
   const methodBgColor = params.pickupMethod === 'online' ? '#eff6ff' : '#fef3c7'

@@ -7,8 +7,7 @@ export type ApplicationStatus =
   | 'Diparaf Kasubbag Anev'
   | 'Diproses Sekretaris'
   | 'Ditandatangani Inspektur'
-  | 'Diambil'
-  | 'Selesai' // Legacy status for backward compatibility
+  | 'Selesai'
   | 'Ditolak'
 
 export type TujuanPermohonan = 'mutasi' | 'promosi' | 'lainnya_asn' | 'lainnya_non_asn'
@@ -106,38 +105,54 @@ export interface DocumentWithRejection extends Document {
   rejection?: DocumentRejection
 }
 
+export interface Session {
+  id: string
+  user_id: string
+  token_hash: string
+  ip_address?: string
+  user_agent?: string
+  expires_at: string
+  created_at: string
+  revoked_at?: string
+}
+
 export interface Database {
   public: {
     Tables: {
       users: {
         Row: User
-        Insert: Partial<User> & { nip: string; nama: string; password_hash: string; roles: UserRole[] }
-        Update: Partial<User>
+        Insert: Omit<User, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<User, 'id' | 'created_at'>>
       }
       applications: {
         Row: Application
-        Insert: Partial<Application> & { tracking_number: string; nama_lengkap: string; nip: string; pangkat_golongan: string; jabatan: string; unit_kerja_asal: string; instansi_tujuan: string; alasan_permohonan: string; email: string; nomor_hp: string }
-        Update: Partial<Application>
+        Insert: Omit<Application, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Application, 'id' | 'created_at'>>
       }
       documents: {
         Row: Document
-        Insert: Partial<Document> & { application_id: string; document_type: DocumentType; file_name: string; file_path: string; file_size: number }
-        Update: Partial<Document>
+        Insert: Omit<Document, 'id' | 'uploaded_at'>
+        Update: Partial<Omit<Document, 'id' | 'uploaded_at'>>
       }
       status_history: {
         Row: StatusHistory
-        Insert: Partial<StatusHistory> & { application_id: string; status: ApplicationStatus }
-        Update: Partial<StatusHistory>
+        Insert: Omit<StatusHistory, 'id' | 'changed_at'>
+        Update: Partial<Omit<StatusHistory, 'id' | 'changed_at'>>
       }
       audit_logs: {
         Row: AuditLog
-        Insert: Partial<AuditLog> & { action: string; entity_type: string }
-        Update: Partial<AuditLog>
+        Insert: Omit<AuditLog, 'id' | 'created_at'>
+        Update: Partial<Omit<AuditLog, 'id' | 'created_at'>>
       }
       document_rejections: {
         Row: DocumentRejection
-        Insert: Partial<DocumentRejection> & { document_id: string; application_id: string; rejection_reason: string }
-        Update: Partial<DocumentRejection>
+        Insert: Omit<DocumentRejection, 'id' | 'rejected_at' | 'resolved_at'>
+        Update: Partial<Omit<DocumentRejection, 'id' | 'rejected_at'>>
+      }
+      sessions: {
+        Row: Session
+        Insert: Omit<Session, 'id' | 'created_at' | 'revoked_at'>
+        Update: Partial<Omit<Session, 'id' | 'created_at'>>
       }
     }
   }

@@ -69,9 +69,9 @@ export default function PermohonanDetailPage() {
       const docs = await getApplicationDocuments(applicationId)
       setDocuments(docs as Document[])
       
-      // Load delivery proof if status is Diambil/Selesai
+      // Load delivery proof if status is Selesai
       const appData = app as Application
-      if (appData.status === 'Diambil' || appData.status === 'Selesai') {
+      if (appData.status === 'Selesai') {
         if (appData.pickup_method === 'online') {
           await loadDeliveryProof(appData.tracking_number)
         } else {
@@ -472,7 +472,7 @@ export default function PermohonanDetailPage() {
       </div>
 
       {/* Delivery/Pickup Proof Section */}
-      {(application.status === 'Diambil' || application.status === 'Selesai') && (
+      {application.status === 'Selesai' && (
         <Card className="border border-slate-200 shadow-sm">
           <CardHeader>
             <div className="flex items-center gap-3">
@@ -492,7 +492,7 @@ export default function PermohonanDetailPage() {
                 <p className="text-sm text-slate-500">
                   {application.pickup_method === 'online' 
                     ? 'SKBT telah dikirim via email' 
-                    : 'SKBT telah diambil langsung di kantor'}
+                    : 'SKBT telah selesai diproses'}
                 </p>
               </div>
             </div>

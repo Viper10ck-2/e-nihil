@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendDigitalReceiptEmail } from '@/lib/services/emailService'
 import { supabase } from '@/lib/supabase'
+import { withAuth } from '@/lib/api-middleware'
 
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (request, userId) => {
     const body = await request.json()
     const { trackingNumber, nomorSurat, namaLengkap, nip, tujuanPermohonan, email, tanggalTTD, downloadUrl, sentBy } = body
 
@@ -55,11 +56,5 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-  } catch (error) {
-    console.error('Error in send-digital-receipt API:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
+  })
 }

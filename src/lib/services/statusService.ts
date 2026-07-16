@@ -8,10 +8,9 @@ const validTransitions: Record<ApplicationStatus, ApplicationStatus[]> = {
   'Diverifikasi Admin': ['Diparaf Kasubbag Anev', 'Menunggu Verifikasi Admin'], // Can return for revision
   'Diparaf Kasubbag Anev': ['Diproses Sekretaris'],
   'Diproses Sekretaris': ['Ditandatangani Inspektur', 'Diparaf Kasubbag Anev'], // Can return
-  'Ditandatangani Inspektur': ['Diambil'],
-  'Diambil': [],
+  'Ditandatangani Inspektur': ['Selesai'],
+  'Selesai': [],
   'Ditolak': [],
-  'Selesai': [], // Legacy status - kept for backward compatibility
 }
 
 // Role permissions for status changes
@@ -195,7 +194,7 @@ export async function confirmPickup(
 ): Promise<void> {
   const { error } = await supabase
     .from('applications')
-    .update({ status: 'Diambil' } as never)
+    .update({ status: 'Selesai' } as never)
     .eq('id', applicationId)
 
   if (error) {
@@ -204,8 +203,8 @@ export async function confirmPickup(
 
   await supabase.from('status_history').insert({
     application_id: applicationId,
-    status: 'Diambil',
-    notes: 'Surat telah diambil oleh pemohon',
+    status: 'Selesai',
+    notes: 'Surat telah selesai diproses',
     changed_by: userId,
   } as never)
 }

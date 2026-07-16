@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendPickupChoiceEmail } from '@/lib/services/emailService'
 import { supabase } from '@/lib/supabase'
+import { withAuth } from '@/lib/api-middleware'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 
@@ -9,7 +10,7 @@ interface PickupMethodData {
 }
 
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (request, userId) => {
     const body = await request.json()
     const { trackingNumber, nomorSurat, namaLengkap, nip, email, nomorHp, pickupMethod } = body
 
@@ -83,14 +84,7 @@ export async function POST(request: NextRequest) {
     if (result.success) {
       return NextResponse.json({ success: true, data: result.data })
     } else {
-      // Even if email fails, pickup method is saved
       return NextResponse.json({ success: true, data: { emailFailed: true } })
     }
-  } catch (error) {
-    console.error('Error in send-pickup-choice API:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
+  })
 }

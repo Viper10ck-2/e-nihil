@@ -1,17 +1,17 @@
 /**
  * Security Utilities for e-Nihil Application
- * Provides password hashing, token generation, and security helpers
+ * Provides password hashing, token generation, session management, and security helpers
  */
 
 import bcrypt from 'bcryptjs'
+import { createHash, randomBytes } from 'crypto'
+import { createServerClient } from '@/lib/supabase'
 
 // Salt rounds for bcrypt (higher = more secure but slower)
 const SALT_ROUNDS = 12
 
 /**
  * Hash a password using bcrypt
- * @param password - Plain text password
- * @returns Hashed password
  */
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, SALT_ROUNDS)
@@ -19,13 +19,9 @@ export async function hashPassword(password: string): Promise<string> {
 
 /**
  * Verify a password against a hash
- * @param password - Plain text password to verify
- * @param hash - Stored hash to compare against
- * @returns True if password matches
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   // Handle legacy plain text passwords (for migration)
-  // If hash doesn't start with $2, it's likely plain text
   if (!hash.startsWith('$2')) {
     return password === hash
   }
@@ -33,22 +29,115 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 /**
- * Generate a cryptographically secure random token
- * @param length - Number of bytes (default 32 = 64 hex chars)
- * @returns Hex-encoded random token
+ * Generate a cryptographically secure random token (Node.js compatible)
  */
 export function generateSecureToken(length: number = 32): string {
-  const array = new Uint8Array(length)
-  crypto.getRandomValues(array)
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+  return randomBytes(length).toString('hex')
+}
+
+/**
+ * Hash a token for secure storage (SHA-256)
+ */
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex')
 }
 
 /**
  * Generate a CSRF token
- * @returns CSRF token string
  */
 export function generateCSRFToken(): string {
   return generateSecureToken(32)
+}
+
+/**
+ * Generate a CSRF token + hashed version pair
+ */
+export function generateCSRFTokenPair(): { token: string; hash: string } {
+  const token = generateCSRFToken()
+  return { token, hash: hashToken(token) }
+}
+
+// ---- Session Management ----
+
+/**
+ * Create a new session in the database
+ */
+export async function createSession(
+  userId: string,
+  ipAddress?: string,
+  userAgent?: string
+): Promise<{ sessionToken: string; expiresAt: number }> {
+  const sessionToken = generateSecureToken(32)
+  const tokenHash = hashToken(sessionToken)
+  const now = Date.now()
+  const expiresAt = now + 8 * 60 * 60 * 1000 // 8 hours
+
+  const supabase = createServerClient()
+  await supabase.from('sessions').insert({
+    user_id: userId,
+    token_hash: tokenHash,
+    ip_address: ipAddress || null,
+    user_agent: userAgent || null,
+    expires_at: new Date(expiresAt).toISOString(),
+  } as never)
+
+  return { sessionToken, expiresAt }
+}
+
+/**
+ * Validate a session token against the database
+ * Returns the user_id if valid, null otherwise
+ */
+export async function validateSession(sessionToken: string): Promise<string | null> {
+  if (!sessionToken) return null
+
+  const tokenHash = hashToken(sessionToken)
+  const supabase = createServerClient()
+
+  const { data } = await supabase
+    .from('sessions')
+    .select('user_id, expires_at, revoked_at')
+    .eq('token_hash', tokenHash)
+    .single()
+
+  if (!data) return null
+
+  const session = data as { user_id: string; expires_at: string; revoked_at: string | null }
+
+  // Check if revoked
+  if (session.revoked_at) return null
+
+  // Check if expired
+  if (new Date(session.expires_at) < new Date()) return null
+
+  return session.user_id
+}
+
+/**
+ * Revoke a session (logout)
+ */
+export async function revokeSession(sessionToken: string): Promise<void> {
+  if (!sessionToken) return
+
+  const tokenHash = hashToken(sessionToken)
+  const supabase = createServerClient()
+
+  await supabase
+    .from('sessions')
+    .update({ revoked_at: new Date().toISOString() } as never)
+    .eq('token_hash', tokenHash)
+}
+
+/**
+ * Revoke all sessions for a user
+ */
+export async function revokeAllUserSessions(userId: string): Promise<void> {
+  const supabase = createServerClient()
+  await supabase
+    .from('sessions')
+    .update({ revoked_at: new Date().toISOString() } as never)
+    .eq('user_id', userId)
+    .is('revoked_at', null)
 }
 
 /**

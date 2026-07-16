@@ -20,24 +20,22 @@ export async function rejectDocument(params: RejectDocumentParams): Promise<Docu
   const { documentId, applicationId, rejectionReason, rejectedBy } = params
 
   // First, resolve any existing unresolved rejection for this document
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
+  await supabase
     .from('document_rejections')
-    .update({ is_resolved: true, resolved_at: new Date().toISOString() })
+    .update({ is_resolved: true, resolved_at: new Date().toISOString() } as never)
     .eq('document_id', documentId)
     .eq('is_resolved', false)
 
   // Create new rejection record
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('document_rejections')
     .insert({
       document_id: documentId,
       application_id: applicationId,
       rejection_reason: rejectionReason,
-      rejected_by: rejectedBy,
+      rejected_by: rejectedBy || null,
       is_resolved: false,
-    })
+    } as never)
     .select()
     .single()
 
@@ -52,8 +50,7 @@ export async function rejectDocument(params: RejectDocumentParams): Promise<Docu
  * Get all document rejections for an application
  */
 export async function getDocumentRejections(applicationId: string): Promise<DocumentRejection[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('document_rejections')
     .select('*')
     .eq('application_id', applicationId)
@@ -71,8 +68,7 @@ export async function getDocumentRejections(applicationId: string): Promise<Docu
  * Get unresolved rejections for an application
  */
 export async function getUnresolvedRejections(applicationId: string): Promise<DocumentRejection[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('document_rejections')
     .select('*')
     .eq('application_id', applicationId)
@@ -91,13 +87,12 @@ export async function getUnresolvedRejections(applicationId: string): Promise<Do
 export async function resolveRejection(params: ResolveRejectionParams): Promise<void> {
   const { documentId } = params
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from('document_rejections')
     .update({
       is_resolved: true,
       resolved_at: new Date().toISOString(),
-    })
+    } as never)
     .eq('document_id', documentId)
     .eq('is_resolved', false)
 
@@ -110,8 +105,7 @@ export async function resolveRejection(params: ResolveRejectionParams): Promise<
  * Check if all rejections for an application are resolved
  */
 export async function checkAllRejectionsResolved(applicationId: string): Promise<boolean> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('document_rejections')
     .select('id')
     .eq('application_id', applicationId)

@@ -72,7 +72,7 @@ export const metadata: Metadata = {
         url: '/logo-bintan.png',
         width: 512,
         height: 512,
-        alt: 'Logo e-Nihil Bintan',
+        alt: 'Logo Pemerintah Kabupaten Bintan',
       },
     ],
   },
@@ -86,9 +86,12 @@ export const metadata: Metadata = {
     canonical: 'https://e-nihil.vercel.app',
   },
   icons: {
-    icon: '/logo-bintan.png',
+    icon: [
+      { url: '/logo-bintan.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logo-bintan.png', sizes: '192x192', type: 'image/png' },
+    ],
     shortcut: '/logo-bintan.png',
-    apple: '/logo-bintan.png',
+    apple: [{ url: '/logo-bintan.png', sizes: '180x180', type: 'image/png' }],
   },
   category: 'government',
   classification: 'Government Services',
@@ -110,7 +113,7 @@ export default function RootLayout({
       name: 'Inspektorat Daerah Kabupaten Bintan',
       address: {
         '@type': 'PostalAddress',
-        streetAddress: 'Jl. Bintan Buyu',
+        streetAddress: 'Jalan Raya Tanjungpinang-Tanjunguban KM.42',
         addressLocality: 'Bandar Seri Bentan',
         addressRegion: 'Kepulauan Riau',
         addressCountry: 'ID'

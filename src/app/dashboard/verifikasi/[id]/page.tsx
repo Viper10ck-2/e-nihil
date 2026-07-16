@@ -104,8 +104,8 @@ export default function VerifikasiDetailPage() {
 
   const canApprove = () => {
     if (!application) return false
-    // Admin tidak bisa approve jika sudah Selesai, Diambil, Ditolak, atau Ditandatangani Inspektur
-    if (currentRole === 'admin') return !['Selesai', 'Diambil', 'Ditolak', 'Ditandatangani Inspektur'].includes(application.status)
+    // Admin tidak bisa approve jika sudah Selesai, Ditolak, atau Ditandatangani Inspektur
+    if (currentRole === 'admin') return !['Selesai', 'Ditolak', 'Ditandatangani Inspektur'].includes(application.status)
     switch (currentRole) {
       case 'kasubbag_anev': return application.status === 'Diverifikasi Admin'
       case 'sekretaris': return application.status === 'Diparaf Kasubbag Anev'
@@ -329,8 +329,8 @@ export default function VerifikasiDetailPage() {
       const result = await response.json()
       if (!result.success) throw new Error('Gagal mengirim email')
 
-      // 4. Update status menjadi Diambil dan set pickup_method jika belum ada
-      await updateApplicationStatus(application.id, 'Diambil', 'Berkas dikirim secara online', user?.id)
+      // 4. Update status menjadi Selesai dan set pickup_method jika belum ada
+      await updateApplicationStatus(application.id, 'Selesai', 'Berkas dikirim secara online', user?.id)
       
       // Set pickup_method ke 'online' jika belum dipilih oleh pemohon
       if (!application.pickup_method) {
@@ -404,8 +404,8 @@ export default function VerifikasiDetailPage() {
 
       if (uploadError) throw uploadError
 
-      // 2. Update status menjadi Diambil dan set pickup_method jika belum ada
-      await updateApplicationStatus(application.id, 'Diambil', 'Berkas diserahkan secara langsung', user?.id)
+      // 2. Update status menjadi Selesai dan set pickup_method jika belum ada
+      await updateApplicationStatus(application.id, 'Selesai', 'Berkas diserahkan secara langsung', user?.id)
       
       // Set pickup_method ke 'offline' jika belum dipilih oleh pemohon
       if (!application.pickup_method) {
@@ -418,7 +418,7 @@ export default function VerifikasiDetailPage() {
           .eq('id', application.id)
       }
 
-      toast.success('Berkas berhasil diserahkan! Status diperbarui menjadi Diambil.')
+      toast.success('Berkas berhasil diserahkan! Status diperbarui menjadi Selesai.')
       setShowOfflineDialog(false)
       setBuktiPenyerahanFile(null)
       router.push('/dashboard/verifikasi')
@@ -1064,7 +1064,7 @@ export default function VerifikasiDetailPage() {
             {/* Info */}
             <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
               <p className="text-sm text-emerald-800">
-                <strong>Informasi:</strong> Setelah dikonfirmasi, status permohonan akan berubah menjadi &quot;Diambil&quot; dan proses dinyatakan selesai.
+                <strong>Informasi:</strong> Setelah dikonfirmasi, status permohonan akan berubah menjadi &quot;Selesai&quot; dan proses dinyatakan selesai.
               </p>
             </div>
           </div>

@@ -1,8 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendNewApplicationEmail } from '@/lib/services/emailService'
+import { withAuth } from '@/lib/api-middleware'
+import { checkRateLimit, getClientIP } from '@/lib/security'
 
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (request, userId) => {
+    // Rate limiting for email sending (prevent abuse)
+    const clientIP = getClientIP(request.headers)
+    const rateLimit = checkRateLimit(`email:${clientIP}`, 10, 60000)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Terlalu banyak permintaan. Coba lagi.' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
     
     const result = await sendNewApplicationEmail({
@@ -25,8 +37,5 @@ export async function POST(request: NextRequest) {
     } else {
       return NextResponse.json({ success: false, error: result.error }, { status: 500 })
     }
-  } catch (error) {
-    console.error('API Error:', error)
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 })
-  }
+  })
 }

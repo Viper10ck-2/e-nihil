@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { verifyPassword, generateSecureToken, checkRateLimit, getClientIP, maskSensitiveData, SECURE_COOKIE_OPTIONS } from '@/lib/security'
+import { verifyPassword, generateCSRFTokenPair, createSession, checkRateLimit, getClientIP, SECURE_COOKIE_OPTIONS, hashToken } from '@/lib/security'
 import type { User, UserRole } from '@/types/database'
 
 // Session timeout in milliseconds (8 hours)
@@ -67,10 +67,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate secure session token
-    const sessionToken = generateSecureToken(32)
-    const now = Date.now()
-    const expiresAt = now + SESSION_TIMEOUT
+    // Generate secure session and store in database
+    const { sessionToken, expiresAt } = await createSession(
+      userData.id,
+      clientIP,
+      request.headers.get('user-agent') || undefined
+    )
+
+    // Generate CSRF token pair
+    const csrf = generateCSRFTokenPair()
 
     // Create auth user object (without sensitive data)
     const authUser = {
@@ -95,6 +100,7 @@ export async function POST(request: NextRequest) {
       success: true,
       user: authUser,
       expiresAt,
+      csrfToken: csrf.token,
     })
 
     // Set HttpOnly cookies (not accessible via JavaScript)
@@ -110,11 +116,16 @@ export async function POST(request: NextRequest) {
       maxAge: cookieMaxAge,
     })
 
-    // Store session token hash in a separate cookie for validation
-    // This allows client to know session exists without exposing the actual token
+    // Store CSRF token hash for server-side validation
+    response.cookies.set('e-nihil-csrf', csrf.hash, {
+      ...SECURE_COOKIE_OPTIONS,
+      maxAge: cookieMaxAge,
+    })
+
+    // Client-readable session flag
     response.cookies.set('e-nihil-session-valid', 'true', {
       ...SECURE_COOKIE_OPTIONS,
-      httpOnly: false, // Allow client to check this
+      httpOnly: false,
       maxAge: cookieMaxAge,
     })
 

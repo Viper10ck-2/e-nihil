@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { rejectDocument } from '@/lib/services/documentRejectionService'
 import { sendMultipleDocumentRejectionEmail } from '@/lib/services/emailService'
+import { withAuth } from '@/lib/api-middleware'
 import type { Application, Document } from '@/types/database'
 
 const documentTypeLabels: Record<string, string> = {
@@ -20,7 +21,7 @@ interface RejectionItem {
 }
 
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (request, userId) => {
     const body = await request.json()
     const { applicationId, rejections, rejectedBy } = body as {
       applicationId: string
@@ -137,11 +138,5 @@ export async function POST(request: NextRequest) {
       message: `${rejectedDocs.length} dokumen berhasil ditolak dan notifikasi telah dikirim`,
       rejectedCount: rejectedDocs.length,
     })
-  } catch (error) {
-    console.error('Error rejecting multiple documents:', error)
-    return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan saat menolak dokumen' },
-      { status: 500 }
-    )
-  }
+  })
 }

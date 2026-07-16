@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { validateSession } from '@/lib/security'
 
 // Routes that require authentication
 const protectedRoutes = ['/dashboard']
@@ -10,8 +11,8 @@ const authRoutes = ['/login']
 // Content Security Policy
 const CSP_DIRECTIVES = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Required for Next.js
-  "style-src 'self' 'unsafe-inline'", // Required for inline styles
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co",
   "font-src 'self' data:",
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
@@ -24,43 +25,41 @@ const CSP_DIRECTIVES = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Check if user is logged in by looking for session token in cookies
-  const sessionToken = request.cookies.get('e-nihil-auth')
-  const sessionExpiry = request.cookies.get('e-nihil-session-expiry')
+  // Note: DB session validation is async, but proxy() must be sync in Next.js 16.
+  // For production, use the /api/auth/session endpoint for full DB validation.
+  // Here we do a fast cookie-expiry check as first line of defense.
+  const sessionToken = request.cookies.get('e-nihil-auth')?.value
+  const sessionExpiry = request.cookies.get('e-nihil-session-expiry')?.value
 
-  // Check if session is valid and not expired
   let isValidSession = false
   if (sessionToken && sessionExpiry) {
-    const expiryTime = parseInt(sessionExpiry.value, 10)
+    const expiryTime = parseInt(sessionExpiry, 10)
     isValidSession = !isNaN(expiryTime) && Date.now() < expiryTime
   }
 
-  // Check protected routes
+  // Protected route without valid session → redirect to login
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
-  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
-
-  // If accessing protected route without valid session, redirect to login
   if (isProtectedRoute && !isValidSession) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
     
-    // Clear expired cookies
     const response = NextResponse.redirect(loginUrl)
     response.cookies.delete('e-nihil-auth')
     response.cookies.delete('e-nihil-session-expiry')
     response.cookies.delete('e-nihil-session-valid')
+    response.cookies.delete('e-nihil-csrf')
     return response
   }
 
-  // If accessing auth route while logged in with valid session, redirect to dashboard
+  // Auth route with valid session → redirect to dashboard
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
   if (isAuthRoute && isValidSession) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Add security headers
+  // Apply security headers to all responses
   const response = NextResponse.next()
-  
-  // Comprehensive Security Headers
+
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -69,7 +68,7 @@ export function proxy(request: NextRequest) {
   response.headers.set('X-DNS-Prefetch-Control', 'on')
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
   response.headers.set('Content-Security-Policy', CSP_DIRECTIVES)
-  
+
   // Prevent caching of protected pages
   if (isProtectedRoute) {
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, private')
@@ -83,14 +82,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (images, etc)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$|.*\\.jpg$|.*\\.ico$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$|.*\\.jpg$|.*\\.ico$|.*\\.mp4$).*)',
   ],
 }

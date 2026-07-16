@@ -54,7 +54,7 @@ export function StatusTimeline({ currentStatus, history, rejectionReason }: Stat
       'Diparaf Kasubbag Anev': 'Kasubbag',
       'Diproses Sekretaris': 'Sekretaris',
       'Ditandatangani Inspektur': 'Inspektur',
-      'Diambil': 'Selesai',
+      'Selesai': 'Selesai',
     }
     return labels[status] || status
   }
@@ -68,7 +68,7 @@ export function StatusTimeline({ currentStatus, history, rejectionReason }: Stat
           <div className="flex items-start min-w-max px-4">
             {STATUS_FLOW.map((status, index) => {
               const historyItem = getHistoryForStatus(status)
-              const isCompleted = index < currentIndex || (index === currentIndex && currentStatus === 'Diambil')
+              const isCompleted = index < currentIndex || (index === currentIndex && currentStatus === 'Selesai')
               const isCurrent = index === currentIndex && !isRejected
               const isPending = index > currentIndex
               const isLast = index === STATUS_FLOW.length - 1
@@ -148,7 +148,7 @@ export function StatusTimeline({ currentStatus, history, rejectionReason }: Stat
         <div className="md:hidden overflow-x-auto pb-4">
           <div className="flex items-center min-w-max px-2 py-4">
             {STATUS_FLOW.map((status, index) => {
-              const isCompleted = index < currentIndex || (index === currentIndex && currentStatus === 'Diambil')
+              const isCompleted = index < currentIndex || (index === currentIndex && currentStatus === 'Selesai')
               const isCurrent = index === currentIndex && !isRejected
               const isPending = index > currentIndex
               const isLast = index === STATUS_FLOW.length - 1

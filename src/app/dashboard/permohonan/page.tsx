@@ -35,7 +35,7 @@ const allStatuses: ApplicationStatus[] = [
   'Diparaf Kasubbag Anev',
   'Diproses Sekretaris',
   'Ditandatangani Inspektur',
-  'Diambil',
+  'Selesai',
   'Selesai', // Legacy status
   'Ditolak',
 ]
@@ -95,30 +95,30 @@ export default function PermohonanPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header Section */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Semua Permohonan</h1>
-        <p className="text-slate-500 mt-1">
+        <h1 className="text-lg sm:text-2xl font-bold text-slate-800">Semua Permohonan</h1>
+        <p className="text-sm text-slate-500 mt-0.5 sm:mt-1">
           Daftar semua permohonan SKBT yang masuk
         </p>
       </div>
 
       {/* Filters */}
       <Card className="border border-slate-200 shadow-sm">
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
+        <CardContent className="p-3 sm:pt-6">
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Cari berdasarkan nama, NIP, atau no. tracking..."
+                placeholder="Cari nama, NIP, atau no. tracking..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[250px]">
+              <SelectTrigger className="w-full sm:w-[250px] text-sm">
                 <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
               <SelectContent>
@@ -136,13 +136,48 @@ export default function PermohonanPage() {
 
       {/* Applications Table */}
       <Card className="border border-slate-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-slate-800 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-slate-500" />
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="text-sm sm:text-base text-slate-800 flex items-center gap-2">
+            <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-slate-500" />
             Riwayat Permohonan
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 sm:px-6">
+          {/* Mobile card list */}
+          <div className="block md:hidden divide-y">
+            {filteredApplications.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8 text-sm">
+                Tidak ada permohonan yang ditemukan
+              </div>
+            ) : (
+              filteredApplications.map((app) => (
+                <Link
+                  key={app.id}
+                  href={`/dashboard/permohonan/${app.id}`}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  <div className="min-w-0 flex-1 mr-3">
+                    <p className="font-medium text-sm truncate">{app.nama_lengkap}</p>
+                    <p className="text-xs text-gray-500 truncate">{app.unit_kerja_asal || '-'}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      <span className="text-[11px] text-gray-400 font-mono">{app.tracking_number}</span>
+                      {app.nomor_surat && (
+                        <span className="text-[11px] text-gray-400 font-mono">| {app.nomor_surat}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <StatusBadge status={app.status} />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      {format(new Date(app.created_at), 'dd/MM/yy')}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -199,6 +234,7 @@ export default function PermohonanPage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

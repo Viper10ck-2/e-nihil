@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendSkbtOnlineEmail } from '@/lib/services/emailService'
 import { supabase } from '@/lib/supabase'
+import { withAuth } from '@/lib/api-middleware'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 
 export async function POST(request: NextRequest) {
-  try {
+  return withAuth(request, async (request, userId) => {
     const body = await request.json()
     const { applicationId, trackingNumber, nomorSurat, namaLengkap, nip, email, tujuanPermohonan } = body
 
@@ -62,11 +63,5 @@ export async function POST(request: NextRequest) {
       data: result.data,
       proofPath,
     })
-  } catch (error) {
-    console.error('Error in send-skbt-online API:', error)
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
+  })
 }
