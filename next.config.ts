@@ -34,8 +34,10 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-select',
       '@radix-ui/react-tabs',
     ],
+    // Don't bundle Node.js packages for client
+    serverComponentsExternalPackages: ['postgres'],
   },
-
+  
   // Turbopack configuration (Next.js 16+)
   turbopack: {},
 };
