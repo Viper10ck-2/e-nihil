@@ -14,7 +14,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { SimpleCaptcha } from '@/components/ui/simple-captcha'
 import { applicationFormSchema, type ApplicationFormData } from '@/lib/validations'
 import { DOCUMENT_TYPES, PANGKAT_GOLONGAN, UNIT_KERJA } from '@/lib/constants'
-import { createApplication, generateUniqueTrackingNumber, uploadDocument } from '@/lib/services/applicationService'
+import { createApplication, generateUniqueTrackingNumber } from '@/lib/actions'
 import { toast } from 'sonner'
 import { 
   CheckCircle, Copy, FileText, User, Upload, Shield,

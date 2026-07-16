@@ -118,3 +118,23 @@ export async function updateUserPassword(userId: string, newPassword: string) {
   const hashed = await hashPassword(newPassword)
   await supabase.from('users').update({ password_hash: hashed } as never).eq('id', userId)
 }
+
+// Pengajuan
+export async function generateUniqueTrackingNumber() {
+  const now = new Date()
+  const datePrefix = `SKBT-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`
+  const { count } = await supabase.from('applications').select('*', { count: 'exact', head: true }).like('tracking_number', `${datePrefix}%`)
+  return `${datePrefix}-${String((count||0)+1).padStart(4,'0')}`
+}
+
+export async function createApplication(data: Record<string, string>, trackingNumber: string, tujuan: string) {
+  const { data: app } = await supabase.from('applications').insert({
+    tracking_number: trackingNumber, tujuan_permohonan: tujuan,
+    nama_lengkap: data.nama_lengkap, nip: data.nip, pangkat_golongan: data.pangkat_golongan,
+    jabatan: data.jabatan||'-', unit_kerja_asal: data.unit_kerja_asal||'-',
+    instansi_tujuan: data.instansi_tujuan||'-', alasan_permohonan: data.alasan_permohonan||'-',
+    email: data.email, nomor_hp: data.nomor_hp,
+    status: 'Menunggu Verifikasi Admin',
+  } as never).select().single()
+  return app as unknown as Application
+}
