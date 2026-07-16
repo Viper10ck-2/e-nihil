@@ -180,11 +180,11 @@ export default function PengajuanPage() {
               <CardDescription>Permohonan Anda telah berhasil diajukan dan sedang menunggu verifikasi.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100/50">
+              <div className="bg-gradient-to-r from-slate-50 to-white p-6 rounded-2xl border border-slate-100">
                 <p className="text-sm text-slate-500 mb-2">Nomor Tracking Anda:</p>
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-2xl font-bold font-mono text-blue-600">{trackingNumber}</span>
-                  <Button variant="ghost" size="sm" onClick={copyTrackingNumber} className="hover:bg-blue-100 rounded-full">
+                  <span className="text-2xl font-bold font-mono text-amber-600">{trackingNumber}</span>
+                  <Button variant="ghost" size="sm" onClick={copyTrackingNumber} className="hover:bg-amber-100 rounded-full">
                     <Copy className="h-4 w-4" />
                   </Button>
                 </div>
@@ -195,7 +195,7 @@ export default function PengajuanPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button variant="outline" onClick={() => window.location.href = '/tracking'} className="rounded-full">Cek Status</Button>
-                <Button onClick={() => window.location.href = '/'} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-full">Kembali ke Beranda</Button>
+                <Button onClick={() => window.location.href = '/'} className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 rounded-full">Kembali ke Beranda</Button>
               </div>
             </CardContent>
           </Card>
@@ -205,10 +205,10 @@ export default function PengajuanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-white">
       {/* Hero Header - More Modern */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0c1524] via-[#0f1729] to-[#1e3a5f]"></div>
         {/* Decorative circles */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/4"></div>
@@ -220,18 +220,18 @@ export default function PengajuanPage() {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white">Form Pengajuan SKBT</h1>
-              <p className="text-blue-100 text-sm md:text-base">Surat Keterangan Bebas Temuan - Inspektorat Kabupaten Bintan</p>
+              <p className="text-slate-300 text-sm md:text-base">Surat Keterangan Bebas Temuan - Inspektorat Kabupaten Bintan</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-3 text-sm">
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-              <Shield className="h-4 w-4 text-blue-100" /> <span className="text-white">Aman & Terpercaya</span>
+              <Shield className="h-4 w-4 text-slate-300" /> <span className="text-white">Aman & Terpercaya</span>
             </div>
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-              <Sparkles className="h-4 w-4 text-blue-100" /> <span className="text-white">Proses Cepat</span>
+              <Sparkles className="h-4 w-4 text-slate-300" /> <span className="text-white">Proses Cepat</span>
             </div>
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-              <CheckCircle className="h-4 w-4 text-blue-100" /> <span className="text-white">100% Gratis</span>
+              <CheckCircle className="h-4 w-4 text-slate-300" /> <span className="text-white">100% Gratis</span>
             </div>
           </div>
         </div>
@@ -239,7 +239,7 @@ export default function PengajuanPage() {
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
             <path d="M0 60V30C240 50 480 10 720 30C960 50 1200 10 1440 30V60H0Z" className="fill-slate-50/50"/>
-            <path d="M0 60V40C240 55 480 25 720 40C960 55 1200 25 1440 40V60H0Z" className="fill-blue-50"/>
+            <path d="M0 60V40C240 55 480 25 720 40C960 55 1200 25 1440 40V60H0Z" className="fill-slate-100"/>
           </svg>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function PengajuanPage() {
       <div className="container py-8">
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-500 rounded-full"></div>
+            <div className="w-1 h-6 bg-gradient-to-b from-amber-400 to-amber-500 rounded-full"></div>
             <h2 className="text-lg font-semibold text-slate-800">Pilih Tujuan Permohonan</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -256,7 +256,7 @@ export default function PengajuanPage() {
               const Icon = option.icon
               const isSelected = tujuanPermohonan === option.value
               const colorConfig = {
-                blue: { bg: 'bg-blue-500', light: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600', hover: 'hover:border-blue-300 hover:bg-blue-50/50' },
+                blue: { bg: 'bg-amber-500', light: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', hover: 'hover:border-amber-300 hover:bg-amber-50/50' },
                 emerald: { bg: 'bg-emerald-500', light: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-600', hover: 'hover:border-emerald-300 hover:bg-emerald-50/50' },
                 violet: { bg: 'bg-violet-500', light: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-600', hover: 'hover:border-violet-300 hover:bg-violet-50/50' },
                 amber: { bg: 'bg-amber-500', light: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-600', hover: 'hover:border-amber-300 hover:bg-amber-50/50' },
@@ -295,11 +295,11 @@ export default function PengajuanPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {/* Left Column - Data Pemohon */}
                 <div className="relative">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 rounded-full"></div>
-                  <Card className="ml-4 border-0 shadow-xl shadow-blue-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 via-amber-400 to-amber-300 rounded-full"></div>
+                  <Card className="ml-4 border-0 shadow-xl shadow-slate-200/50 bg-white/80 backdrop-blur-sm overflow-hidden">
                     <CardHeader className="pb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0f1729] to-[#1e3a5f] flex items-center justify-center shadow-lg shadow-slate-300/50">
                           <User className="h-5 w-5 text-white" />
                         </div>
                         <div>
@@ -312,7 +312,7 @@ export default function PengajuanPage() {
                       <FormField control={form.control} name="nama_lengkap" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-sm text-slate-600 font-medium">Nama Lengkap (dengan gelar)</FormLabel>
-                          <FormControl><Input placeholder="Dr. Nama Lengkap, S.H., M.H." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                          <FormControl><Input placeholder="Dr. Nama Lengkap, S.H., M.H." className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
                           <FormMessage />
                         </FormItem>
                       )} />
@@ -322,7 +322,7 @@ export default function PengajuanPage() {
                           <FormField control={form.control} name="nip" render={({ field }) => (
                             <FormItem>
                               <FormLabel className="text-sm text-slate-600 font-medium">NIP</FormLabel>
-                              <FormControl><Input placeholder="198501012010011001" maxLength={18} className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                              <FormControl><Input placeholder="198501012010011001" maxLength={18} className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )} />
@@ -335,7 +335,7 @@ export default function PengajuanPage() {
                                 if (value === 'lainnya') { setShowPangkatLainnya(true); field.onChange('') }
                                 else { setShowPangkatLainnya(false); setPangkatLainnya(''); field.onChange(value) }
                               }} value={showPangkatLainnya ? 'lainnya' : field.value}>
-                                <FormControl><SelectTrigger className="bg-slate-50/50 border-slate-200 focus:border-blue-400 rounded-xl"><SelectValue placeholder="Pilih Pangkat" /></SelectTrigger></FormControl>
+                                <FormControl><SelectTrigger className="bg-slate-50/50 border-slate-200 focus:border-amber-400 rounded-xl"><SelectValue placeholder="Pilih Pangkat" /></SelectTrigger></FormControl>
                                 <SelectContent>
                                   {PANGKAT_GOLONGAN.map((pg) => (<SelectItem key={pg.value} value={pg.value}>{pg.label}</SelectItem>))}
                                   <SelectItem value="lainnya">Lainnya</SelectItem>
@@ -352,7 +352,7 @@ export default function PengajuanPage() {
                           <FormItem>
                             <FormLabel className="text-sm text-slate-600 font-medium">Isi Sendiri Pangkat/Golongan</FormLabel>
                             <FormControl>
-                              <Input placeholder="Masukkan pangkat/golongan..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl"
+                              <Input placeholder="Masukkan pangkat/golongan..." className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl"
                                 value={pangkatLainnya} onChange={(e) => { setPangkatLainnya(e.target.value); field.onChange(e.target.value) }} />
                             </FormControl>
                             <FormMessage />
@@ -363,7 +363,7 @@ export default function PengajuanPage() {
                       {showTujuanLainnya && (
                         <div className="space-y-2">
                           <FormLabel className="text-sm text-slate-600 font-medium">Tuliskan Tujuan dan Alasan <span className="text-red-500">*</span></FormLabel>
-                          <Textarea placeholder="Jelaskan tujuan dan alasan permohonan SKBT Anda..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl"
+                          <Textarea placeholder="Jelaskan tujuan dan alasan permohonan SKBT Anda..." className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl"
                             value={tujuanLainnya} onChange={(e) => setTujuanLainnya(e.target.value)} rows={3} />
                         </div>
                       )}
@@ -372,7 +372,7 @@ export default function PengajuanPage() {
                         <FormField control={form.control} name="jabatan" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-sm text-slate-600 font-medium">Jabatan</FormLabel>
-                            <FormControl><Input placeholder="Kepala Seksi..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                            <FormControl><Input placeholder="Kepala Seksi..." className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -383,7 +383,7 @@ export default function PengajuanPage() {
                           <FormItem>
                             <FormLabel className="text-sm text-slate-600 font-medium">Unit Kerja Asal</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl><SelectTrigger className="bg-slate-50/50 border-slate-200 focus:border-blue-400 rounded-xl"><SelectValue placeholder="Pilih Unit Kerja" /></SelectTrigger></FormControl>
+                              <FormControl><SelectTrigger className="bg-slate-50/50 border-slate-200 focus:border-amber-400 rounded-xl"><SelectValue placeholder="Pilih Unit Kerja" /></SelectTrigger></FormControl>
                               <SelectContent>{UNIT_KERJA.map((uk) => (<SelectItem key={uk.value} value={uk.value}>{uk.label}</SelectItem>))}</SelectContent>
                             </Select>
                             <FormMessage />
@@ -395,7 +395,7 @@ export default function PengajuanPage() {
                         <FormField control={form.control} name="instansi_tujuan" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-sm text-slate-600 font-medium">Instansi Tujuan</FormLabel>
-                            <FormControl><Input placeholder="Instansi yang dituju..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                            <FormControl><Input placeholder="Instansi yang dituju..." className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -405,7 +405,7 @@ export default function PengajuanPage() {
                         <FormField control={form.control} name="alasan_permohonan" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-sm text-slate-600 font-medium">Alasan Permohonan</FormLabel>
-                            <FormControl><Textarea placeholder="Jelaskan alasan pengajuan SKBT..." className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" rows={3} {...field} /></FormControl>
+                            <FormControl><Textarea placeholder="Jelaskan alasan pengajuan SKBT..." className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl" rows={3} {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -415,14 +415,14 @@ export default function PengajuanPage() {
                         <FormField control={form.control} name="email" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-sm text-slate-600 font-medium">Email</FormLabel>
-                            <FormControl><Input type="email" placeholder="email@example.com" className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                            <FormControl><Input type="email" placeholder="email@example.com" className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
                         <FormField control={form.control} name="nomor_hp" render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-sm text-slate-600 font-medium">Nomor HP</FormLabel>
-                            <FormControl><Input placeholder="08123456789" className="bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
+                            <FormControl><Input placeholder="08123456789" className="bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl" {...field} /></FormControl>
                             <FormMessage />
                           </FormItem>
                         )} />
@@ -494,7 +494,7 @@ export default function PengajuanPage() {
                   )}
                 </div>
                 <Button type="submit" size="lg" disabled={isSubmitting || !allDocumentsUploaded || !isCaptchaVerified}
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-200/50 rounded-xl px-8 transition-all duration-300 hover:scale-[1.02]">
+                  className="w-full sm:w-auto bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-200/50 rounded-xl px-8 transition-all duration-300 hover:scale-[1.02]">
                   {isSubmitting ? (<><LoadingSpinner size="sm" className="mr-2" />Mengirim...</>) : 'Ajukan Permohonan'}
                 </Button>
               </div>
