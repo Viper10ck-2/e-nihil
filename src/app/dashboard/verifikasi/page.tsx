@@ -250,6 +250,8 @@ export default function VerifikasiPage() {
                 ))
               )}
             </TableBody>
+          </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
