@@ -15,9 +15,9 @@ export default function DashboardLayout({
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-[calc(100vh-64px)] bg-muted/30">
         <DashboardHeader onMenuClick={() => setSidebarOpen(true)} />
-        <div className="flex relative">
+        <div className="flex relative min-h-[calc(100vh-64px)]">
           {/* Desktop sidebar */}
           <div className="hidden lg:block shrink-0">
             <DashboardSidebar />

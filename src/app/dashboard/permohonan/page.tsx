@@ -137,90 +137,51 @@ export default function PermohonanPage() {
             Riwayat Permohonan
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-0 sm:px-6">
-          {/* Mobile card list */}
-          <div className="block md:hidden divide-y">
-            {filteredApplications.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8 text-sm">
-                Tidak ada permohonan yang ditemukan
-              </div>
-            ) : (
-              filteredApplications.map((app) => (
-                <Link
-                  key={app.id}
-                  href={`/dashboard/permohonan/${app.id}`}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                >
-                  <div className="min-w-0 flex-1 mr-3">
-                    <p className="font-medium text-sm truncate">{app.nama_lengkap}</p>
-                    <p className="text-xs text-gray-500 truncate">{app.unit_kerja_asal || '-'}</p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[11px] text-gray-400 font-mono">{app.tracking_number}</span>
-                      {app.nomor_surat && (
-                        <span className="text-[11px] text-gray-400 font-mono">| {app.nomor_surat}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <StatusBadge status={app.status} />
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      {format(new Date(app.created_at), 'dd/MM/yy')}
-                    </p>
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
-          {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto">
+        <CardContent className="px-0 sm:px-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[140px]">No. Tracking</TableHead>
-                <TableHead className="w-[200px]">Nama Pemohon</TableHead>
-                <TableHead className="w-[120px]">Unit Kerja</TableHead>
-                <TableHead className="w-[100px]">Tanggal</TableHead>
-                <TableHead className="w-[140px]">Status</TableHead>
-                <TableHead className="w-[120px]">No. Surat</TableHead>
-                <TableHead className="w-[140px]">Aksi</TableHead>
+                <TableHead className="w-[130px]">No. Tracking</TableHead>
+                <TableHead>Pemohon</TableHead>
+                <TableHead className="hidden sm:table-cell">Unit Kerja</TableHead>
+                <TableHead className="w-[90px] hidden sm:table-cell">Tanggal</TableHead>
+                <TableHead className="w-[160px]">Status</TableHead>
+                <TableHead className="w-[60px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredApplications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    Tidak ada permohonan yang ditemukan
+                  <TableCell colSpan={6} className="text-center text-slate-400 py-12">
+                    <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                    Tidak ada permohonan
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredApplications.map((app) => (
                   <TableRow key={app.id}>
-                    <TableCell className="font-mono text-sm">
-                      {app.tracking_number}
+                    <TableCell className="font-mono text-xs sm:text-sm">
+                      <span className="block truncate max-w-[120px]">{app.tracking_number}</span>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{app.nama_lengkap}</p>
-                        <p className="text-sm text-muted-foreground">
-                          NIP: {app.nip}
-                        </p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate max-w-[150px] sm:max-w-none">{app.nama_lengkap}</p>
+                        <p className="text-xs text-slate-500 sm:hidden">{app.unit_kerja_asal || '-'}</p>
+                        <p className="text-[11px] text-slate-400 sm:hidden">{format(new Date(app.created_at), 'dd/MM/yy')}</p>
                       </div>
                     </TableCell>
-                    <TableCell>{app.unit_kerja_asal || '-'}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-sm text-slate-600 hidden sm:table-cell">{app.unit_kerja_asal || '-'}</TableCell>
+                    <TableCell className="text-sm hidden sm:table-cell">
                       {format(new Date(app.created_at), 'dd MMM yyyy', { locale: id })}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={app.status} />
                     </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {app.nomor_surat || '-'}
-                    </TableCell>
                     <TableCell>
                       <Link href={`/dashboard/permohonan/${app.id}`}>
-                        <Button variant="ghost" size="sm">
-                          Detail
-                          <ArrowRight className="ml-1 h-4 w-4" />
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <ArrowRight className="h-4 w-4" />
                         </Button>
                       </Link>
                     </TableCell>

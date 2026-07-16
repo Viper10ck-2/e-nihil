@@ -103,8 +103,10 @@ export function DashboardSidebar({ mobile, onClose }: DashboardSidebarProps) {
   }
 
   return (
-    <aside className="w-64 bg-sidebar text-sidebar-foreground min-h-[calc(100vh-64px)] p-4">
-      {sidebarContent}
+    <aside className="w-64 bg-sidebar text-sidebar-foreground h-[calc(100vh-64px)] sticky top-16 p-4 flex flex-col">
+      <div className="flex-1">
+        {sidebarContent}
+      </div>
     </aside>
   )
 }
