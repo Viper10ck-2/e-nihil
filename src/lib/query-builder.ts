@@ -6,7 +6,7 @@ let _sql: ReturnType<typeof postgres> | null = null
 function getSql() {
   if (!_sql) {
     const url = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || ''
-    _sql = postgres(url, { ssl: 'require', max: 10 })
+    _sql = postgres(url, { ssl: url.includes('localhost') ? false : 'require', max: 10 })
   }
   return _sql
 }

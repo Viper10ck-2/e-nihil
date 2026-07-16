@@ -1,36 +1,21 @@
 /**
- * Supabase Storage Client - CLIENT-SAFE
- * Uses @supabase/supabase-js (browser-compatible, no Node.js deps).
- * Only for storage operations. DB queries use server actions.
+ * Storage Client - CLIENT-SAFE
+ * Uses fetch() to API routes. Files stored on local disk (home server).
  */
-import { createClient } from '@supabase/supabase-js'
 
-function getStorageClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !key) return null
-  return createClient(url, key)
-}
-
-function requireClient() {
-  const client = getStorageClient()
-  if (!client) throw new Error('Storage tidak dikonfigurasi (NEXT_PUBLIC_SUPABASE_URL/ANON_KEY tidak disetel)')
-  return client
-}
+const STORAGE_BASE = '/api/storage'
 
 export function getPublicUrl(filePath: string): { publicUrl: string } | null {
-  const client = getStorageClient()
-  if (!client) return null
-  const { data } = client.storage.from('documents').getPublicUrl(filePath)
-  return data
+  return { publicUrl: `${STORAGE_BASE}/file?path=${encodeURIComponent(filePath)}` }
 }
 
 export async function downloadFile(filePath: string): Promise<{ data: Blob | null; error: string | null }> {
   try {
-    const client = requireClient()
-    const { data, error } = await client.storage.from('documents').download(filePath)
-    if (error) return { data: null, error: error.message }
-    return { data, error: null }
+    const url = `${STORAGE_BASE}/file?path=${encodeURIComponent(filePath)}`
+    const response = await fetch(url)
+    if (!response.ok) return { data: null, error: 'File not found' }
+    const blob = await response.blob()
+    return { data: blob, error: null }
   } catch (err) {
     return { data: null, error: (err as Error).message }
   }
@@ -38,9 +23,18 @@ export async function downloadFile(filePath: string): Promise<{ data: Blob | nul
 
 export async function uploadFile(filePath: string, file: File): Promise<{ error: string | null }> {
   try {
-    const client = requireClient()
-    const { error } = await client.storage.from('documents').upload(filePath, file)
-    if (error) return { error: error.message }
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('path', filePath)
+
+    const response = await fetch(`${STORAGE_BASE}/upload`, {
+      method: 'POST',
+      body: formData,
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ error: 'Upload failed' }))
+      return { error: err.error || 'Upload failed' }
+    }
     return { error: null }
   } catch (err) {
     return { error: (err as Error).message }
@@ -49,12 +43,12 @@ export async function uploadFile(filePath: string, file: File): Promise<{ error:
 
 export async function listFiles(prefix: string, search?: string): Promise<{ files: { name: string; created_at: string }[] | null; error: string | null }> {
   try {
-    const client = requireClient()
-    const opts: { search?: string } = {}
-    if (search) opts.search = search
-    const { data, error } = await client.storage.from('documents').list(prefix, opts)
-    if (error) return { files: null, error: error.message }
-    return { files: data?.map(f => ({ name: f.name, created_at: f.created_at })) || [], error: null }
+    const params = new URLSearchParams({ prefix })
+    if (search) params.set('search', search)
+    const response = await fetch(`${STORAGE_BASE}/list?${params}`)
+    if (!response.ok) return { files: null, error: 'List failed' }
+    const data = await response.json()
+    return { files: data.files || [], error: null }
   } catch (err) {
     return { files: null, error: (err as Error).message }
   }
