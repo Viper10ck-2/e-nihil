@@ -80,11 +80,11 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-white">
           <div className="w-24 h-24 mb-6 rounded-2xl bg-amber-500/20 backdrop-blur-sm flex items-center justify-center border border-amber-400/30">
             <Image
-              src="/logo-inspektorat.png"
-              alt="Logo Inspektorat"
+              src="/logo-bintan.png"
+              alt="Logo Kabupaten Bintan"
               width={64}
               height={64}
-              className="object-contain brightness-0 invert"
+              className="object-contain"
             />
           </div>
           <h1 className="text-3xl font-bold mb-2 text-center text-white">e-Nihil</h1>
@@ -122,11 +122,11 @@ export default function LoginPage() {
           <div className="lg:hidden text-center mb-8">
             <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-[#0f1729] to-[#1e3a5f] flex items-center justify-center shadow-lg shadow-slate-300/50 border border-amber-500/20">
               <Image
-                src="/logo-inspektorat.png"
-                alt="Logo Inspektorat"
+                src="/logo-bintan.png"
+                alt="Logo Kabupaten Bintan"
                 width={40}
                 height={40}
-                className="object-contain brightness-0 invert"
+                className="object-contain"
               />
             </div>
             <h1 className="text-xl font-bold text-slate-800">e-Nihil</h1>
