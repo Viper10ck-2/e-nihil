@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
       'Diparaf Kasubbag Anev',
       'Diproses Sekretaris',
       'Ditandatangani Inspektur',
-      'Diambil',
       'Selesai'
     ]
 

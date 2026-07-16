@@ -86,11 +86,11 @@ function TrackingPageContent() {
         
         // Check if pickup method already selected
         if (result.application.pickup_method) {
-          setSavedPickupMethod(result.application.pickup_method as PickupMethod)
+          setSavedPickupMethod(result.application.pickup_method as unknown as PickupMethod)
           setPickupChoiceSent(true)
         }
         
-        setHistory(result.statusHistory as StatusHistory[])
+        setHistory(result.statusHistory as unknown as StatusHistory[])
         
         // Load rejected documents if status is "Dokumen Ditolak"
         if (result.application.status === 'Dokumen Ditolak') {
@@ -178,7 +178,7 @@ function TrackingPageContent() {
       const reloaded = await getTrackingApplication(trackingNumber.toUpperCase())
       if (reloaded.application) {
         setApplication(reloaded.application)
-        setHistory(reloaded.statusHistory as StatusHistory[])
+        setHistory(reloaded.statusHistory as unknown as StatusHistory[])
         
         // Reload rejected documents
         if (reloaded.application.status === 'Dokumen Ditolak') {

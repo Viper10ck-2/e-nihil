@@ -355,7 +355,6 @@ export default function VerifikasiDetailPage() {
       'Diparaf Kasubbag Anev',
       'Diproses Sekretaris',
       'Ditandatangani Inspektur',
-      'Diambil',
       'Selesai'
     ]
     return allowedStatuses.includes(application.status)
