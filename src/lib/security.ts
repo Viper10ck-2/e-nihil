@@ -247,7 +247,7 @@ export function maskSensitiveData(data: string, visibleChars: number = 4): strin
  */
 export const SECURE_COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env.NODE_ENV === 'production' && process.env.VERCEL === '1',
   sameSite: 'lax' as const, // Use 'lax' to allow cookies on same-site navigation
   path: '/',
 }
