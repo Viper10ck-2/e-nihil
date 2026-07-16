@@ -94,7 +94,7 @@ export async function createUser(userData: {
     instansi: userData.instansi || 'Inspektorat Daerah Kabupaten Bintan',
     email: userData.email || null, password_hash: hashedPassword,
     roles: userData.roles, is_active: true,
-  } as never).select().single()
+  } as never).select('*').single()
   return data as unknown as User
 }
 
@@ -106,7 +106,7 @@ export async function updateUser(userId: string, userData: {
     nama: userData.nama, pangkat: userData.pangkat || null,
     jabatan: userData.jabatan || null, instansi: userData.instansi || null,
     email: userData.email || null, roles: userData.roles,
-  } as never).eq('id', userId).select().single()
+  } as never).eq('id', userId).select('*').single()
   return data as unknown as User
 }
 
@@ -135,7 +135,7 @@ export async function createApplication(data: Record<string, string>, trackingNu
     instansi_tujuan: data.instansi_tujuan||'-', alasan_permohonan: data.alasan_permohonan||'-',
     email: data.email, nomor_hp: data.nomor_hp,
     status: 'Menunggu Verifikasi Admin',
-  } as never).select().single()
+  } as never).select('*').single()
   return app as unknown as Application
 }
 
@@ -276,7 +276,7 @@ export async function uploadDocument(formData: FormData) {
     file_name: file.name,
     file_path: fileName,
     file_size: file.size,
-  } as never).select().single()
+  } as never).select('*').single()
 
   return { success: true, path: fileName, doc: data }
 }
