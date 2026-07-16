@@ -145,6 +145,7 @@ export default function PermohonanPage() {
                 <TableHead className="w-[130px]">No. Tracking</TableHead>
                 <TableHead>Pemohon</TableHead>
                 <TableHead className="hidden sm:table-cell">Unit Kerja</TableHead>
+                <TableHead className="w-[100px] hidden lg:table-cell">No. Surat</TableHead>
                 <TableHead className="w-[90px] hidden sm:table-cell">Tanggal</TableHead>
                 <TableHead className="w-[160px]">Status</TableHead>
                 <TableHead className="w-[60px]"></TableHead>
@@ -153,7 +154,7 @@ export default function PermohonanPage() {
             <TableBody>
               {filteredApplications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-slate-400 py-12">
+                  <TableCell colSpan={7} className="text-center text-slate-400 py-12">
                     <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300" />
                     Tidak ada permohonan
                   </TableCell>
@@ -172,6 +173,7 @@ export default function PermohonanPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm text-slate-600 hidden sm:table-cell">{app.unit_kerja_asal || '-'}</TableCell>
+                    <TableCell className="text-xs font-mono text-slate-500 hidden lg:table-cell">{app.nomor_surat || '-'}</TableCell>
                     <TableCell className="text-sm hidden sm:table-cell">
                       {format(new Date(app.created_at), 'dd MMM yyyy', { locale: id })}
                     </TableCell>
