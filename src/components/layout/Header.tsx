@@ -38,9 +38,9 @@ export function Header() {
 
       {/* Main Header */}
       <div className="container px-4">
-        <div className="flex items-center justify-between py-2 sm:py-3">
+        <div className="flex items-center py-2 sm:py-3">
           {/* Logo & Brand */}
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0 flex-1">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/header-halaman-depan.png"
@@ -57,8 +57,8 @@ export function Header() {
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
+          {/* Desktop Navigation - centered */}
+          <nav className="hidden lg:flex items-center gap-1 justify-center">
             {MENU_ITEMS.map((item) => (
               <Link
                 key={item.href}
@@ -71,7 +71,7 @@ export function Header() {
           </nav>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 justify-end">
             {user ? (
               <div className="flex items-center gap-3">
                 <Link href="/dashboard">
