@@ -115,7 +115,7 @@ export async function checkAllRejectionsResolved(applicationId: string): Promise
     throw new Error(`Failed to check rejections: ${error.message}`)
   }
 
-  return (data || []).length === 0
+  return ((data || []) as unknown[]).length === 0
 }
 
 /**
@@ -133,8 +133,7 @@ export async function getDocumentsWithRejections(applicationId: string): Promise
   }
 
   // Get all unresolved rejections
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rejections, error: rejError } = await (supabase as any)
+  const { data: rejections, error: rejError } = await supabase
     .from('document_rejections')
     .select('*')
     .eq('application_id', applicationId)
@@ -144,11 +143,9 @@ export async function getDocumentsWithRejections(applicationId: string): Promise
     throw new Error(`Failed to get rejections: ${rejError.message}`)
   }
 
-  // Map rejections to documents
   const rejectionMap = new Map<string, DocumentRejection>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  for (const rejection of (rejections || []) as any[]) {
-    rejectionMap.set(rejection.document_id, rejection as unknown as DocumentRejection)
+  for (const rejection of (rejections || []) as unknown as Record<string, unknown>[]) {
+    rejectionMap.set(rejection.document_id as string, rejection as unknown as DocumentRejection)
   }
 
   // Combine documents with rejections
@@ -162,8 +159,7 @@ export async function getDocumentsWithRejections(applicationId: string): Promise
  * Get rejection history for a document
  */
 export async function getDocumentRejectionHistory(documentId: string): Promise<DocumentRejection[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('document_rejections')
     .select('*')
     .eq('document_id', documentId)
