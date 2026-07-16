@@ -45,7 +45,7 @@ export default function TrackingPage() {
 // Loading fallback component
 function TrackingPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-white flex items-center justify-center">
       <LoadingSpinner size="lg" />
     </div>
   )
@@ -251,10 +251,10 @@ function TrackingPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-white">
       {/* Hero Header */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-500"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0c1524] via-[#0f1729] to-[#1e3a5f]"></div>
         {/* Decorative elements */}
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4"></div>
         <div className="absolute bottom-0 left-0 w-56 h-56 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/4"></div>
@@ -266,15 +266,15 @@ function TrackingPageContent() {
               <FileSearch className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Cek Status Permohonan</h1>
-            <p className="text-blue-100 text-base md:text-lg max-w-xl mx-auto">
+            <p className="text-slate-300 text-base md:text-lg max-w-xl mx-auto">
               Masukkan nomor tracking untuk melihat status permohonan SKBT Anda secara real-time
             </p>
             <div className="flex flex-wrap justify-center gap-3 mt-6 text-sm">
               <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                <Clock className="h-4 w-4 text-blue-100" /> <span className="text-white">Update Real-time</span>
+                <Clock className="h-4 w-4 text-slate-300" /> <span className="text-white">Update Real-time</span>
               </div>
               <div className="flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
-                <Sparkles className="h-4 w-4 text-blue-100" /> <span className="text-white">Mudah & Cepat</span>
+                <Sparkles className="h-4 w-4 text-slate-300" /> <span className="text-white">Mudah & Cepat</span>
               </div>
             </div>
           </div>
@@ -292,7 +292,7 @@ function TrackingPageContent() {
       <div className="container py-8">
         <div className="max-w-3xl mx-auto">
           {/* Search Form */}
-          <Card className="mb-8 border-0 shadow-xl shadow-blue-100/50 bg-white/80 backdrop-blur-sm overflow-hidden -mt-8 relative z-10">
+          <Card className="mb-8 border-0 shadow-xl shadow-slate-200/50 bg-white backdrop-blur-sm overflow-hidden -mt-8 relative z-10">
             <CardContent className="p-6">
               <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1 relative">
@@ -306,13 +306,13 @@ function TrackingPageContent() {
                         e.preventDefault()
                       }
                     }}
-                    className="font-mono uppercase pl-12 h-12 bg-slate-50/50 border-slate-200 focus:border-blue-400 focus:bg-white transition-colors rounded-xl text-base"
+                    className="font-mono uppercase pl-12 h-12 bg-slate-50/50 border-slate-200 focus:border-amber-400 focus:bg-white transition-colors rounded-xl text-base"
                   />
                 </div>
                 <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="h-12 px-8 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-200/50 rounded-xl transition-all duration-300 hover:scale-[1.02]"
+                  className="h-12 px-8 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 shadow-lg shadow-amber-200/50 rounded-xl transition-all duration-300 hover:scale-[1.02]"
                 >
                   {isLoading ? (
                     <LoadingSpinner size="sm" />
@@ -340,12 +340,12 @@ function TrackingPageContent() {
             <div className="space-y-6">
               {/* Application Info */}
               <div className="relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-blue-300 rounded-full"></div>
-                <Card className="ml-4 border-0 shadow-xl shadow-blue-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 via-amber-400 to-amber-300 rounded-full"></div>
+                <Card className="ml-4 border-0 shadow-xl shadow-slate-200/50 bg-white backdrop-blur-sm overflow-hidden">
                   <CardHeader className="pb-4">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-200/50">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0f1729] to-[#1e3a5f] flex items-center justify-center shadow-lg shadow-slate-300/50">
                           <FileSearch className="h-5 w-5 text-white" />
                         </div>
                         <div>
@@ -363,8 +363,8 @@ function TrackingPageContent() {
                   <CardContent className="p-5">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50/50">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-blue-600" />
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-amber-600" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-[10px] text-slate-500 uppercase tracking-wide">Pemohon</p>
@@ -421,11 +421,11 @@ function TrackingPageContent() {
 
               {/* Status Timeline */}
               <div className="relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 via-indigo-400 to-indigo-300 rounded-full"></div>
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-500 via-amber-400 to-amber-300 rounded-full"></div>
                 <Card className="ml-4 border-0 shadow-xl shadow-indigo-100/50 bg-white/80 backdrop-blur-sm overflow-hidden">
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200/50">
+                      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0f1729] to-[#1e3a5f] flex items-center justify-center shadow-lg shadow-slate-300/50">
                         <Clock className="h-5 w-5 text-white" />
                       </div>
                       <CardTitle className="text-lg text-slate-800">Riwayat Status</CardTitle>
@@ -579,7 +579,7 @@ function TrackingPageContent() {
                             <span className="text-sm text-emerald-700 font-medium">Pilihan Terkirim</span>
                           </div>
                           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-                            savedPickupMethod === 'online' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                            savedPickupMethod === 'online' ? 'bg-amber-100 text-amber-700' : 'bg-amber-100 text-amber-700'
                           }`}>
                             {savedPickupMethod === 'online' ? <Send className="h-3 w-3" /> : <HandCoins className="h-3 w-3" />}
                             {savedPickupMethod === 'online' ? 'Online' : 'Ambil Langsung'}
@@ -591,13 +591,13 @@ function TrackingPageContent() {
                             <button
                               onClick={() => handlePickupChoice('online')}
                               disabled={isSendingPickupChoice}
-                              className="flex-1 flex items-center gap-2 p-3 bg-white/80 rounded-lg border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all disabled:opacity-50"
+                              className="flex-1 flex items-center gap-2 p-3 bg-white/80 rounded-lg border-2 border-amber-200 hover:border-amber-400 hover:bg-amber-50/50 transition-all disabled:opacity-50"
                             >
-                              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                <Send className="h-4 w-4 text-blue-600" />
+                              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                <Send className="h-4 w-4 text-amber-600" />
                               </div>
                               <div className="text-left min-w-0">
-                                <p className="font-semibold text-sm text-blue-700">Kirim Online</p>
+                                <p className="font-semibold text-sm text-amber-700">Kirim Online</p>
                                 <p className="text-[10px] text-slate-500 truncate">Dikirim via email</p>
                               </div>
                             </button>
@@ -696,22 +696,22 @@ function TrackingPageContent() {
           <div className="py-4">
             <div className={`p-4 rounded-xl border-2 ${
               pendingPickupMethod === 'online' 
-                ? 'bg-blue-50 border-blue-200' 
+                ? 'bg-amber-50 border-amber-200' 
                 : 'bg-amber-50 border-amber-200'
             }`}>
               <div className="flex items-center gap-3">
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                  pendingPickupMethod === 'online' ? 'bg-blue-100' : 'bg-amber-100'
+                  pendingPickupMethod === 'online' ? 'bg-amber-100' : 'bg-amber-100'
                 }`}>
                   {pendingPickupMethod === 'online' ? (
-                    <Send className="h-6 w-6 text-blue-600" />
+                    <Send className="h-6 w-6 text-amber-600" />
                   ) : (
                     <HandCoins className="h-6 w-6 text-amber-600" />
                   )}
                 </div>
                 <div>
                   <p className={`font-semibold ${
-                    pendingPickupMethod === 'online' ? 'text-blue-700' : 'text-amber-700'
+                    pendingPickupMethod === 'online' ? 'text-amber-700' : 'text-amber-700'
                   }`}>
                     {pendingPickupMethod === 'online' ? 'Kirim Online (Email)' : 'Ambil Langsung di Kantor'}
                   </p>
@@ -743,7 +743,7 @@ function TrackingPageContent() {
               disabled={isSendingPickupChoice}
               className={`w-full sm:w-auto rounded-xl ${
                 pendingPickupMethod === 'online'
-                  ? 'bg-blue-600 hover:bg-blue-700'
+                  ? 'bg-amber-500 hover:bg-amber-600'
                   : 'bg-amber-600 hover:bg-amber-700'
               }`}
             >
