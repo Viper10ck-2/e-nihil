@@ -3,4 +3,7 @@
  * SERVER-ONLY. Jangan import dari 'use client' component.
  * Untuk client, gunakan API routes / server actions.
  */
-export { db as supabase, db as createServerClient } from '@/lib/query-builder'
+import { db } from '@/lib/query-builder'
+
+export const supabase = db
+export const createServerClient = () => db

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { hashPassword } from '@/lib/security'
 import type { User } from '@/types/database'
 
@@ -23,8 +23,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const supabase = createServerClient()
-
     // Get all users
     const { data: users, error } = await supabase
       .from('users')
