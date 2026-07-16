@@ -31,7 +31,7 @@ export async function GET(
       )
     }
 
-    const app = application as Application
+    const app = application as unknown as Application
 
     // Get documents with rejection info
     const documents = await getDocumentsWithRejections(app.id)
