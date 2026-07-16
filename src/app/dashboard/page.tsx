@@ -108,171 +108,116 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-lg sm:text-2xl font-bold text-slate-800">{getRoleTitle()}</h1>
-        <p className="text-sm text-slate-500">
-          Selamat datang, {user?.nama}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg sm:text-2xl font-bold text-slate-800">{getRoleTitle()}</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Selamat datang, <span className="text-amber-600 font-medium">{user?.nama}</span>
+          </p>
+        </div>
+        <div className="hidden sm:block px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
+          <span className="text-xs font-medium text-amber-700 uppercase tracking-wide">{currentRole?.replace(/_/g, ' ') || 'Admin'}</span>
+        </div>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <InfoCard
-          title="Permohonan Masuk"
-          value={stats.masuk}
-          icon={Inbox}
-          iconClassName="text-amber-500"
-        />
-        <InfoCard
-          title="Sedang Diproses"
-          value={stats.diproses}
-          icon={Clock}
-          iconClassName="text-sky-500"
-        />
-        <InfoCard
-          title="Diverifikasi"
-          value={stats.diverifikasi}
-          icon={FileCheck}
-          iconClassName="text-violet-500"
-        />
-        <InfoCard
-          title="Selesai"
-          value={stats.selesai}
-          icon={CheckCircle}
-          iconClassName="text-emerald-500"
-        />
+        {[
+          { title: 'Masuk', value: stats.masuk, icon: Inbox, color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50', text: 'text-amber-600' },
+          { title: 'Diproses', value: stats.diproses, icon: Clock, color: 'from-sky-500 to-blue-500', bg: 'bg-sky-50', text: 'text-sky-600' },
+          { title: 'Diverifikasi', value: stats.diverifikasi, icon: FileCheck, color: 'from-violet-500 to-purple-500', bg: 'bg-violet-50', text: 'text-violet-600' },
+          { title: 'Selesai', value: stats.selesai, icon: CheckCircle, color: 'from-emerald-500 to-green-500', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+        ].map((card) => (
+          <div key={card.title} className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl blur-lg -z-10" 
+              style={{ background: `linear-gradient(135deg, ${card.color.split(' ')[1]?.replace('to-', '#') || '#f59e0b'}15, transparent)` }} />
+            <div className="relative bg-white border border-slate-200 rounded-xl p-4 sm:p-5 hover:border-slate-300 hover:shadow-lg transition-all duration-200">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{card.title}</span>
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${card.bg} flex items-center justify-center`}>
+                  <card.icon className={`h-5 w-5 ${card.text}`} />
+                </div>
+              </div>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-800 tabular-nums">{card.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Chart */}
-      {currentRole === 'admin' && (
-        <Card className="border border-slate-200 shadow-sm">
-          <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle className="text-sm sm:text-base text-slate-800">Statistik Permohonan Bulanan</CardTitle>
-          </CardHeader>
-          <CardContent className="px-2 sm:px-6">
-            <div className="h-[200px] sm:h-[300px]">
+      {/* Chart + Pending Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Chart */}
+        {currentRole === 'admin' && (
+          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm sm:text-base font-semibold text-slate-800">Statistik Bulanan</h3>
+              <span className="text-[11px] text-slate-400">6 bulan terakhir</span>
+            </div>
+            <div className="h-[200px] sm:h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 12 }} />
-                  <YAxis stroke="#64748b" tick={{ fontSize: 12 }} />
+                <BarChart data={monthlyData} barGap={4}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="month" stroke="#94a3b8" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis stroke="#94a3b8" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: '#fff', 
                       border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-                      fontSize: '12px'
+                      borderRadius: '12px',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                      fontSize: '13px',
+                      padding: '12px'
                     }} 
                   />
-                  <Legend wrapperStyle={{ fontSize: '12px' }} />
-                  <Bar dataKey="masuk" name="Masuk" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="diproses" name="Diproses" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="selesai" name="Selesai" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="masuk" name="Masuk" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="diproses" name="Diproses" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="selesai" name="Selesai" fill="#10b981" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      {/* Pending Applications */}
-      <Card className="border border-slate-200 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
-          <CardTitle className="text-sm sm:text-base text-slate-800">Permohonan Menunggu Verifikasi</CardTitle>
-          <Link href="/dashboard/verifikasi">
-            <Button variant="outline" size="sm" className="text-xs sm:text-sm">
-              Lihat Semua
-              <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent className="px-0 sm:px-6">
-          {/* Mobile: card list */}
-          <div className="block md:hidden divide-y">
+        {/* Pending Applications */}
+        <div className={`${currentRole === 'admin' ? 'lg:col-span-1' : 'lg:col-span-3'} bg-white border border-slate-200 rounded-xl overflow-hidden`}>
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100">
+            <h3 className="text-sm sm:text-base font-semibold text-slate-800">Menunggu Verifikasi</h3>
+            <Link href="/dashboard/verifikasi">
+              <Button variant="ghost" size="sm" className="text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50 h-8">
+                Semua <ArrowRight className="ml-1 h-3 w-3" />
+              </Button>
+            </Link>
+          </div>
+          <div className="divide-y divide-slate-50 max-h-[420px] overflow-y-auto">
             {pendingApplications.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8 text-sm">
-                Tidak ada permohonan yang menunggu verifikasi
+              <div className="text-center py-12 text-sm text-slate-400">
+                <Inbox className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                Tidak ada permohonan menunggu
               </div>
             ) : (
               pendingApplications.map((app) => (
                 <Link
                   key={app.id}
                   href={`/dashboard/verifikasi/${app.id}`}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between px-4 sm:px-5 py-3.5 hover:bg-slate-50 active:bg-slate-100 transition-colors group"
                 >
                   <div className="min-w-0 flex-1 mr-3">
-                    <p className="font-medium text-sm truncate">{app.nama_lengkap}</p>
-                    <p className="text-xs text-gray-500 truncate">{app.unit_kerja_asal}</p>
-                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">{app.tracking_number}</p>
+                    <p className="font-medium text-sm text-slate-700 group-hover:text-slate-900 truncate">{app.nama_lengkap}</p>
+                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">{app.tracking_number}</p>
+                    <p className="text-xs text-slate-500 truncate mt-0.5">{app.unit_kerja_asal || app.instansi_tujuan || '-'}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <StatusBadge status={app.status} />
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      {format(new Date(app.created_at), 'dd/MM/yy')}
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      {format(new Date(app.created_at), 'dd MMM', { locale: id })}
                     </p>
                   </div>
                 </Link>
               ))
             )}
           </div>
-          {/* Desktop: table */}
-          <div className="hidden md:block overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>No. Tracking</TableHead>
-                <TableHead>Nama Pemohon</TableHead>
-                <TableHead>Unit Kerja</TableHead>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pendingApplications.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                    Tidak ada permohonan yang menunggu verifikasi
-                  </TableCell>
-                </TableRow>
-              ) : (
-                pendingApplications.map((app) => (
-                  <TableRow key={app.id}>
-                    <TableCell className="font-mono text-sm">
-                      {app.tracking_number}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{app.nama_lengkap}</p>
-                        <p className="text-sm text-muted-foreground">
-                          NIP: {app.nip}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{app.unit_kerja_asal}</TableCell>
-                    <TableCell>
-                      {format(new Date(app.created_at), 'dd MMM yyyy', { locale: id })}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={app.status} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link href={`/dashboard/verifikasi/${app.id}`}>
-                        <Button variant="ghost" size="sm">
-                          Detail
-                          <ArrowRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
