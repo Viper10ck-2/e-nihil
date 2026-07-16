@@ -12,7 +12,8 @@ function getSql() {
 }
 
 async function query(text: string, params?: unknown[]) {
-  return getSql().unsafe(text, params || [])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return getSql().unsafe(text, (params || []) as any[])
 }
 
 type QueryResult<T> = { data: T | null; error: Error | null; count?: number }
