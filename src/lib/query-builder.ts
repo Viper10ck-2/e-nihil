@@ -1,4 +1,3 @@
-import 'server-only'
 import postgres from 'postgres'
 
 let _sql: ReturnType<typeof postgres> | null = null

@@ -27,7 +27,7 @@ import { Search, ArrowRight, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
+import { getAllApplications } from '@/lib/actions'
 import type { Application, ApplicationStatus } from '@/types/database'
 
 export default function VerifikasiPage() {
@@ -45,13 +45,8 @@ export default function VerifikasiPage() {
   const loadApplications = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setApplications((data as Application[]) || [])
+      const data = await getAllApplications()
+      setApplications(data || [])
     } catch (error) {
       console.error('Error loading applications:', error)
     } finally {
