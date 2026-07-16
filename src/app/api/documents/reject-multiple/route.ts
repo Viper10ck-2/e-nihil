@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const docs = documents as Document[]
+    const docs = documents as unknown as Document[]
     const docMap = new Map(docs.map(d => [d.id, d]))
 
     // Create rejection records for each document
