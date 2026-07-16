@@ -38,6 +38,11 @@ const nextConfig: NextConfig = {
 
   // Don't bundle Node.js packages for client (moved from experimental in Next.js 16)
   serverExternalPackages: ['postgres'],
+
+  // Allow up to 10MB file uploads via Server Actions
+  serverActions: {
+    bodySizeLimit: '10mb',
+  },
   
   // Turbopack configuration (Next.js 16+)
   turbopack: {},
