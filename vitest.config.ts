@@ -10,7 +10,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@vercel/postgres': path.resolve(__dirname, './src/test/mocks/vercel-postgres.ts'),
+      'postgres': path.resolve(__dirname, './src/test/mocks/vercel-postgres.ts'),
+      'server-only': path.resolve(__dirname, './src/test/mocks/server-only.ts'),
     },
   },
 })

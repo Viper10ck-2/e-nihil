@@ -1,22 +1,18 @@
 import 'server-only'
-import { createClient } from '@vercel/postgres'
+import postgres from 'postgres'
 
-// Create client with explicit config for CockroachDB
-let _client: ReturnType<typeof createClient> | null = null
+let _sql: ReturnType<typeof postgres> | null = null
 
-function getClient() {
-  if (!_client) {
-    _client = createClient({
-      connectionString: process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING,
-      ssl: { rejectUnauthorized: false }
-    })
+function getSql() {
+  if (!_sql) {
+    const url = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || ''
+    _sql = postgres(url, { ssl: 'require', max: 10 })
   }
-  return _client
+  return _sql
 }
 
 async function query(text: string, params?: unknown[]) {
-  const client = getClient()
-  return client.query(text, params || [])
+  return getSql().unsafe(text, params || [])
 }
 
 type QueryResult<T> = { data: T | null; error: Error | null; count?: number }
@@ -173,7 +169,7 @@ class QueryBuilder<T = Record<string, unknown>> {
     const placeholders = keys.map((_, i) => `$${i + 1}`)
     const q = `INSERT INTO ${this.tableName} (${keys.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`
     const r = await query(q, vals)
-    return { data: (this.isSingle ? r.rows[0] : r.rows) as TResult, error: null }
+    return { data: (this.isSingle ? r[0] : r) as TResult, error: null }
   }
 
   private async executeUpdate(): Promise<QueryResult<null>> {
@@ -199,7 +195,7 @@ class QueryBuilder<T = Record<string, unknown>> {
     if (this.isCount) {
       const q = `SELECT COUNT(*) as count FROM ${this.tableName} ${this.whereClause()}`
       const r = await query(q, this.params)
-      return { data: { count: parseInt(String(r.rows[0]?.count || 0)) } as TResult, error: null, count: parseInt(String(r.rows[0]?.count || 0)) }
+      return { data: { count: parseInt(String(r[0]?.count || 0)) } as TResult, error: null, count: parseInt(String(r[0]?.count || 0)) }
     }
 
     const lim = this.limitCount > 0 ? `LIMIT ${this.limitCount}` : ''
@@ -208,9 +204,9 @@ class QueryBuilder<T = Record<string, unknown>> {
 
     let data: TResult
     if (this.isSingle) {
-      data = (r.rows[0] || null) as TResult
+      data = (r[0] || null) as TResult
     } else {
-      data = r.rows as TResult
+      data = r as TResult
     }
 
     return { data, error: null }
