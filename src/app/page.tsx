@@ -40,7 +40,7 @@ const prosedurSteps = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Hero */}
       <section className="relative overflow-hidden" aria-label="Hero">
         <div className="container relative z-10 py-16 sm:py-24 md:py-32 px-4">
