@@ -14,7 +14,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { SimpleCaptcha } from '@/components/ui/simple-captcha'
 import { applicationFormSchema, type ApplicationFormData } from '@/lib/validations'
 import { DOCUMENT_TYPES, PANGKAT_GOLONGAN, UNIT_KERJA } from '@/lib/constants'
-import { createApplication, generateUniqueTrackingNumber } from '@/lib/actions'
+import { createApplication, generateUniqueTrackingNumber, uploadDocument } from '@/lib/actions'
 import { toast } from 'sonner'
 import { 
   CheckCircle, Copy, FileText, User, Upload, Shield,
@@ -130,7 +130,13 @@ export default function PengajuanPage() {
       
       for (const doc of visibleDocuments) {
         const file = uploadedFiles[doc.type]
-        if (file) await uploadDocument(application.id, doc.type, file)
+        if (file) {
+          const fd = new FormData()
+          fd.append('file', file)
+          fd.append('applicationId', application.id)
+          fd.append('documentType', doc.type)
+          await uploadDocument(fd)
+        }
       }
       
       try {

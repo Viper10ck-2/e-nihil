@@ -249,3 +249,34 @@ export async function updatePickupMethod(applicationId: string, method: string) 
   } as never).eq('id', applicationId)
   return { success: true }
 }
+
+// ============== Document Upload Action ==============
+
+export async function uploadDocument(formData: FormData) {
+  const file = formData.get('file') as File | null
+  const applicationId = formData.get('applicationId') as string | null
+  const documentType = formData.get('documentType') as string | null
+
+  if (!file || !applicationId || !documentType) {
+    throw new Error('File, applicationId, dan documentType wajib diisi')
+  }
+
+  const { saveFile } = await import('@/lib/storage/local-storage')
+
+  const fileExt = file.name.split('.').pop() || 'pdf'
+  const fileName = `${applicationId}/${documentType}_${Date.now()}.${fileExt}`
+
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const result = await saveFile(fileName, buffer)
+  if (!result.success) throw new Error(result.error || 'Gagal upload file')
+
+  const { data } = await supabase.from('documents').insert({
+    application_id: applicationId,
+    document_type: documentType,
+    file_name: file.name,
+    file_path: fileName,
+    file_size: file.size,
+  } as never).select().single()
+
+  return { success: true, path: fileName, doc: data }
+}
