@@ -150,7 +150,7 @@ class QueryBuilder<T = Record<string, unknown>> {
       if (this.mode === 'insert' && this.insertData) {
         result = await this.executeInsert<TResult>()
       } else if (this.mode === 'update' && this.updateData) {
-        result = await this.executeUpdate()
+        result = await this.executeUpdate() as unknown as QueryResult<TResult>
       } else {
         result = await this.executeSelect<TResult>()
       }
