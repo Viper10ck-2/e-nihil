@@ -178,7 +178,7 @@ export async function getApplicationDetailWithRejections(applicationId: string) 
     .eq('application_id', applicationId).eq('is_resolved', false)
 
   const rejectionMap = new Map<string, Record<string, unknown>>()
-  for (const r of (rejections || [])) {
+  for (const r of (rejections || []) as unknown as Record<string, unknown>[]) {
     rejectionMap.set((r as Record<string, string>).document_id, r as Record<string, unknown>)
   }
 
