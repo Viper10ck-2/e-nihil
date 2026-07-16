@@ -149,7 +149,7 @@ export async function getDocumentsWithRejections(applicationId: string): Promise
   }
 
   // Combine documents with rejections
-  return (documents || []).map((doc: Document) => ({
+  return ((documents || []) as unknown as Document[]).map((doc: Document) => ({
     ...doc,
     rejection: rejectionMap.get(doc.id),
   })) as unknown as DocumentWithRejection[]
