@@ -4,7 +4,7 @@ const mockQuery = async () => [{ count: '0' }] as unknown as Record<string, unkn
 const mockFn = Object.assign(
   async () => [{ count: '0' }],
   {
-    unsafe: async () => mockQuery() as Record<string, unknown>[],
+    unsafe: async () => (await mockQuery()) as unknown as Record<string, unknown>[],
     end: async () => {},
     query: async () => ({ rows: [], rowCount: 0 }),
   }
