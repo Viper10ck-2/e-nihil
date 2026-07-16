@@ -43,19 +43,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
       {/* Hero */}
       <section className="relative overflow-hidden" aria-label="Hero">
-        <div className="absolute inset-0">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-          >
-            <source src="/background.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-[#0c1524]/88"></div>
-        </div>
-        
         <div className="container relative z-10 py-16 sm:py-24 md:py-32 px-4">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
             <span className="text-amber-400/90 text-[10px] sm:text-xs font-semibold tracking-[0.2em] sm:tracking-[0.25em] uppercase mb-6 sm:mb-8">

@@ -147,17 +147,33 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Providers>
-          <Header />
-          <main className="flex-1">
-            <PageTransition>
-              {children}
-            </PageTransition>
-          </main>
-          <Footer />
-          <Toaster />
-          <SpeedInsights />
-        </Providers>
+        {/* Fixed background video */}
+        <div className="fixed inset-0 z-0">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          >
+            <source src="/background.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-[#0c1524]/88"></div>
+        </div>
+
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <Providers>
+            <Header />
+            <main className="flex-1">
+              <PageTransition>
+                {children}
+              </PageTransition>
+            </main>
+            <Footer />
+            <Toaster />
+            <SpeedInsights />
+          </Providers>
+        </div>
       </body>
     </html>
   );
