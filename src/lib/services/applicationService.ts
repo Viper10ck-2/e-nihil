@@ -19,13 +19,33 @@ export async function generateUniqueTrackingNumber(): Promise<string> {
   return `${datePrefix}-${sequence}`
 }
 
+// Nama bulan dalam Bahasa Indonesia
+const NAMA_BULAN = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+]
+
 // Konversi bulan ke angka romawi
 function toRomanMonth(month: number): string {
   const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
   return romanNumerals[month - 1] || ''
 }
 
-// Generate nomor surat: XXX/SKBT/ITDA/BULAN-ROMAWI/TAHUN
+/**
+ * Format tanggal untuk surat dalam format Indonesia
+ * Contoh output: "5 Januari 2026"
+ * @param date - Date object atau ISO string timestamp
+ * @returns string dalam format "tanggal NamaBulan tahun"
+ */
+export function formatTanggalSurat(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  const tanggal = d.getDate()
+  const bulan = NAMA_BULAN[d.getMonth()]
+  const tahun = d.getFullYear()
+  return `${tanggal} ${bulan} ${tahun}`
+}
+
+// Generate nomor surat: XXX/800.1.4/BULAN-ROMAWI/TAHUN
 export async function generateNomorSurat(): Promise<string> {
   const now = new Date()
   const year = now.getFullYear()
@@ -44,7 +64,7 @@ export async function generateNomorSurat(): Promise<string> {
   }
   
   const sequence = String((count || 0) + 1).padStart(3, '0')
-  return `${sequence}/SKBT/ITDA/${romanMonth}/${year}`
+  return `${sequence}/800.1.4/${romanMonth}/${year}`
 }
 
 // Update nomor surat pada aplikasi
@@ -247,4 +267,109 @@ export async function getAllApplications() {
   }
 
   return data as Application[]
+}
+
+/**
+ * Mendapatkan timestamp saat status berubah ke "Diverifikasi Admin"
+ * @param applicationId - ID aplikasi
+ * @returns timestamp dalam format tanggal surat atau null jika belum diverifikasi
+ */
+export async function getTimestampVerifikasiAdmin(applicationId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('status_history')
+    .select('changed_at')
+    .eq('application_id', applicationId)
+    .eq('status', 'Diverifikasi Admin')
+    .order('changed_at', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  const statusData = data as { changed_at: string }
+  return formatTanggalSurat(statusData.changed_at)
+}
+
+/**
+ * Format tujuan permohonan untuk ditampilkan di surat
+ * @param tujuanPermohonan - nilai dari database (mutasi, promosi, lainnya_asn, lainnya_non_asn)
+ * @param alasanPermohonan - alasan permohonan (untuk tujuan lainnya)
+ * @returns string tujuan yang sudah diformat untuk surat
+ */
+export function formatTujuanPermohonan(
+  tujuanPermohonan: string,
+  alasanPermohonan?: string
+): string {
+  switch (tujuanPermohonan) {
+    case 'mutasi':
+      return 'Mutasi/Pindah Instansi'
+    case 'promosi':
+      return 'Promosi Jabatan'
+    case 'lainnya_asn':
+    case 'lainnya_non_asn':
+      // Untuk lainnya, ambil dari alasan_permohonan
+      // Format di database: "[Lainnya (ASN)] alasan detail"
+      if (alasanPermohonan && alasanPermohonan !== '-') {
+        // Hapus prefix [Lainnya (ASN)] atau [Lainnya (Non-ASN)] jika ada
+        const cleaned = alasanPermohonan.replace(/^\[Lainnya \((ASN|Non-ASN)\)\]\s*/i, '')
+        return cleaned || 'Keperluan Lainnya'
+      }
+      return 'Keperluan Lainnya'
+    default:
+      return 'Keperluan Dinas'
+  }
+}
+
+/**
+ * Mendapatkan data lengkap untuk generate surat SKBT
+ * @param applicationId - ID aplikasi
+ * @returns Object berisi semua data yang diperlukan untuk template surat
+ */
+export async function getDataForSuratSKBT(applicationId: string): Promise<{
+  nomor_surat: string
+  nama_lengkap: string
+  nip: string
+  pangkat_golongan: string
+  jabatan: string
+  unit_kerja_asal: string
+  tujuan_pembuatan: string
+  tanggal_surat: string
+} | null> {
+  // Get application data
+  const { data: app, error: appError } = await supabase
+    .from('applications')
+    .select('*')
+    .eq('id', applicationId)
+    .single()
+
+  if (appError || !app) {
+    console.error('Error fetching application for surat:', appError)
+    return null
+  }
+
+  const application = app as Application
+
+  // Get timestamp verifikasi admin
+  const tanggalSurat = await getTimestampVerifikasiAdmin(applicationId)
+
+  if (!tanggalSurat) {
+    console.error('Application belum diverifikasi admin')
+    return null
+  }
+
+  return {
+    nomor_surat: application.nomor_surat || '',
+    nama_lengkap: application.nama_lengkap,
+    nip: application.nip,
+    pangkat_golongan: application.pangkat_golongan,
+    jabatan: application.jabatan || '-',
+    unit_kerja_asal: application.unit_kerja_asal || '-',
+    tujuan_pembuatan: formatTujuanPermohonan(
+      application.tujuan_permohonan,
+      application.alasan_permohonan
+    ),
+    tanggal_surat: tanggalSurat,
+  }
 }
