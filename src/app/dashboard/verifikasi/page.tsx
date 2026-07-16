@@ -190,99 +190,58 @@ export default function VerifikasiPage() {
         <CardHeader className="pb-2 sm:pb-4">
           <CardTitle className="text-sm sm:text-base text-slate-800">Perlu Tindakan</CardTitle>
         </CardHeader>
-        <CardContent className="px-0 sm:px-6">
-          {/* Mobile card list */}
-          <div className="block md:hidden divide-y">
-            {filteredApplications.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8 text-sm">
-                Tidak ada permohonan yang ditemukan
-              </div>
-            ) : (
-              filteredApplications.map((app) => (
-                <Link
-                  key={app.id}
-                  href={`/dashboard/verifikasi/${app.id}`}
-                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                >
-                  <div className="min-w-0 flex-1 mr-3">
-                    <p className="font-medium text-sm truncate">{app.nama_lengkap}</p>
-                    <p className="text-xs text-gray-500 truncate">{app.unit_kerja_asal || '-'}</p>
-                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">{app.tracking_number}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <StatusBadge status={app.status} />
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      {format(new Date(app.created_at), 'dd/MM/yy')}
-                    </p>
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
-          {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto">
+        <CardContent className="px-0 sm:px-0">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[140px]">No. Tracking</TableHead>
-                <TableHead className="w-[200px]">Nama Pemohon</TableHead>
-                <TableHead className="w-[120px]">Unit Kerja</TableHead>
-                <TableHead className="w-[120px]">Instansi Tujuan</TableHead>
-                <TableHead className="w-[100px]">Tanggal</TableHead>
-                <TableHead className="w-[140px]">Status</TableHead>
-                <TableHead className="w-[100px]">Aksi</TableHead>
+                <TableHead className="w-[130px]">No. Tracking</TableHead>
+                <TableHead>Pemohon</TableHead>
+                <TableHead className="hidden sm:table-cell">Unit Kerja</TableHead>
+                <TableHead className="w-[90px] hidden sm:table-cell">Tanggal</TableHead>
+                <TableHead className="w-[160px]">Status</TableHead>
+                <TableHead className="w-[80px]">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredApplications.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    Tidak ada permohonan yang ditemukan
+                  <TableCell colSpan={6} className="text-center text-slate-400 py-12">
+                    <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                    Tidak ada permohonan
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredApplications.map((app) => (
                   <TableRow key={app.id}>
-                    <TableCell className="font-mono text-sm">
-                      {app.tracking_number}
+                    <TableCell className="font-mono text-xs sm:text-sm">
+                      <span className="block truncate max-w-[120px]">{app.tracking_number}</span>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <p className="font-medium">{app.nama_lengkap}</p>
-                        <p className="text-sm text-muted-foreground">
-                          NIP: {app.nip}
-                        </p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate max-w-[150px] sm:max-w-none">{app.nama_lengkap}</p>
+                        <p className="text-xs text-slate-500 sm:hidden">{app.unit_kerja_asal || '-'}</p>
+                        <p className="text-[11px] text-slate-400 sm:hidden">{format(new Date(app.created_at), 'dd/MM/yy')}</p>
                       </div>
                     </TableCell>
-                    <TableCell>{app.unit_kerja_asal || '-'}</TableCell>
-                    <TableCell>{app.instansi_tujuan || '-'}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-sm text-slate-600 hidden sm:table-cell">{app.unit_kerja_asal || '-'}</TableCell>
+                    <TableCell className="text-sm hidden sm:table-cell">
                       {format(new Date(app.created_at), 'dd MMM yyyy', { locale: id })}
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={app.status} />
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5">
                         {canDownloadDraft(app.status) && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleDownloadDraft(app)}
-                            disabled={downloadingId === app.id}
-                            title="Download Draft SKBT"
-                          >
-                            {downloadingId === app.id ? (
-                              <LoadingSpinner size="sm" />
-                            ) : (
-                              <FileText className="h-4 w-4" />
-                            )}
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0"
+                            onClick={() => handleDownloadDraft(app)} disabled={downloadingId === app.id}>
+                            {downloadingId === app.id ? <LoadingSpinner size="sm" /> : <FileText className="h-3.5 w-3.5" />}
                           </Button>
                         )}
                         <Link href={`/dashboard/verifikasi/${app.id}`}>
-                          <Button variant="ghost" size="sm">
-                            Detail
-                            <ArrowRight className="ml-1 h-4 w-4" />
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                            <ArrowRight className="h-4 w-4" />
                           </Button>
                         </Link>
                       </div>
@@ -291,8 +250,6 @@ export default function VerifikasiPage() {
                 ))
               )}
             </TableBody>
-          </Table>
-          </div>
         </CardContent>
       </Card>
     </div>
