@@ -85,8 +85,9 @@ export default function VerifikasiDetailPage() {
       // Load document rejections
       const rejectionMap = new Map<string, DocumentRejection>()
       detail.documents.forEach(doc => {
-        if ((doc as Record<string, unknown>).rejection) {
-          rejectionMap.set(doc.id as string, (doc as Record<string, unknown>).rejection as DocumentRejection)
+        const docRecord = doc as unknown as Document & { rejection?: DocumentRejection }
+        if (docRecord.rejection) {
+          rejectionMap.set(docRecord.id, docRecord.rejection)
         }
       })
       setDocumentRejections(rejectionMap)
