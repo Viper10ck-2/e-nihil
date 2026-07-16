@@ -19,7 +19,7 @@ import {
 import { Search, User, Building, MapPin, Calendar, Target, FileSearch, CheckCircle, Clock, Sparkles, AlertTriangle, Upload, FileText, Send, HandCoins } from 'lucide-react'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import { getApplicationByTrackingNumber, getStatusHistory } from '@/lib/services/applicationService'
+import { getTrackingApplication } from '@/lib/actions'
 import { toast } from 'sonner'
 import type { Application, StatusHistory, DocumentWithRejection, PickupMethod } from '@/types/database'
 
@@ -79,22 +79,21 @@ function TrackingPageContent() {
     setPickupChoiceSent(false)
 
     try {
-      const app = await getApplicationByTrackingNumber(trackingNo.toUpperCase())
+      const result = await getTrackingApplication(trackingNo.toUpperCase())
       
-      if (app) {
-        setApplication(app)
+      if (result.application) {
+        setApplication(result.application)
         
         // Check if pickup method already selected
-        if (app.pickup_method) {
-          setSavedPickupMethod(app.pickup_method as PickupMethod)
+        if (result.application.pickup_method) {
+          setSavedPickupMethod(result.application.pickup_method as PickupMethod)
           setPickupChoiceSent(true)
         }
         
-        const statusHistory = await getStatusHistory(app.id)
-        setHistory(statusHistory as StatusHistory[])
+        setHistory(result.statusHistory as StatusHistory[])
         
         // Load rejected documents if status is "Dokumen Ditolak"
-        if (app.status === 'Dokumen Ditolak') {
+        if (result.application.status === 'Dokumen Ditolak') {
           try {
             const response = await fetch(`/api/applications/${trackingNo.toUpperCase()}/rejected-documents`)
             const result = await response.json()

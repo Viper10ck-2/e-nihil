@@ -138,3 +138,114 @@ export async function createApplication(data: Record<string, string>, trackingNu
   } as never).select().single()
   return app as unknown as Application
 }
+
+// ============== Tracking Page Actions ==============
+
+export async function getTrackingApplication(trackingNumber: string) {
+  const { data: app } = await supabase
+    .from('applications').select('*')
+    .eq('tracking_number', trackingNumber).single()
+  
+  if (!app) return { application: null, statusHistory: [] }
+
+  const { data: history } = await supabase
+    .from('status_history').select('*')
+    .eq('application_id', (app as Application).id)
+    .order('changed_at', { ascending: true })
+
+  return { application: app as Application, statusHistory: (history || []) as unknown[] }
+}
+
+// ============== Detail Page Actions ==============
+
+export async function getApplicationDetail(applicationId: string) {
+  const { data: app } = await supabase
+    .from('applications').select('*').eq('id', applicationId).single()
+  if (!app) throw new Error('Permohonan tidak ditemukan')
+
+  const { data: docs } = await supabase
+    .from('documents').select('*').eq('application_id', applicationId)
+
+  return { application: app as Application, documents: (docs || []) as Record<string, unknown>[] }
+}
+
+export async function getApplicationDetailWithRejections(applicationId: string) {
+  const base = await getApplicationDetail(applicationId)
+  
+  // Get unresolved rejections
+  const { data: rejections } = await supabase
+    .from('document_rejections').select('*')
+    .eq('application_id', applicationId).eq('is_resolved', false)
+
+  const rejectionMap = new Map<string, Record<string, unknown>>()
+  for (const r of (rejections || [])) {
+    rejectionMap.set((r as Record<string, string>).document_id, r as Record<string, unknown>)
+  }
+
+  const docsWithRejections = base.documents.map(doc => ({
+    ...doc,
+    rejection: rejectionMap.get(doc.id as string) || null,
+  }))
+
+  return { ...base, documents: docsWithRejections }
+}
+
+// ============== Verification Actions ==============
+
+export async function approveVerification(
+  applicationId: string,
+  nextStatus: string,
+  notes: string,
+  userId?: string,
+  generateNomor?: boolean
+) {
+  await supabase.from('applications').update({ status: nextStatus } as never).eq('id', applicationId)
+  
+  await supabase.from('status_history').insert({
+    application_id: applicationId, status: nextStatus, notes, changed_by: userId,
+  } as never)
+
+  let nomorSurat: string | null = null
+  if (generateNomor) {
+    nomorSurat = await generateNomorSuratServer(applicationId)
+  }
+
+  return { success: true, nomorSurat }
+}
+
+async function generateNomorSuratServer(applicationId: string): Promise<string> {
+  const now = new Date()
+  const romanMonths = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
+  const romanMonth = romanMonths[now.getMonth()]
+  const year = now.getFullYear()
+
+  const { count } = await supabase
+    .from('applications').select('*', { count: 'exact', head: true })
+    .not('nomor_surat', 'is', null).neq('nomor_surat', '')
+
+  const sequence = String((count || 0) + 1).padStart(3, '0')
+  const nomorSurat = `${sequence}/800.1.4/${romanMonth}/${year}`
+
+  await supabase.from('applications').update({ nomor_surat: nomorSurat } as never).eq('id', applicationId)
+
+  return nomorSurat
+}
+
+export async function rejectVerification(applicationId: string, reason: string, userId?: string) {
+  await supabase.from('applications').update({
+    status: 'Ditolak', rejection_reason: reason, nomor_surat: null
+  } as never).eq('id', applicationId)
+
+  await supabase.from('status_history').insert({
+    application_id: applicationId, status: 'Ditolak', notes: reason, changed_by: userId,
+  } as never)
+
+  return { success: true }
+}
+
+export async function updatePickupMethod(applicationId: string, method: string) {
+  await supabase.from('applications').update({
+    pickup_method: method, pickup_method_selected_at: new Date().toISOString()
+  } as never).eq('id', applicationId)
+  return { success: true }
+}

@@ -14,8 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { DOCUMENT_TYPES } from '@/lib/constants'
-import { supabase } from '@/lib/supabase'
-import { getApplicationDocuments } from '@/lib/services/applicationService'
+import { getApplicationDetail } from '@/lib/actions'
+import { getPublicUrl, downloadFile, listFiles } from '@/lib/supabase-storage'
 import { toast } from 'sonner'
 import {
   ArrowLeft, Check, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send, HandCoins, Receipt
@@ -63,20 +63,16 @@ export default function PermohonanDetailPage() {
     setIsLoading(true)
     try {
       const applicationId = params.id as string
-      const { data: app, error } = await supabase.from('applications').select('*').eq('id', applicationId).single()
-      if (error) throw error
-      setApplication(app as Application)
-      const docs = await getApplicationDocuments(applicationId)
-      setDocuments(docs as Document[])
+      const detail = await getApplicationDetail(applicationId)
+      setApplication(detail.application)
+      setDocuments(detail.documents as Document[])
       
       // Load delivery proof if status is Selesai
-      const appData = app as Application
-      if (appData.status === 'Selesai') {
-        if (appData.pickup_method === 'online') {
-          await loadDeliveryProof(appData.tracking_number)
+      if (detail.application.status === 'Selesai') {
+        if (detail.application.pickup_method === 'online') {
+          await loadDeliveryProof(detail.application.tracking_number)
         } else {
-          // Load offline pickup proof
-          await loadOfflineProof(appData.id, appData.tracking_number)
+          await loadOfflineProof(detail.application.id, detail.application.tracking_number)
         }
       }
     } catch (error) {
@@ -89,22 +85,12 @@ export default function PermohonanDetailPage() {
 
   const loadDeliveryProof = async (trackingNumber: string) => {
     try {
-      // List files in bukti-pengiriman folder
-      const { data: files, error } = await supabase.storage
-        .from('documents')
-        .list('bukti-pengiriman', {
-          search: `online_${trackingNumber}`
-        })
-      
+      const { files, error } = await listFiles('bukti-pengiriman', `online_${trackingNumber}`)
       if (error || !files || files.length === 0) return
       
-      // Get the proof file
       const proofFile = files[0]
-      const { data, error: downloadError } = await supabase.storage
-        .from('documents')
-        .download(`bukti-pengiriman/${proofFile.name}`)
-      
-      if (downloadError) return
+      const { data, error: downloadError } = await downloadFile(`bukti-pengiriman/${proofFile.name}`)
+      if (downloadError || !data) return
       
       const text = await data.text()
       const proofData = JSON.parse(text) as DeliveryProof
@@ -116,19 +102,10 @@ export default function PermohonanDetailPage() {
 
   const loadOfflineProof = async (applicationId: string, _trackingNumber: string) => {
     try {
-      // Try to find bukti penyerahan in storage
-      const { data: files, error } = await supabase.storage
-        .from('documents')
-        .list(`bukti-penyerahan/${applicationId}`)
+      const { files, error } = await listFiles(`bukti-penyerahan/${applicationId}`)
       
       if (error || !files || files.length === 0) {
-        // Also try tanda-terima folder (legacy)
-        const { data: tandaTerimaFiles, error: ttError } = await supabase.storage
-          .from('documents')
-          .list('tanda-terima', {
-            search: applicationId
-          })
-        
+        const { files: tandaTerimaFiles, error: ttError } = await listFiles('tanda-terima', applicationId)
         if (ttError || !tandaTerimaFiles || tandaTerimaFiles.length === 0) return
         
         const file = tandaTerimaFiles[0]
@@ -154,8 +131,9 @@ export default function PermohonanDetailPage() {
   const handleViewOfflineProof = async () => {
     if (!offlineProof) return
     try {
-      const { data } = supabase.storage.from('documents').getPublicUrl(offlineProof.filePath)
-      setPreviewDoc({ url: data.publicUrl, name: offlineProof.fileName, filePath: offlineProof.filePath })
+      const urlData = getPublicUrl(offlineProof.filePath)
+      if (!urlData) { toast.error('Storage tidak dikonfigurasi'); return }
+      setPreviewDoc({ url: urlData.publicUrl, name: offlineProof.fileName, filePath: offlineProof.filePath })
     } catch (error) {
       console.error('Error viewing offline proof:', error)
       toast.error('Gagal membuka bukti pengambilan')
@@ -165,8 +143,8 @@ export default function PermohonanDetailPage() {
   const handleDownloadOfflineProof = async () => {
     if (!offlineProof) return
     try {
-      const { data, error } = await supabase.storage.from('documents').download(offlineProof.filePath)
-      if (error) throw error
+      const { data, error } = await downloadFile(offlineProof.filePath)
+      if (error || !data) throw new Error(error || 'Gagal download')
       const url = URL.createObjectURL(data)
       const a = document.createElement('a')
       a.href = url
@@ -296,8 +274,9 @@ export default function PermohonanDetailPage() {
 
   const handleViewDocument = async (doc: Document) => {
     try {
-      const { data } = supabase.storage.from('documents').getPublicUrl(doc.file_path)
-      setPreviewDoc({ url: data.publicUrl, name: doc.file_name, filePath: doc.file_path })
+      const urlData = getPublicUrl(doc.file_path)
+      if (!urlData) { toast.error('Storage tidak dikonfigurasi'); return }
+      setPreviewDoc({ url: urlData.publicUrl, name: doc.file_name, filePath: doc.file_path })
     } catch (error) {
       console.error('Error getting document URL:', error)
       toast.error('Gagal membuka dokumen')
@@ -306,8 +285,8 @@ export default function PermohonanDetailPage() {
 
   const handleDownloadDocument = async (doc: Document) => {
     try {
-      const { data, error } = await supabase.storage.from('documents').download(doc.file_path)
-      if (error) throw error
+      const { data, error } = await downloadFile(doc.file_path)
+      if (error || !data) throw new Error(error || 'Gagal download')
       const url = URL.createObjectURL(data)
       const a = document.createElement('a')
       a.href = url; a.download = doc.file_name; a.click()
@@ -320,8 +299,8 @@ export default function PermohonanDetailPage() {
   const handleDownloadPreview = async () => {
     if (!previewDoc) return
     try {
-      const { data, error } = await supabase.storage.from('documents').download(previewDoc.filePath)
-      if (error) throw error
+      const { data, error } = await downloadFile(previewDoc.filePath)
+      if (error || !data) throw new Error(error || 'Gagal download')
       const url = URL.createObjectURL(data)
       const a = document.createElement('a')
       a.href = url; a.download = previewDoc.name; a.click()

@@ -20,8 +20,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { DOCUMENT_TYPES } from '@/lib/constants'
-import { supabase } from '@/lib/supabase'
-import { updateApplicationStatus, getApplicationDocuments, generateNomorSurat, updateNomorSurat } from '@/lib/services/applicationService'
+import { getApplicationDetailWithRejections, approveVerification, rejectVerification, updatePickupMethod } from '@/lib/actions'
+import { getPublicUrl, downloadFile, uploadFile } from '@/lib/supabase-storage'
 import { toast } from 'sonner'
 import {
   ArrowLeft, Check, X, FileText, Download, Eye, User, Building, MapPin, Mail, Phone, Target, Calendar, Hash, Briefcase, Send, HandCoins, AlertTriangle, Clock
@@ -29,7 +29,6 @@ import {
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 import type { Application, Document, ApplicationStatus, DocumentRejection } from '@/types/database'
-import { getDocumentsWithRejections } from '@/lib/services/documentRejectionService'
 
 export default function VerifikasiDetailPage() {
   const router = useRouter()
@@ -79,18 +78,15 @@ export default function VerifikasiDetailPage() {
     setIsLoading(true)
     try {
       const applicationId = params.id as string
-      const { data: app, error } = await supabase.from('applications').select('*').eq('id', applicationId).single()
-      if (error) throw error
-      setApplication(app as Application)
-      const docs = await getApplicationDocuments(applicationId)
-      setDocuments(docs as Document[])
+      const detail = await getApplicationDetailWithRejections(applicationId)
+      setApplication(detail.application)
+      setDocuments(detail.documents as Document[])
       
       // Load document rejections
-      const docsWithRejections = await getDocumentsWithRejections(applicationId)
       const rejectionMap = new Map<string, DocumentRejection>()
-      docsWithRejections.forEach(doc => {
-        if (doc.rejection) {
-          rejectionMap.set(doc.id, doc.rejection)
+      detail.documents.forEach(doc => {
+        if ((doc as Record<string, unknown>).rejection) {
+          rejectionMap.set(doc.id as string, (doc as Record<string, unknown>).rejection as DocumentRejection)
         }
       })
       setDocumentRejections(rejectionMap)
@@ -160,11 +156,10 @@ export default function VerifikasiDetailPage() {
     setIsApproving(true)
     try {
       const nextStatus = getNextStatus()
-      await updateApplicationStatus(application.id, nextStatus, `Disetujui oleh ${currentRole}`, user?.id)
-      if (nextStatus === 'Diverifikasi Admin') {
-        const nomorSurat = await generateNomorSurat()
-        await updateNomorSurat(application.id, nomorSurat)
-        toast.success(`Nomor surat: ${nomorSurat}`)
+      const shouldGenerateNomor = nextStatus === 'Diverifikasi Admin'
+      const result = await approveVerification(application.id, nextStatus, `Disetujui oleh ${currentRole}`, user?.id, shouldGenerateNomor)
+      if (result.nomorSurat) {
+        toast.success(`Nomor surat: ${result.nomorSurat}`)
       }
       
       // Kirim email notifikasi saat status berubah ke "Ditandatangani Inspektur"
@@ -208,10 +203,7 @@ export default function VerifikasiDetailPage() {
     if (!rejectionReason.trim()) { toast.error('Alasan penolakan wajib diisi'); return }
     setIsRejecting(true)
     try {
-      await updateApplicationStatus(application.id, 'Ditolak', rejectionReason, user?.id)
-      const updateData: { rejection_reason: string; nomor_surat?: null } = { rejection_reason: rejectionReason }
-      if (application.nomor_surat) updateData.nomor_surat = null
-      await supabase.from('applications').update(updateData as never).eq('id', application.id)
+      await rejectVerification(application.id, rejectionReason, user?.id)
       toast.success('Permohonan ditolak')
       setShowRejectDialog(false)
       router.push('/dashboard/verifikasi')
@@ -225,8 +217,9 @@ export default function VerifikasiDetailPage() {
 
   const handleViewDocument = async (doc: Document) => {
     try {
-      const { data } = supabase.storage.from('documents').getPublicUrl(doc.file_path)
-      setPreviewDoc({ url: data.publicUrl, name: doc.file_name, filePath: doc.file_path })
+      const urlData = getPublicUrl(doc.file_path)
+      if (!urlData) { toast.error('Storage tidak dikonfigurasi'); return }
+      setPreviewDoc({ url: urlData.publicUrl, name: doc.file_name, filePath: doc.file_path })
     } catch (error) {
       console.error('Error getting document URL:', error)
       toast.error('Gagal membuka dokumen')
@@ -235,8 +228,8 @@ export default function VerifikasiDetailPage() {
 
   const handleDownloadDocument = async (doc: Document) => {
     try {
-      const { data, error } = await supabase.storage.from('documents').download(doc.file_path)
-      if (error) throw error
+      const { data, error } = await downloadFile(doc.file_path)
+      if (error || !data) throw new Error(error || 'Gagal download')
       const url = URL.createObjectURL(data)
       const a = document.createElement('a')
       a.href = url; a.download = doc.file_name; a.click()
@@ -249,8 +242,8 @@ export default function VerifikasiDetailPage() {
   const handleDownloadPreview = async () => {
     if (!previewDoc) return
     try {
-      const { data, error } = await supabase.storage.from('documents').download(previewDoc.filePath)
-      if (error) throw error
+      const { data, error } = await downloadFile(previewDoc.filePath)
+      if (error || !data) throw new Error(error || 'Gagal download')
       const url = URL.createObjectURL(data)
       const a = document.createElement('a')
       a.href = url; a.download = previewDoc.name; a.click()
@@ -301,16 +294,11 @@ export default function VerifikasiDetailPage() {
       const fileName = `skbt_${application.tracking_number}_${Date.now()}.${fileExt}`
       const filePath = `skbt/${application.id}/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, skbtFile)
-
-      if (uploadError) throw uploadError
+      const { error: uploadError } = await uploadFile(filePath, skbtFile)
+      if (uploadError) throw new Error(uploadError)
 
       // 2. Get public URL untuk download
-      const { data: urlData } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath)
+      const urlData = getPublicUrl(filePath)
 
       // 3. Kirim email notifikasi dengan tanda terima digital
       const response = await fetch('/api/send-digital-receipt', {
@@ -324,7 +312,7 @@ export default function VerifikasiDetailPage() {
           tujuanPermohonan: application.tujuan_permohonan || 'mutasi',
           email: application.email,
           tanggalTTD: format(new Date(), 'dd MMMM yyyy, HH:mm', { locale: id }) + ' WIB',
-          downloadUrl: urlData.publicUrl,
+          downloadUrl: urlData?.publicUrl || '',
           sentBy: user?.nama || 'Admin',
         }),
       })
@@ -333,17 +321,11 @@ export default function VerifikasiDetailPage() {
       if (!result.success) throw new Error('Gagal mengirim email')
 
       // 4. Update status menjadi Selesai dan set pickup_method jika belum ada
-      await updateApplicationStatus(application.id, 'Selesai', 'Berkas dikirim secara online', user?.id)
+      await approveVerification(application.id, 'Selesai', 'Berkas dikirim secara online', user?.id)
       
       // Set pickup_method ke 'online' jika belum dipilih oleh pemohon
       if (!application.pickup_method) {
-        await supabase
-          .from('applications')
-          .update({ 
-            pickup_method: 'online',
-            pickup_method_selected_at: new Date().toISOString()
-          } as never)
-          .eq('id', application.id)
+        await updatePickupMethod(application.id, 'online')
       }
 
       toast.success('Berkas berhasil dikirim! Email notifikasi telah dikirim ke pemohon.')
@@ -451,24 +433,15 @@ export default function VerifikasiDetailPage() {
       const fileName = `bukti_penyerahan_${application.tracking_number}_${Date.now()}.${fileExt}`
       const filePath = `bukti-penyerahan/${application.id}/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
-        .upload(filePath, buktiPenyerahanFile)
-
-      if (uploadError) throw uploadError
+      const { error: uploadError } = await uploadFile(filePath, buktiPenyerahanFile)
+      if (uploadError) throw new Error(uploadError)
 
       // 2. Update status menjadi Selesai dan set pickup_method jika belum ada
-      await updateApplicationStatus(application.id, 'Selesai', 'Berkas diserahkan secara langsung', user?.id)
+      await approveVerification(application.id, 'Selesai', 'Berkas diserahkan secara langsung', user?.id)
       
       // Set pickup_method ke 'offline' jika belum dipilih oleh pemohon
       if (!application.pickup_method) {
-        await supabase
-          .from('applications')
-          .update({ 
-            pickup_method: 'offline',
-            pickup_method_selected_at: new Date().toISOString()
-          } as never)
-          .eq('id', application.id)
+        await updatePickupMethod(application.id, 'offline')
       }
 
       toast.success('Berkas berhasil diserahkan! Status diperbarui menjadi Selesai.')
