@@ -175,14 +175,13 @@ function TrackingPageContent() {
       toast.success(result.message)
       
       // Reload application data
-      const app = await getApplicationByTrackingNumber(trackingNumber.toUpperCase())
-      if (app) {
-        setApplication(app)
-        const statusHistory = await getStatusHistory(app.id)
-        setHistory(statusHistory as StatusHistory[])
+      const result = await getTrackingApplication(trackingNumber.toUpperCase())
+      if (result.application) {
+        setApplication(result.application)
+        setHistory(result.statusHistory as StatusHistory[])
         
         // Reload rejected documents
-        if (app.status === 'Dokumen Ditolak') {
+        if (result.application.status === 'Dokumen Ditolak') {
           const rejResponse = await fetch(`/api/applications/${trackingNumber.toUpperCase()}/rejected-documents`)
           const rejResult = await rejResponse.json()
           if (rejResult.success) {
