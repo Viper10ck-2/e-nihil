@@ -172,7 +172,7 @@ export async function getApplicationByTrackingNumber(
     .single()
 
   if (error) {
-    if (error.code === 'PGRST116') {
+    if ((error as Record<string, unknown>).code === 'PGRST116') {
       return null // Not found
     }
     console.error('Error fetching application:', error)
