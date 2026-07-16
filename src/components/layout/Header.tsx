@@ -24,9 +24,9 @@ export function Header() {
   }
 
   return (
-    <header className="bg-[#0f1729]/75 backdrop-blur-md sticky top-0 z-50">
+    <header className="bg-[#0f1729] sticky top-0 z-50">
       {/* Top Bar */}
-      <div className="bg-[#080d17]/60 backdrop-blur-md text-white/40 text-[10px] sm:text-xs py-1 sm:py-1.5 border-b border-white/5">
+      <div className="bg-[#080d17] text-white/40 text-[10px] sm:text-xs py-1 sm:py-1.5 border-b border-white/5">
         <div className="container px-4 flex justify-between items-center">
           <span className="truncate mr-2">Pemerintah Daerah Kabupaten Bintan</span>
           <div className="hidden sm:flex items-center gap-3 sm:gap-4 shrink-0">
