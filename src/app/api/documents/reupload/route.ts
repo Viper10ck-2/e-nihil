@@ -74,10 +74,11 @@ export async function POST(request: NextRequest) {
     const fileExt = file.name.split('.').pop()
     const fileName = `${trackingNumber}/${doc.document_type}_${Date.now()}.${fileExt}`
     const fileBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(fileBuffer)
 
     const { error: uploadError } = await supabase.storage
       .from('documents')
-      .upload(fileName, fileBuffer, {
+      .upload(fileName, buffer, {
         contentType: file.type,
         upsert: false,
       })
