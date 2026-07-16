@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const application = app as Pick<Application, 'tracking_number' | 'status'>
+    const application = app as unknown as Pick<Application, 'tracking_number' | 'status'>
 
     // Cek status minimal sudah diverifikasi admin
     const allowedStatuses = [
