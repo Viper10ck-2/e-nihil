@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { saveFile } from '@/lib/storage/local-storage'
+import { saveFile } from '@/lib/storage/supabase-storage'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
-    const result = await saveFile(filePath, buffer)
+    const result = await saveFile(filePath, buffer, file.type || 'application/pdf')
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 500 })

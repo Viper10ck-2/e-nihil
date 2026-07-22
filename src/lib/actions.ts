@@ -123,12 +123,13 @@ export async function updateUserPassword(userId: string, newPassword: string) {
 export async function generateUniqueTrackingNumber() {
   const now = new Date()
   const datePrefix = `SKBT-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`
-  const { count } = await supabase.from('applications').select('*', { count: 'exact', head: true }).like('tracking_number', `${datePrefix}%`)
+  const { count, error } = await supabase.from('applications').select('*', { count: 'exact', head: true }).like('tracking_number', `${datePrefix}%`)
+  if (error) throw new Error(`Gagal generate nomor tracking: ${error.message}`)
   return `${datePrefix}-${String((count||0)+1).padStart(4,'0')}`
 }
 
 export async function createApplication(data: Record<string, string>, trackingNumber: string, tujuan: string) {
-  const { data: app } = await supabase.from('applications').insert({
+  const { data: app, error } = await supabase.from('applications').insert({
     tracking_number: trackingNumber, tujuan_permohonan: tujuan,
     nama_lengkap: data.nama_lengkap, nip: data.nip, pangkat_golongan: data.pangkat_golongan,
     jabatan: data.jabatan||'-', unit_kerja_asal: data.unit_kerja_asal||'-',
@@ -136,6 +137,8 @@ export async function createApplication(data: Record<string, string>, trackingNu
     email: data.email, nomor_hp: data.nomor_hp,
     status: 'Menunggu Verifikasi Admin',
   } as never).select('*').single()
+  if (error) throw new Error(`Gagal membuat permohonan: ${error.message}`)
+  if (!app) throw new Error('Gagal membuat permohonan: data tidak ditemukan setelah insert')
   return app as unknown as Application
 }
 
@@ -261,22 +264,25 @@ export async function uploadDocument(formData: FormData) {
     throw new Error('File, applicationId, dan documentType wajib diisi')
   }
 
-  const { saveFile } = await import('@/lib/storage/local-storage')
+  const { saveFile } = await import('@/lib/storage/supabase-storage')
 
   const fileExt = file.name.split('.').pop() || 'pdf'
   const fileName = `${applicationId}/${documentType}_${Date.now()}.${fileExt}`
 
   const buffer = Buffer.from(await file.arrayBuffer())
-  const result = await saveFile(fileName, buffer)
-  if (!result.success) throw new Error(result.error || 'Gagal upload file')
+  const result = await saveFile(fileName, buffer, file.type || 'application/pdf')
+  if (!result.success) throw new Error(result.error || 'Gagal upload file ke Supabase Storage')
 
-  const { data } = await supabase.from('documents').insert({
+  const { data, error } = await supabase.from('documents').insert({
     application_id: applicationId,
     document_type: documentType,
     file_name: file.name,
     file_path: fileName,
     file_size: file.size,
   } as never).select('*').single()
+
+  if (error) throw new Error(`Gagal menyimpan data dokumen: ${error.message}`)
+  if (!data) throw new Error('Gagal menyimpan data dokumen: data tidak ditemukan setelah insert')
 
   return { success: true, path: fileName, doc: data }
 }

@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-
-const STORAGE_PATH = process.env.LOCAL_STORAGE_PATH || '/opt/e-nihil/uploads'
+import { listFiles } from '@/lib/storage/supabase-storage'
 
 export async function GET(request: NextRequest) {
   const prefix = request.nextUrl.searchParams.get('prefix') || ''
@@ -14,23 +11,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const dirPath = path.join(STORAGE_PATH, prefix)
-    if (!fs.existsSync(dirPath)) {
-      return NextResponse.json({ files: [] })
+    const { files, error } = await listFiles(prefix, search || undefined)
+    if (error) {
+      return NextResponse.json({ files: [], error }, { status: 500 })
     }
-
-    const entries = fs.readdirSync(dirPath, { withFileTypes: true })
-    const files = entries
-      .filter(e => e.isFile())
-      .filter(e => !search || e.name.includes(search))
-      .map(e => {
-        const stat = fs.statSync(path.join(dirPath, e.name))
-        return {
-          name: e.name,
-          created_at: stat.birthtime.toISOString(),
-        }
-      })
-
     return NextResponse.json({ files })
   } catch {
     return NextResponse.json({ files: [] })

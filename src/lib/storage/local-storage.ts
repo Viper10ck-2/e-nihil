@@ -6,7 +6,9 @@ import fs from 'fs'
 import path from 'path'
 import { randomBytes } from 'crypto'
 
-const STORAGE_PATH = process.env.LOCAL_STORAGE_PATH || '/opt/e-nihil/uploads'
+// Vercel serverless only allows writes to /tmp; home server uses /opt/e-nihil/uploads
+const STORAGE_PATH = process.env.LOCAL_STORAGE_PATH
+  || (process.env.VERCEL ? '/tmp/e-nihil/uploads' : '/opt/e-nihil/uploads')
 
 // Ensure upload directory exists
 function ensureDir(dir: string) {

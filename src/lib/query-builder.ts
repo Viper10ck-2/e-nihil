@@ -6,7 +6,14 @@ let _sql: ReturnType<typeof postgres> | null = null
 function getSql() {
   if (!_sql) {
     const url = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING || ''
-    _sql = postgres(url, { ssl: url.includes('localhost') ? false : 'require', max: 10 })
+    // Only force SSL if the URL doesn't already specify sslmode (CockroachDB uses sslmode=verify-full)
+    const hasSslMode = url.includes('sslmode=') || url.includes('sslmode%3D')
+    const sslOpt = hasSslMode
+      ? true  // Let the connection string's sslmode take precedence
+      : url.includes('localhost')
+        ? false
+        : 'require'
+    _sql = postgres(url, { ssl: sslOpt, max: 10, idle_timeout: 20, connect_timeout: 10 })
   }
   return _sql
 }
