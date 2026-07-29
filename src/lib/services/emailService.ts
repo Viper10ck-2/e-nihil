@@ -8,19 +8,38 @@ const SMTP_CONFIG = {
   host: process.env.MAIL_HOST || 'mail.bintankab.go.id',
   port: parseInt(process.env.MAIL_PORT || '465'),
   secure: (process.env.MAIL_ENCRYPTION || 'ssl') === 'ssl',
+  requireTLS: true,
   auth: {
     user: process.env.MAIL_USERNAME || '',
     pass: process.env.MAIL_PASSWORD || ''
-  }
-}
+  },
+  connectionTimeout: 15000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
+  logger: process.env.NODE_ENV === 'development'
+} as const
+
+// Debug: log SMTP config (without password)
+console.log('[Email Service] SMTP Config:', {
+  host: SMTP_CONFIG.host,
+  port: SMTP_CONFIG.port,
+  secure: SMTP_CONFIG.secure,
+  user: SMTP_CONFIG.auth.user,
+  hasPassword: !!SMTP_CONFIG.auth.pass
+})
 
 // Validation warnings
 if (!process.env.MAIL_USERNAME || !process.env.MAIL_PASSWORD) {
-  console.warn('[Email Service] Warning: MAIL_USERNAME or MAIL_PASSWORD not configured')
+  console.error('[Email Service] ERROR: MAIL_USERNAME or MAIL_PASSWORD not configured! Emails will fail.')
 }
 
 // Create Nodemailer transporter (singleton)
 const transporter: Transporter = nodemailer.createTransport(SMTP_CONFIG)
+
+// Verify SMTP connection on cold start (non-blocking)
+transporter.verify()
+  .then(() => console.log('[Email Service] SMTP connection verified successfully'))
+  .catch((err) => console.error('[Email Service] SMTP verification failed:', err.message))
 
 const FROM_EMAIL = process.env.MAIL_USERNAME || 'inspektorat@bintankab.go.id'
 const FROM_NAME = 'e-Nihil Inspektorat'
