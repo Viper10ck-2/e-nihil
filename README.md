@@ -16,7 +16,7 @@ Sistem Layanan Surat Keterangan Bebas Temuan (SKBT) secara online dari Inspektor
 - **Database**: Supabase (PostgreSQL)
 - **Styling**: Tailwind CSS
 - **UI Components**: Radix UI + shadcn/ui
-- **Email**: Nodemailer (Gmail SMTP)
+- **Email**: Nodemailer (cPanel SMTP)
 - **Testing**: Vitest + fast-check
 
 ## Prerequisites
@@ -24,7 +24,7 @@ Sistem Layanan Surat Keterangan Bebas Temuan (SKBT) secara online dari Inspektor
 - Node.js 18.x atau lebih baru
 - npm atau yarn
 - Akun Supabase
-- Akun Gmail (untuk notifikasi email)
+- Akun cPanel Webmail (untuk notifikasi email)
 
 ## Setup Development
 
@@ -57,9 +57,12 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# Email (Gmail)
-GMAIL_USER=your-email@gmail.com
-GMAIL_APP_PASSWORD=your_app_password
+# Email (cPanel SMTP)
+MAIL_HOST=mail.bintankab.go.id
+MAIL_PORT=465
+MAIL_USERNAME=inspektorat@bintankab.go.id
+MAIL_PASSWORD=your_webmail_password_here
+MAIL_ENCRYPTION=ssl
 ADMIN_EMAIL=admin@inspektorat.bintankab.go.id
 ```
 
@@ -91,8 +94,11 @@ Buka [http://localhost:3000](http://localhost:3000)
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `GMAIL_USER`
-   - `GMAIL_APP_PASSWORD`
+   - `MAIL_HOST`
+   - `MAIL_PORT`
+   - `MAIL_USERNAME`
+   - `MAIL_PASSWORD`
+   - `MAIL_ENCRYPTION`
    - `ADMIN_EMAIL`
 4. Deploy!
 
@@ -103,8 +109,11 @@ Buka [http://localhost:3000](http://localhost:3000)
 | `NEXT_PUBLIC_SUPABASE_URL` | URL project Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon/public key Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-side only) |
-| `GMAIL_USER` | Email Gmail untuk SMTP |
-| `GMAIL_APP_PASSWORD` | App password Gmail (16 karakter) |
+| `MAIL_HOST` | Hostname SMTP cPanel (mail.bintankab.go.id) |
+| `MAIL_PORT` | Port SMTP (465 untuk SSL) |
+| `MAIL_USERNAME` | Username email cPanel |
+| `MAIL_PASSWORD` | Password webmail cPanel |
+| `MAIL_ENCRYPTION` | Tipe enkripsi (ssl/tls) |
 | `ADMIN_EMAIL` | Email admin untuk notifikasi |
 
 ## Scripts
