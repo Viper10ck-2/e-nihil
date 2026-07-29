@@ -140,7 +140,7 @@ export default function PengajuanPage() {
       }
       
       try {
-        await fetch('/api/send-notification', {
+        const emailRes = await fetch('/api/send-notification', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -152,7 +152,15 @@ export default function PengajuanPage() {
             nomor_hp: submitData.nomor_hp, created_at: new Date().toISOString(),
           }),
         })
-      } catch (emailError) { console.warn('Email notification failed:', emailError) }
+        const emailJson = await emailRes.json()
+        if (!emailRes.ok) {
+          console.error('Email notification failed:', emailJson)
+          toast.warning('Permohonan berhasil, tapi notifikasi email gagal. Admin akan tetap memproses.', { duration: 6000 })
+        }
+      } catch (emailError) {
+        console.error('Email notification failed:', emailError)
+        toast.warning('Permohonan berhasil, tapi notifikasi email gagal. Admin akan tetap memproses.', { duration: 6000 })
+      }
       
       setTrackingNumber(newTrackingNumber)
       toast.success('Permohonan berhasil diajukan!')
