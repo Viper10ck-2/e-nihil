@@ -1,81 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
 import { withAuth } from '@/lib/api-middleware'
 
 export async function POST(request: NextRequest) {
   return withAuth(request, async () => {
     const results: string[] = []
+    const brevoKey = process.env.BREVO_API_KEY || ''
 
     // 1. Check env vars
-    const host = process.env.MAIL_HOST || 'mail.bintankab.go.id'
-    const port = parseInt(process.env.MAIL_PORT || '465')
-    const secure = (process.env.MAIL_ENCRYPTION || 'ssl') === 'ssl'
-    const user = process.env.MAIL_USERNAME || ''
-    const pass = process.env.MAIL_PASSWORD || ''
+    if (brevoKey) {
+      results.push(`Transport: Brevo HTTP API`)
+      results.push(`BREVO_API_KEY: ${brevoKey.substring(0, 6)}...`)
+    } else {
+      results.push(`Transport: SMTP (no BREVO_API_KEY set)`)
+      results.push(`MAIL_HOST: ${process.env.MAIL_HOST || 'mail.bintankab.go.id'}`)
+      results.push(`MAIL_USERNAME: ${process.env.MAIL_USERNAME || '(not set)'}`)
+    }
 
-    results.push(`Config: host=${host}, port=${port}, secure=${secure}, user=${user}, hasPass=${!!pass}`)
-
-    if (!user || !pass) {
+    const hasSMTP = process.env.MAIL_USERNAME && process.env.MAIL_PASSWORD
+    if (!brevoKey && !hasSMTP) {
       return NextResponse.json({
         success: false,
-        error: 'MAIL_USERNAME atau MAIL_PASSWORD belum di-set di environment variables Vercel',
+        error: 'No email transport configured! Set BREVO_API_KEY for Vercel, or SMTP credentials.',
         results
       }, { status: 500 })
     }
 
-    // 2. Test SMTP connection
+    // 2. Test sending
     try {
-      const testTransporter = nodemailer.createTransport({
-        host,
-        port,
-        secure,
+      if (brevoKey) {
+        results.push('Testing Brevo API...')
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'api-key': brevoKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sender: { name: 'e-Nihil Test', email: process.env.BREVO_FROM_EMAIL || process.env.MAIL_USERNAME || 'inspektorat@bintankab.go.id' },
+            to: [{ email: process.env.ADMIN_EMAIL || 'mohd.rizki08@gmail.com' }],
+            subject: '[e-Nihil] SMTP Test via Brevo',
+            htmlContent: '<p>Ini adalah email test dari e-Nihil menggunakan Brevo API.</p><p>Koneksi berhasil!</p>',
+          }),
+        })
+
+        if (!response.ok) {
+          const errBody = await response.text()
+          results.push(`Brevo API error ${response.status}: ${errBody}`)
+          throw new Error(`Brevo API error ${response.status}: ${errBody}`)
+        }
+
+        const data = await response.json()
+        results.push(`Brevo test email sent! messageId: ${data.messageId}`)
+
+        return NextResponse.json({
+          success: true,
+          message: 'Brevo API test email berhasil terkirim!',
+          messageId: data.messageId,
+          results
+        })
+      }
+
+      // SMTP fallback
+      results.push('Testing SMTP...')
+      const nodemailer = await import('nodemailer')
+      const transporter = nodemailer.default.createTransport({
+        host: process.env.MAIL_HOST || 'mail.bintankab.go.id',
+        port: parseInt(process.env.MAIL_PORT || '465'),
+        secure: true,
         requireTLS: true,
-        auth: { user, pass },
+        auth: { user: process.env.MAIL_USERNAME!, pass: process.env.MAIL_PASSWORD! },
         connectionTimeout: 15000,
-        greetingTimeout: 10000,
-        socketTimeout: 15000,
-        debug: true,
-        logger: true
       })
+      await transporter.verify()
+      results.push('SMTP verified!')
 
-      results.push('Transporter created, verifying connection...')
-
-      await testTransporter.verify()
-      results.push('SMTP connection VERIFIED successfully!')
-
-      // 3. Test sending a test email
-      const info = await testTransporter.sendMail({
-        from: `e-Nihil Test <${user}>`,
-        to: process.env.ADMIN_EMAIL || user,
-        subject: '[e-Nihil] SMTP Test Email',
-        html: `<p>Ini adalah email test dari e-Nihil.</p><p>SMTP connection ke ${host}:${port} berhasil.</p>`
+      const info = await transporter.sendMail({
+        from: `e-Nihil Test <${process.env.MAIL_USERNAME}>`,
+        to: process.env.ADMIN_EMAIL || 'mohd.rizki08@gmail.com',
+        subject: '[e-Nihil] SMTP Test',
+        html: '<p>Ini adalah email test dari e-Nihil menggunakan SMTP.</p><p>Koneksi berhasil!</p>',
       })
-
-      results.push(`Test email sent! messageId: ${info.messageId}`)
-      results.push(`Response: ${info.response}`)
 
       return NextResponse.json({
         success: true,
-        message: 'SMTP connection & test email berhasil!',
+        message: 'SMTP test email berhasil terkirim!',
         messageId: info.messageId,
         results
       })
 
     } catch (error: any) {
       results.push(`ERROR: ${error.message}`)
-      results.push(`Code: ${error.code}`)
-      results.push(`Command: ${error.command}`)
+      results.push(`Code: ${error.code || 'N/A'}`)
 
-      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.code === 'ESOCKET') {
-        results.push('⚠️ Kemungkinan Vercel memblokir outbound port SMTP (Hobby plan hanya mengizinkan port 80 & 443)')
-        results.push('Solusi: Upgrade ke Vercel Pro, atau gunakan layanan email relay HTTP seperti SendGrid/Brevo')
+      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+        results.push('⚠️ Port SMTP diblokir Vercel Hobby. Gunakan Brevo API (set BREVO_API_KEY).')
       }
 
       return NextResponse.json({
         success: false,
         error: error.message,
         code: error.code,
-        command: error.command,
         results
       }, { status: 500 })
     }

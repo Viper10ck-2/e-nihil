@@ -3,46 +3,92 @@ import type { Transporter } from 'nodemailer'
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
 
-// SMTP Configuration from environment variables
-const SMTP_CONFIG = {
-  host: process.env.MAIL_HOST || 'mail.bintankab.go.id',
-  port: parseInt(process.env.MAIL_PORT || '465'),
-  secure: (process.env.MAIL_ENCRYPTION || 'ssl') === 'ssl',
-  requireTLS: true,
-  auth: {
-    user: process.env.MAIL_USERNAME || '',
-    pass: process.env.MAIL_PASSWORD || ''
-  },
-  connectionTimeout: 15000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000,
-  logger: process.env.NODE_ENV === 'development'
-} as const
+// ================================================================
+// Email sending: Brevo HTTP API (primary) or SMTP (fallback)
+// ================================================================
+// Vercel Hobby only allows outbound on ports 80/443, so SMTP won't work.
+// Use Brevo REST API (HTTPS) - free 300 emails/day.
+// If BREVO_API_KEY is not set, fallback to nodemailer SMTP.
 
-// Debug: log SMTP config (without password)
-console.log('[Email Service] SMTP Config:', {
-  host: SMTP_CONFIG.host,
-  port: SMTP_CONFIG.port,
-  secure: SMTP_CONFIG.secure,
-  user: SMTP_CONFIG.auth.user,
-  hasPassword: !!SMTP_CONFIG.auth.pass
-})
+const FROM_EMAIL = process.env.BREVO_FROM_EMAIL || process.env.MAIL_USERNAME || 'inspektorat@bintankab.go.id'
+const FROM_NAME = 'e-Nihil Inspektorat'
+const BREVO_API_KEY = process.env.BREVO_API_KEY || ''
 
-// Validation warnings
-if (!process.env.MAIL_USERNAME || !process.env.MAIL_PASSWORD) {
-  console.error('[Email Service] ERROR: MAIL_USERNAME or MAIL_PASSWORD not configured! Emails will fail.')
+// Log which transport is active
+if (BREVO_API_KEY) {
+  console.log('[Email Service] Using Brevo HTTP API')
+} else if (process.env.MAIL_USERNAME && process.env.MAIL_PASSWORD) {
+  console.log('[Email Service] Using SMTP (no BREVO_API_KEY set)')
+} else {
+  console.error('[Email Service] ERROR: No email transport configured! Set BREVO_API_KEY or SMTP credentials.')
 }
 
-// Create Nodemailer transporter (singleton)
-const transporter: Transporter = nodemailer.createTransport(SMTP_CONFIG)
+// SMTP fallback transporter (lazy init)
+let smtpTransporter: Transporter | null = null
+function getSmtpTransporter(): Transporter {
+  if (!smtpTransporter) {
+    smtpTransporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST || 'mail.bintankab.go.id',
+      port: parseInt(process.env.MAIL_PORT || '465'),
+      secure: (process.env.MAIL_ENCRYPTION || 'ssl') === 'ssl',
+      requireTLS: true,
+      auth: {
+        user: process.env.MAIL_USERNAME || '',
+        pass: process.env.MAIL_PASSWORD || ''
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+    })
+  }
+  return smtpTransporter
+}
 
-// Verify SMTP connection on cold start (non-blocking)
-transporter.verify()
-  .then(() => console.log('[Email Service] SMTP connection verified successfully'))
-  .catch((err) => console.error('[Email Service] SMTP verification failed:', err.message))
+// Unified send function
+interface SendMailOptions {
+  to: string | string[]
+  subject: string
+  html: string
+}
 
-const FROM_EMAIL = process.env.MAIL_USERNAME || 'inspektorat@bintankab.go.id'
-const FROM_NAME = 'e-Nihil Inspektorat'
+async function sendMail(options: SendMailOptions) {
+  if (BREVO_API_KEY) {
+    // --- Brevo HTTP API (works on Vercel Hobby) ---
+    const toArray = Array.isArray(options.to) ? options.to : [options.to]
+    
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': BREVO_API_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: FROM_NAME, email: FROM_EMAIL },
+        to: toArray.map(email => ({ email })),
+        subject: options.subject,
+        htmlContent: options.html,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorBody = await response.text()
+      throw new Error(`Brevo API error ${response.status}: ${errorBody}`)
+    }
+
+    const data = await response.json()
+    return { messageId: data.messageId }
+  }
+
+  // --- SMTP fallback (local dev / VPS) ---
+  const transporter = getSmtpTransporter()
+  const info = await transporter.sendMail({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
+    subject: options.subject,
+    html: options.html,
+  })
+  return { messageId: info.messageId }
+}
 
 interface SendNewApplicationEmailParams {
   trackingNumber: string
@@ -301,8 +347,7 @@ export async function sendNewApplicationEmail(params: SendNewApplicationEmailPar
 
   try {
     // Send email to admin
-    const adminInfo = await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const adminInfo = await sendMail({
       to: adminEmail,
       subject: `[e-Nihil] Permohonan SKBT Baru - ${params.trackingNumber}`,
       html: generateEmailHTML({ ...params, tanggalPengajuan }),
@@ -310,8 +355,7 @@ export async function sendNewApplicationEmail(params: SendNewApplicationEmailPar
     console.log('[Email Service] Admin email sent:', adminInfo.messageId)
 
     // Send confirmation email to applicant
-    const applicantInfo = await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const applicantInfo = await sendMail({
       to: params.email,
       subject: `[e-Nihil] Permohonan SKBT Anda Berhasil Diajukan - ${params.trackingNumber}`,
       html: generateApplicantEmailHTML({ ...params, tanggalPengajuan }),
@@ -506,8 +550,7 @@ const generateDigitalReceiptHTML = (params: SendDigitalReceiptParams) => {
 
 export async function sendDigitalReceiptEmail(params: SendDigitalReceiptParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const info = await sendMail({
       to: params.email,
       subject: `[e-Nihil] SKBT Anda Telah Selesai - ${params.nomorSurat}`,
       html: generateDigitalReceiptHTML(params),
@@ -671,8 +714,7 @@ const generateDocumentRejectionHTML = (params: SendDocumentRejectionEmailParams)
 
 export async function sendDocumentRejectionEmail(params: SendDocumentRejectionEmailParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const info = await sendMail({
       to: params.email,
       subject: `[e-Nihil] Dokumen Perlu Diperbaiki - ${params.trackingNumber}`,
       html: generateDocumentRejectionHTML(params),
@@ -852,8 +894,7 @@ const generateMultipleDocumentRejectionHTML = (params: SendMultipleDocumentRejec
 
 export async function sendMultipleDocumentRejectionEmail(params: SendMultipleDocumentRejectionEmailParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const info = await sendMail({
       to: params.email,
       subject: `[e-Nihil] ${params.rejectedDocuments.length} Dokumen Perlu Diperbaiki - ${params.trackingNumber}`,
       html: generateMultipleDocumentRejectionHTML(params),
@@ -1066,8 +1107,7 @@ const generateSkbtReadyHTML = (params: SendSkbtReadyEmailParams) => {
 
 export async function sendSkbtReadyEmail(params: SendSkbtReadyEmailParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const info = await sendMail({
       to: params.email,
       subject: `[e-Nihil] SKBT Anda Telah Selesai - ${params.nomorSurat}`,
       html: generateSkbtReadyHTML(params),
@@ -1245,8 +1285,7 @@ export async function sendPickupChoiceEmail(params: SendPickupChoiceEmailParams)
   
   try {
     const methodLabel = params.pickupMethod === 'online' ? 'Online' : 'Offline'
-    const info = await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const info = await sendMail({
       to: adminEmail,
       subject: `[e-Nihil] Pemohon Pilih Pengambilan ${methodLabel} - ${params.trackingNumber}`,
       html: generatePickupChoiceHTML(params),
@@ -1427,8 +1466,7 @@ const generateSkbtOnlineHTML = (params: SendSkbtOnlineEmailParams) => {
 
 export async function sendSkbtOnlineEmail(params: SendSkbtOnlineEmailParams) {
   try {
-    const info = await transporter.sendMail({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const info = await sendMail({
       to: params.email,
       subject: `[e-Nihil] SKBT Anda Telah Dikirim - ${params.nomorSurat}`,
       html: generateSkbtOnlineHTML(params),

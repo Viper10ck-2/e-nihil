@@ -16,7 +16,7 @@ Sistem Layanan Surat Keterangan Bebas Temuan (SKBT) secara online dari Inspektor
 - **Database**: Supabase (PostgreSQL)
 - **Styling**: Tailwind CSS
 - **UI Components**: Radix UI + shadcn/ui
-- **Email**: Nodemailer (cPanel SMTP)
+- **Email**: Brevo API (HTTPS) / Nodemailer SMTP (fallback)
 - **Testing**: Vitest + fast-check
 
 ## Prerequisites
@@ -24,7 +24,7 @@ Sistem Layanan Surat Keterangan Bebas Temuan (SKBT) secara online dari Inspektor
 - Node.js 18.x atau lebih baru
 - npm atau yarn
 - Akun Supabase
-- Akun cPanel Webmail (untuk notifikasi email)
+- Akun Brevo (gratis, untuk notifikasi email di Vercel)
 
 ## Setup Development
 
@@ -94,11 +94,7 @@ Buka [http://localhost:3000](http://localhost:3000)
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `MAIL_HOST`
-   - `MAIL_PORT`
-   - `MAIL_USERNAME`
-   - `MAIL_PASSWORD`
-   - `MAIL_ENCRYPTION`
+   - `BREVO_API_KEY`
    - `ADMIN_EMAIL`
 4. Deploy!
 
@@ -109,11 +105,8 @@ Buka [http://localhost:3000](http://localhost:3000)
 | `NEXT_PUBLIC_SUPABASE_URL` | URL project Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon/public key Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-side only) |
-| `MAIL_HOST` | Hostname SMTP cPanel (mail.bintankab.go.id) |
-| `MAIL_PORT` | Port SMTP (465 untuk SSL) |
-| `MAIL_USERNAME` | Username email cPanel |
-| `MAIL_PASSWORD` | Password webmail cPanel |
-| `MAIL_ENCRYPTION` | Tipe enkripsi (ssl/tls) |
+| `BREVO_API_KEY` | API key Brevo untuk kirim email via HTTPS |
+| `BREVO_FROM_EMAIL` | Email pengirim (default: inspektorat@bintankab.go.id) |
 | `ADMIN_EMAIL` | Email admin untuk notifikasi |
 
 ## Scripts
